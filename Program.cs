@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 Console.WriteLine("Hello, World!");
 
-var input =
+var fullInput =
 @"zlmlk1
 vqjvxtc79mvdnktdsxcqc1sevenone
 vsskdclbtmjmvrseven6
@@ -1003,13 +1003,85 @@ qkrsvjclp23
 5fourzllbmcgkxsevengkrzkpvcmvgtxlrv6
 fivetczxxvjrrqfive1sevennvj6one3";
 
+var smallInput =
+@"two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen";
+
+var smallest = "37oneightrmm";
+
+//var input = smallInput;
+var input = fullInput;
+//var input = smallest;
+
+var replace = new Dictionary<string, string>()
+{
+     {"one", "1"}  ,
+    {"two", "2"}  ,
+    {"three", "3"},
+    {"four", "4"} ,
+    {"five", "5"} ,
+    {"six", "6"}  ,
+    {"seven", "7"},
+    {"eight", "8"},
+    {"nine", "9"}
+};
+
+var digits = replace.Values.Select(x => x[0]).ToArray();
 var total = 0;
 foreach (var line in input.Split(Environment.NewLine))
 {
-    var numbers = line.Where(x => char.IsDigit(x)).Select(x => int.Parse(x.ToString()));
-    var number = numbers.First()*10+numbers.Last();
+    var cpy = line;
+    var first = replace
+    .Select(x => (x, cpy.IndexOf(x.Key, StringComparison.OrdinalIgnoreCase)))
+    .Where(x => x.Item2 != -1)
+    .OrderBy(x => x.Item2).FirstOrDefault();
+
+    if (first.x.Value != default && (cpy.IndexOfAny(digits) == -1 || cpy.IndexOfAny(digits) > first.Item2))
+    {
+        cpy = ReplaceFirst(cpy, first.x.Key, first.x.Value);
+    }
+
+    var last = replace
+   .Select(x => (x, cpy.LastIndexOf(x.Key, StringComparison.OrdinalIgnoreCase)))
+   .Where(x => x.Item2 != -1)
+   .OrderBy(x => x.Item2).LastOrDefault();
+
+    if (last.x.Value != default && (cpy.IndexOfAny(digits) == -1 || cpy.LastIndexOfAny(digits) < last.Item2))
+    {
+        cpy = ReplaceLastOccurrence(cpy, last.x.Key, last.x.Value);
+    }
+
+
+    var numbers = cpy.Where(x => char.IsDigit(x)).Select(x => int.Parse(x.ToString()));
+    var number = numbers.First() * 10 + numbers.Last();
+    Console.WriteLine(cpy + "\t" + number);
     total += number;
 }
 
 Console.WriteLine(total);
 Console.ReadLine();
+
+static string ReplaceLastOccurrence(string source, string find, string replace)
+{
+    int place = source.LastIndexOf(find);
+
+    if (place == -1)
+        return source;
+
+    return source.Remove(place, find.Length).Insert(place, replace);
+}
+
+string ReplaceFirst(string text, string search, string replace)
+{
+    int pos = text.IndexOf(search);
+    if (pos < 0)
+    {
+        return text;
+    }
+    return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+}
