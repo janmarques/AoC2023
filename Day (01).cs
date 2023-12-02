@@ -1043,18 +1043,13 @@
 //var total = 0;
 //foreach (var line in input.Split(Environment.NewLine))
 //{
-//    var first = bag
-//    .Select(x => (x, line.IndexOf(x.Key, StringComparison.OrdinalIgnoreCase)))
-//    .Where(x => x.Item2 != -1)
-//    .OrderBy(x => x.Item2).FirstOrDefault();
+//    var matches = bag
+//    .Select(x => new { x.Value, firstIndex = line.IndexOf(x.Key, StringComparison.OrdinalIgnoreCase), lastIndex = line.LastIndexOf(x.Key, StringComparison.OrdinalIgnoreCase) });
 
-//    var last = bag
-//   .Select(x => (x, line.LastIndexOf(x.Key, StringComparison.OrdinalIgnoreCase)))
-//   .Where(x => x.Item2 != -1)
-//   .OrderBy(x => x.Item2).LastOrDefault();
+//    var first = matches.OrderBy(x => x.firstIndex).First(x => x.firstIndex != -1);
+//    var last = matches.OrderBy(x => x.lastIndex).Last();
 
-
-//    var number = first.x.Value * 10 + last.x.Value;
+//    var number = first.Value * 10 + last.Value;
 //    total += number;
 //}
 
