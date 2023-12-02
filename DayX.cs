@@ -12,5 +12,10 @@
 
 //var result = "";
 
+//foreach (var line in input.Split(Environment.NewLine))
+//{
+
+//}
+
 //Console.WriteLine(result);
 //Console.ReadLine();
