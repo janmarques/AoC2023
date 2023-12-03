@@ -160,9 +160,10 @@
 
 //var result = "";
 
+//var timer = Stopwatch.StartNew();
 //var grid = input.Split(Environment.NewLine).Select(x => x.ToArray()).ToArray();
 
-//var tokens = new List<Token>();
+//var tokens = new Dictionary<(int x, int y), Token>();
 
 //for (int i = 0; i < grid.Length; i++)
 //{
@@ -193,30 +194,26 @@
 //    }
 //}
 
-//foreach (var token in tokens.Where(x => x.NumberValue.HasValue))
+//foreach (var token in tokens.Values.Where(x => x.NumberValue.HasValue).ToList())
 //{
 //    for (int x = token.XFrom - 1; x <= token.XTo + 1; x++)
 //    {
 //        for (int y = token.YFrom - 1; y <= token.YTo + 1; y++)
 //        {
-//            var other = tokens.SingleOrDefault(t => t.XFrom == x && t.YFrom == y);
-//            if (other != null && other != token)
+//            if (tokens.TryGetValue((x, y), out var other) && other != token)
 //            {
 //                token.Neighbours.Add(other);
-//                if (!other.Neighbours.Contains(token))
-//                {
-//                    other.Neighbours.Add(token);
-//                }
+//                other.Neighbours.Add(token);
 //            }
 //        }
 //    }
 //}
 
 
-//var builtGrid = tokens.GroupBy(x => x.XFrom).Select(x => x.ToArray()).ToArray();
-////PrintGrid(builtGrid);
 
-//result = tokens.Sum(x => x.GetGearRatio()).ToString();
+//result = tokens.Values.Sum(x => x.GetGearRatio()).ToString(); // 80694070 (oud 4481ms, nieuw 28ms)
+//timer.Stop();
+//Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
 //Console.WriteLine(result);
 //Console.ReadLine();
@@ -242,7 +239,7 @@
 //        YFrom = j,
 //        YTo = j,
 //    };
-//    tokens.Add(token);
+//    tokens[(i, j)] = token;
 //    return token;
 //}
 
@@ -254,7 +251,7 @@
 //    public int XTo { get; set; }
 //    public int YFrom { get; set; }
 //    public int YTo { get; set; }
-//    public List<Token> Neighbours { get; set; } = new List<Token>();
+//    public HashSet<Token> Neighbours { get; set; } = new HashSet<Token>();
 
 //    public bool IsRelevantCharacter() => CharacterValue.HasValue && CharacterValue != '.';
 //    public bool IsGearCharacter() => CharacterValue.HasValue && CharacterValue == '*';

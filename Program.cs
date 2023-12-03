@@ -9,8 +9,9 @@ var smallest = "";
 var input = smallInput;
 //var input = fullInput;
 //var input = smallest;
+var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = "";
+var result = 0;
 
 foreach (var line in input.Split(Environment.NewLine))
 {
@@ -18,6 +19,9 @@ foreach (var line in input.Split(Environment.NewLine))
 }
 
 Console.WriteLine(result);
+
+timer.Stop();
+Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
 void PrintGrid<T>(T[][] grid)
