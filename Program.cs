@@ -154,26 +154,104 @@ var smallInput =
 
 var smallest = "";
 
-var input = smallInput;
-//var input = fullInput;
+//var input = smallInput;
+var input = fullInput;
 //var input = smallest;
 
 var result = "";
 
 var grid = input.Split(Environment.NewLine).Select(x => x.ToArray()).ToArray();
-PrintGrid(grid);
+
+var tokens = new List<Token>();
+
+for (int i = 0; i < grid.Length; i++)
+{
+    Token token = null;
+    for (int j = 0; j < grid[i].Length; j++)
+    {
+        var character = grid[i][j];
+        if (char.IsDigit(character))
+        {
+            if (token == null)
+            {
+                token = InitializeAndAdd(i, j);
+                token.NumberValue = int.Parse(character.ToString());
+            }
+            else
+            {
+                token.NumberValue = token.NumberValue * 10 + int.Parse(character.ToString());
+                token.XTo = i;
+                token.YTo = j;
+            }
+        }
+        else
+        {
+            token = InitializeAndAdd(i, j);
+            token.CharacterValue = character;
+            token = null;
+        }
+    }
+}
+
+foreach (var token in tokens.Where(x => x.NumberValue.HasValue))
+{
+    for (int x = token.XFrom - 1; x <= token.XTo + 1; x++)
+    {
+        for (int y = token.YFrom - 1; y <= token.YTo + 1; y++)
+        {
+            var other = tokens.SingleOrDefault(t => t.XFrom == x && t.YFrom == y);
+            if (other != null && other != token)
+            {
+                token.Neighbours.Add(other);
+            }
+        }
+    }
+}
+
+
+var builtGrid = tokens.GroupBy(x => x.XFrom).Select(x => x.ToArray()).ToArray();
+PrintGrid(builtGrid);
+
+result = tokens.Where(x => x.NumberValue.HasValue && x.Neighbours.Any(y => y.IsRelevantCharacter())).Sum(x => x.NumberValue.Value).ToString();
 
 Console.WriteLine(result);
 Console.ReadLine();
 
 void PrintGrid<T>(T[][] grid)
 {
-	for (int i = 0; i < grid.Length; i++)
-	{
-		for (int j = 0; j < grid[i].Length; j++)
-		{
-			Console.Write(grid[i][j]);
-		}
-		Console.WriteLine();
-	}
+    for (int i = 0; i < grid.Length; i++)
+    {
+        for (int j = 0; j < grid[i].Length; j++)
+        {
+            Console.Write(grid[i][j]);
+        }
+        Console.WriteLine();
+    }
+}
+
+Token InitializeAndAdd(int i, int j)
+{
+    var token = new Token()
+    {
+        XFrom = i,
+        XTo = i,
+        YFrom = j,
+        YTo = j,
+    };
+    tokens.Add(token);
+    return token;
+}
+
+class Token
+{
+    public int? NumberValue { get; set; }
+    public char? CharacterValue { get; set; }
+    public int XFrom { get; set; }
+    public int XTo { get; set; }
+    public int YFrom { get; set; }
+    public int YTo { get; set; }
+    public List<Token> Neighbours { get; set; } = new List<Token>();
+
+    public bool IsRelevantCharacter() => CharacterValue.HasValue && CharacterValue != '.';
+    public override string ToString() => NumberValue?.ToString() ?? CharacterValue?.ToString();
 }
