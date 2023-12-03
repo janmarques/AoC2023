@@ -203,6 +203,10 @@ foreach (var token in tokens.Where(x => x.NumberValue.HasValue))
             if (other != null && other != token)
             {
                 token.Neighbours.Add(other);
+                if (!other.Neighbours.Contains(token))
+                {
+                    other.Neighbours.Add(token);
+                }
             }
         }
     }
@@ -210,9 +214,9 @@ foreach (var token in tokens.Where(x => x.NumberValue.HasValue))
 
 
 var builtGrid = tokens.GroupBy(x => x.XFrom).Select(x => x.ToArray()).ToArray();
-PrintGrid(builtGrid);
+//PrintGrid(builtGrid);
 
-result = tokens.Where(x => x.NumberValue.HasValue && x.Neighbours.Any(y => y.IsRelevantCharacter())).Sum(x => x.NumberValue.Value).ToString();
+result = tokens.Sum(x => x.GetGearRatio()).ToString();
 
 Console.WriteLine(result);
 Console.ReadLine();
@@ -253,5 +257,13 @@ class Token
     public List<Token> Neighbours { get; set; } = new List<Token>();
 
     public bool IsRelevantCharacter() => CharacterValue.HasValue && CharacterValue != '.';
+    public bool IsGearCharacter() => CharacterValue.HasValue && CharacterValue == '*';
+    public bool IsGear() => IsGearCharacter() && Neighbours.Count(x => x.NumberValue.HasValue) == 2;
+    public int GetGearRatio()
+    {
+        if (!IsGear()) { return 0; }
+        var neighbourNumbers = Neighbours.Where(x => x.NumberValue.HasValue).Select(x => x.NumberValue.Value).ToArray();
+        return neighbourNumbers[0] * neighbourNumbers[1];
+    }
     public override string ToString() => NumberValue?.ToString() ?? CharacterValue?.ToString();
 }
