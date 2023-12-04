@@ -216,13 +216,15 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
 
 var smallest = "";
 
-//var input = smallInput; 
+//var input = smallInput;
 var input = fullInput;
 //var input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
+
 var result = 0;
 
+var cards = new Dictionary<int, Card>();
 foreach (var line in input.Split(Environment.NewLine))
 {
     var cardNumber = int.Parse(line.Split(":")[0].Replace("Card ", ""));
@@ -230,17 +232,21 @@ foreach (var line in input.Split(Environment.NewLine))
     var winningNumbers = sequences.First();
     var myNumbers = sequences.Last();
     var matchCount = myNumbers.Count(x => winningNumbers.Contains(x));
-    var score = GetScore(matchCount);
-    Console.WriteLine($"Card {cardNumber} => {score}");
-    result += score;
+    cards[cardNumber] = new Card { Number = cardNumber, Matches = matchCount };
 }
 
-int GetScore(int i)
+foreach (var card in cards.Values.Reverse())
 {
-    if (i == 0) { return 0; }
-    if (i == 1) { return 1; }
-    return 2 * GetScore(i - 1);
+    for (int i = 1; i <= card.Matches; i++)
+    {
+        var copyNr = card.Number + i;
+        card.CopiesGenerated += 1 + cards[copyNr].CopiesGenerated;
+    }
 }
+
+result = cards.Count + cards.Sum(x => x.Value.CopiesGenerated);
+
+
 
 Console.WriteLine(result);
 
@@ -248,14 +254,9 @@ timer.Stop();
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
-void PrintGrid<T>(T[][] grid)
+class Card
 {
-    for (int i = 0; i < grid.Length; i++)
-    {
-        for (int j = 0; j < grid[i].Length; j++)
-        {
-            Console.Write(grid[i][j]);
-        }
-        Console.WriteLine();
-    }
+    public int Number { get; set; }
+    public int Matches { get; set; }
+    public int CopiesGenerated { get; set; }
 }
