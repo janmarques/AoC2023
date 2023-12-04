@@ -224,39 +224,25 @@
 
 //var result = 0;
 
-//var cards = new Dictionary<int, Card>();
-//foreach (var line in input.Split(Environment.NewLine))
+//var cards = new Dictionary<int, int>();
+//foreach (var line in input.Split(Environment.NewLine).Reverse())
 //{
 //    var cardNumber = int.Parse(line.Split(":")[0].Replace("Card ", ""));
 //    var sequences = line.Split(":")[1].Split("|").Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse));
-//    var winningNumbers = sequences.First();
-//    var myNumbers = sequences.Last();
-//    var matchCount = myNumbers.Count(x => winningNumbers.Contains(x));
-//    cards[cardNumber] = new Card { Number = cardNumber, Matches = matchCount };
-//}
+//    var matchCount = sequences.Last().Intersect(sequences.First()).Count();
 
-//foreach (var card in cards.Values.Reverse())
-//{
-//    for (int i = 1; i <= card.Matches; i++)
+//    var copiesGenerated = 0;
+//    for (int i = 1; i <= matchCount; i++)
 //    {
-//        var copyNr = card.Number + i;
-//        card.CopiesGenerated += 1 + cards[copyNr].CopiesGenerated;
+//        var copyNr = cardNumber + i;
+//        copiesGenerated += 1 + cards[copyNr];
 //    }
+//    cards[cardNumber] = copiesGenerated;
 //}
 
-//result = cards.Count + cards.Sum(x => x.Value.CopiesGenerated);
-
-
-
-//Console.WriteLine(result);
+//result = cards.Count + cards.Sum(x => x.Value);
 
 //timer.Stop();
-//Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // full 27ms
+//Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // full 10ms
+//Console.WriteLine(result);
 //Console.ReadLine();
-
-//class Card
-//{
-//    public int Number { get; set; }
-//    public int Matches { get; set; }
-//    public int CopiesGenerated { get; set; }
-//}

@@ -18,9 +18,9 @@ foreach (var line in input.Split(Environment.NewLine))
 
 }
 
-Console.WriteLine(result);
 
 timer.Stop();
+Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
