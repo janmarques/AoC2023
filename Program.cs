@@ -216,8 +216,8 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
 
 var smallest = "";
 
-var input = smallInput;
-//var input = fullInput;
+//var input = smallInput;
+var input = fullInput;
 //var input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -225,7 +225,21 @@ var result = 0;
 
 foreach (var line in input.Split(Environment.NewLine))
 {
+    var cardNumber = int.Parse(line.Split(":")[0].Replace("Card ", ""));
+    var sequences = line.Split(":")[1].Split("|").Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse));
+    var winningNumbers = sequences.First();
+    var myNumbers = sequences.Last();
+    var matchCount = myNumbers.Count(x => winningNumbers.Contains(x));
+    var score = GetScore(matchCount);
+    Console.WriteLine($"Card {cardNumber} => {score}");
+    result += score;
+}
 
+int GetScore(int i)
+{
+    if (i == 0) { return 0; }
+    if (i == 1) { return 1; }
+    return 2 * GetScore(i - 1);
 }
 
 Console.WriteLine(result);
