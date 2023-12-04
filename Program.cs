@@ -251,7 +251,7 @@ result = cards.Count + cards.Sum(x => x.Value.CopiesGenerated);
 Console.WriteLine(result);
 
 timer.Stop();
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // full 27ms
 Console.ReadLine();
 
 class Card
