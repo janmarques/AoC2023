@@ -292,6 +292,17 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = 0L;
 
 var seeds = input.Split(Environment.NewLine)[0].Split("seeds: ")[1].Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToList();
+var seedGroups = input
+    .Split(Environment.NewLine)[0].Split("seeds: ")[1]
+    .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+    .Select(long.Parse)
+    .Select((x, i) => new { x, i })
+    .GroupBy(x => x.i / 2)
+    .Select(x => x.Select(y => y.x).ToArray())
+    .Select(x => new SeedRange { From = x[0], To = x[0] + x[1] - 1 })
+    .ToList();
+
+var totalChecks = seedGroups.Sum(x => x.To - x.From); //2 132 355 824
 
 var maps = new List<Map>();
 Map map = null;
@@ -315,14 +326,17 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
 }
 
 result = long.MaxValue;
-foreach (var seed in seeds)
+foreach (var seedGroup in seedGroups)
 {
-    var cpy = seed;
-    foreach (var pMap in maps)
+    for (long i = seedGroup.From; i < seedGroup.To; i++)
     {
-        cpy = pMap.Transform(cpy);
+        var cpy = i;
+        foreach (var pMap in maps)
+        {
+            cpy = pMap.Transform(cpy);
+        }
+        result = Math.Min(result, cpy);
     }
-    result = Math.Min(result, cpy);
 }
 
 timer.Stop();
@@ -345,6 +359,12 @@ class Map
     }
 }
 
+
+class SeedRange
+{
+    public long From { get; set; }
+    public long To { get; set; }
+}
 
 class Range
 {
