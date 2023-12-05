@@ -381,7 +381,7 @@ class Map
                 foreach (var newRange in newSubRanges)
                 {
                     var offset = newRange.UseNewOffset ? otherRangePair.GetOffset() : rangePair.GetOffset();
-                    newRange.UseNewOffset = false;
+                    //newRange.UseNewOffset = false;
                     var newDestination = newRange.Copy(false);
                     newDestination.To += offset;
                     newDestination.From += offset;
@@ -391,10 +391,10 @@ class Map
                 }
             }
 
-            //if (!matchFound)
-            //{
-            //    newMap.RangePairs.Add(rangePair);
-            //}
+            if (!matchFound)
+            {
+                newMap.RangePairs.Add(rangePair);
+            }
         }
         return newMap;
     }
@@ -415,7 +415,7 @@ class Range
     public long From { get; set; }
     public long To { get; set; }
 
-    public override string ToString() => $"{From} {To}";
+    public override string ToString() => $"{From} {To} {UseNewOffset}";
 
     public bool UseNewOffset { get; set; }
 
@@ -440,7 +440,7 @@ class Range
         var endLeftoverOriginal = GetEndLeftoverOriginal(downstream);
 
         // 2 other is smaller and I have it entirely
-        if (From <= downstream.From && To >= downstream.To)
+        if (From < downstream.From && To > downstream.To)
         {
             yield return startLeftoverOriginal;
             yield return downstream.Copy(false);
@@ -470,12 +470,12 @@ class Range
 
     private Range GetStartLeftoverOriginal(Range downstream)
     {
-        return new Range { From = From, To = downstream.From, UseNewOffset = true };
+        return new Range { From = From, To = downstream.From-1, UseNewOffset = true };
     }
 
     private Range GetEndLeftoverOriginal(Range downstream)
     {
-        return new Range { From = downstream.From, To = To, UseNewOffset = true };
+        return new Range { From = downstream.To+1, To = To, UseNewOffset = true };
     }
 
 }
