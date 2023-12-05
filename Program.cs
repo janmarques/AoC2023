@@ -284,32 +284,65 @@ humidity-to-location map:
 
 var smallest = "";
 
-var input = smallInput;
-//var input = fullInput;
+//var input = smallInput;
+var input = fullInput;
 //var input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
-foreach (var line in input.Split(Environment.NewLine))
-{
+var seeds = input.Split(Environment.NewLine)[0].Split("seeds: ")[1].Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList();
 
+var maps = new List<Map>();
+Map map = null;
+foreach (var line in input.Split(Environment.NewLine).Skip(2))
+{
+    if (string.IsNullOrWhiteSpace(line))
+    {
+        continue;
+    }
+    if (line.Contains("map"))
+    {
+        map = new Map { Name = line };
+        maps.Add(map);
+        continue;
+    }
+    var numbers = line.Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+    var destination = numbers[0];
+    var source = numbers[1];
+    var rangeLength = numbers[2];
+    for (int i = 0; i < rangeLength; i++)
+    {
+        map.Ranges[source + i] = destination + i;
+    }
 }
 
+result = int.MaxValue;
+foreach (var seed in seeds)
+{
+    var cpy = seed;
+    foreach (var pMap in maps)
+    {
+        cpy = pMap.Transform(cpy);
+    }
+    result = Math.Min(result, cpy);
+}
 
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
-void PrintGrid<T>(T[][] grid)
+class Map
 {
-    for (int i = 0; i < grid.Length; i++)
+    public string Name { get; set; }
+    public Dictionary<int, int> Ranges { get; set; } = new Dictionary<int, int>();
+    public int Transform(int input)
     {
-        for (int j = 0; j < grid[i].Length; j++)
+        if (Ranges.TryGetValue(input, out var output))
         {
-            Console.Write(grid[i][j]);
+            return output;
         }
-        Console.WriteLine();
+        return input;
     }
 }
