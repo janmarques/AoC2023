@@ -347,7 +347,7 @@ Parallel.ForEach(seedGroups, seedGroup =>
 
 timer.Stop();
 Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 6472060 3256432ms
 Console.ReadLine();
 
 class Map
