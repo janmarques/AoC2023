@@ -289,9 +289,9 @@ var input = fullInput;
 //var input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = 0;
+var result = 0L;
 
-var seeds = input.Split(Environment.NewLine)[0].Split("seeds: ")[1].Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList();
+var seeds = input.Split(Environment.NewLine)[0].Split("seeds: ")[1].Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToList();
 
 var maps = new List<Map>();
 Map map = null;
@@ -307,17 +307,14 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
         maps.Add(map);
         continue;
     }
-    var numbers = line.Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+    var numbers = line.Split(" ", StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray();
     var destination = numbers[0];
     var source = numbers[1];
     var rangeLength = numbers[2];
-    for (int i = 0; i < rangeLength; i++)
-    {
-        map.Ranges[source + i] = destination + i;
-    }
+    map.Ranges.Add(new Range { SourceFrom = source, SourceTo = source + rangeLength - 1, Offset = destination - source });
 }
 
-result = int.MaxValue;
+result = long.MaxValue;
 foreach (var seed in seeds)
 {
     var cpy = seed;
@@ -336,13 +333,22 @@ Console.ReadLine();
 class Map
 {
     public string Name { get; set; }
-    public Dictionary<int, int> Ranges { get; set; } = new Dictionary<int, int>();
-    public int Transform(int input)
+    public List<Range> Ranges { get; set; } = new List<Range>();
+    public long Transform(long input)
     {
-        if (Ranges.TryGetValue(input, out var output))
+        var range = Ranges.SingleOrDefault(x => input >= x.SourceFrom && input <= x.SourceTo);
+        if (range != null)
         {
-            return output;
+            return input + range.Offset;
         }
         return input;
     }
+}
+
+
+class Range
+{
+    public long SourceFrom { get; set; }
+    public long SourceTo { get; set; }
+    public long Offset { get; set; }
 }
