@@ -327,14 +327,14 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
 
 result = long.MaxValue;
 long progress = 0;
-foreach (var seedGroup in seedGroups)
+Parallel.ForEach(seedGroups, seedGroup =>
 {
     for (long i = seedGroup.From; i < seedGroup.To; i++)
     {
         progress++;
         if (progress % 100_000 == 0)
         {
-            Console.WriteLine($"{progress} -> {(float)progress*100 / totalChecks}%");
+            Console.WriteLine($"{progress} -> {(float)progress * 100 / totalChecks}%");
         }
         var cpy = i;
         foreach (var pMap in maps)
@@ -343,7 +343,7 @@ foreach (var seedGroup in seedGroups)
         }
         result = Math.Min(result, cpy);
     }
-}
+});
 
 timer.Stop();
 Console.WriteLine(result);
