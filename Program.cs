@@ -302,8 +302,9 @@ var seedGroups = input
     .Select(x => new SeedRange { From = x[0], To = x[0] + x[1] - 1 })
     .ToList();
 
-var totalChecks = seedGroups.Sum(x => x.To - x.From); //2 132 355 824
+var totalSeeds = seedGroups.Sum(x => x.To - x.From); //2 132 355 824
 
+int lineProgress = 0;
 var maps = new List<Map>();
 Map map = null;
 foreach (var line in input.Split(Environment.NewLine).Skip(2))
@@ -322,7 +323,12 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
     var destination = numbers[0];
     var source = numbers[1];
     var rangeLength = numbers[2];
-    map.Ranges.Add(new Range { SourceFrom = source, SourceTo = source + rangeLength - 1, Offset = destination - source });
+    //map.Ranges.Add(new Range { SourceFrom = source, SourceTo = source + rangeLength - 1, Offset = destination - source });
+    for (int i = 0; i < rangeLength; i++)
+    {
+        map.Ranges[source + i] = destination + i;
+    }
+    Console.WriteLine($"Line {lineProgress++}");
 }
 
 result = long.MaxValue;
@@ -332,9 +338,9 @@ foreach (var seedGroup in seedGroups)
     for (long i = seedGroup.From; i < seedGroup.To; i++)
     {
         progress++;
-        if (progress % 100_000 == 0)
+        if (progress % 10_000_000 == 0)
         {
-            Console.WriteLine($"{progress} -> {(float)progress*100 / totalChecks}%");
+            Console.WriteLine($"{progress} -> {(float)progress*100 / totalSeeds}%");
         }
         var cpy = i;
         foreach (var pMap in maps)
@@ -353,16 +359,25 @@ Console.ReadLine();
 class Map
 {
     public string Name { get; set; }
-    public List<Range> Ranges { get; set; } = new List<Range>();
+    public Dictionary<long, long> Ranges { get; set; } = new Dictionary<long, long>();
     public long Transform(long input)
     {
-        var range = Ranges.SingleOrDefault(x => input >= x.SourceFrom && input <= x.SourceTo);
-        if (range != null)
+        if (Ranges.TryGetValue(input, out var output))
         {
-            return input + range.Offset;
+            return output;
         }
         return input;
     }
+    //public List<Range> Ranges { get; set; } = new List<Range>();
+    //public long Transform(long input)
+    //{
+    //    var range = Ranges.SingleOrDefault(x => input >= x.SourceFrom && input <= x.SourceTo);
+    //    if (range != null)
+    //    {
+    //        return input + range.Offset;
+    //    }
+    //    return input;
+    //}
 }
 
 
