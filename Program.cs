@@ -1,4 +1,7 @@
-﻿var fullInput =
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
+
+var fullInput =
 @"seeds: 487758422 524336848 2531594804 27107767 1343486056 124327551 1117929819 93097070 3305050822 442320425 2324984130 87604424 4216329536 45038934 1482842780 224610898 115202033 371332058 2845474954 192579859
 
 seed-to-soil map:
@@ -284,8 +287,8 @@ humidity-to-location map:
 
 var smallest = "";
 
-//var input = smallInput;
-var input = fullInput;
+var input = smallInput;
+//var input = fullInput;
 //var input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -302,9 +305,8 @@ var seedGroups = input
     .Select(x => new SeedRange { From = x[0], To = x[0] + x[1] - 1 })
     .ToList();
 
-var totalSeeds = seedGroups.Sum(x => x.To - x.From); //2 132 355 824
+var totalChecks = seedGroups.Sum(x => x.To - x.From); //2 132 355 824
 
-int lineProgress = 0;
 var maps = new List<Map>();
 Map map = null;
 foreach (var line in input.Split(Environment.NewLine).Skip(2))
@@ -323,13 +325,10 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
     var destination = numbers[0];
     var source = numbers[1];
     var rangeLength = numbers[2];
-    //map.Ranges.Add(new Range { SourceFrom = source, SourceTo = source + rangeLength - 1, Offset = destination - source });
-    for (int i = 0; i < rangeLength; i++)
-    {
-        map.Ranges[source + i] = destination + i;
-    }
-    Console.WriteLine($"Line {lineProgress++}");
+    map.Ranges.Add(new Range { SourceFrom = source, SourceTo = source + rangeLength - 1, DestinationFrom = destination, DestinationTo = destination + rangeLength - 1, Offset = destination - source });
 }
+
+var chained = maps.ElementAt(0).Chain(maps.ElementAt(1));
 
 result = long.MaxValue;
 long progress = 0;
@@ -338,9 +337,9 @@ foreach (var seedGroup in seedGroups)
     for (long i = seedGroup.From; i < seedGroup.To; i++)
     {
         progress++;
-        if (progress % 10_000_000 == 0)
+        if (progress % 100_000 == 0)
         {
-            Console.WriteLine($"{progress} -> {(float)progress*100 / totalSeeds}%");
+            Console.WriteLine($"{progress} -> {(float)progress * 100 / totalChecks}%");
         }
         var cpy = i;
         foreach (var pMap in maps)
@@ -359,25 +358,32 @@ Console.ReadLine();
 class Map
 {
     public string Name { get; set; }
-    public Dictionary<long, long> Ranges { get; set; } = new Dictionary<long, long>();
+    public List<Range> Ranges { get; set; } = new List<Range>();
     public long Transform(long input)
     {
-        if (Ranges.TryGetValue(input, out var output))
+        var range = Ranges.SingleOrDefault(x => input >= x.SourceFrom && input <= x.SourceTo);
+        if (range != null)
         {
-            return output;
+            return input + range.Offset;
         }
         return input;
     }
-    //public List<Range> Ranges { get; set; } = new List<Range>();
-    //public long Transform(long input)
-    //{
-    //    var range = Ranges.SingleOrDefault(x => input >= x.SourceFrom && input <= x.SourceTo);
-    //    if (range != null)
-    //    {
-    //        return input + range.Offset;
-    //    }
-    //    return input;
-    //}
+
+    public Map Chain(Map other) // give my output to the next other as input
+    {
+        var newMap = new Map();
+        foreach (var range in Ranges)
+        {
+            //var overlaps = other.Ranges.Where(x => x.HasOverlap(range));
+
+            var overlaps = other.Ranges.Select(x => x.GenerateSubRange(range)).Where(x => x != null);
+            if (overlaps.Any())
+            {
+                newMap.Ranges.AddRange(overlaps);
+            }
+        }
+        return newMap;
+    }
 }
 
 
@@ -391,5 +397,55 @@ class Range
 {
     public long SourceFrom { get; set; }
     public long SourceTo { get; set; }
+
+    public long DestinationFrom { get; set; }
+    public long DestinationTo { get; set; }
+
     public long Offset { get; set; }
+
+    public override string ToString() => $"{DestinationFrom} {SourceFrom} {SourceTo - SourceFrom + 1}";
+
+    public bool HasOverlap(Range original)
+    {
+        // 1 other is larger and has me entirely
+        if (original.DestinationFrom <= SourceFrom && original.DestinationTo >= SourceTo) { return true; }
+
+        // 2 other is smaller and I have it entirely
+        if (SourceFrom <= original.DestinationFrom && SourceTo >= original.DestinationTo) { return true; }
+
+        // 3 we overlap over my start
+        if (original.DestinationFrom <= SourceFrom && SourceFrom <= original.DestinationTo) { return true; }
+
+        // 4 we overlap over my end
+        if (original.DestinationFrom <= SourceTo && SourceTo <= original.DestinationTo) { return true; }
+
+
+        return false;
+    }
+
+    public Range GenerateSubRange(Range original)
+    {
+        if (!HasOverlap(original)) { return null; }
+        var newRange = new Range();
+        var sourceFromDiff = original.SourceFrom - SourceFrom;
+        if (sourceFromDiff < 0)
+        {
+
+        }
+        else
+        {
+
+        }
+
+        var offset = original.Offset + Offset;
+        {
+            SourceFrom = Math.Max(SourceFrom, original.SourceFrom),
+            SourceTo = Math.Max(SourceTo, original.SourceTo),
+            Offset = offset,
+        };
+        newRange.DestinationFrom = SourceFrom + offset;
+        newRange.DestinationTo = SourceTo + offset;
+
+        return newRange;
+    }
 }
