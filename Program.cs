@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Text.Unicode;
 
 var fullInput =
 @"seeds: 487758422 524336848 2531594804 27107767 1343486056 124327551 1117929819 93097070 3305050822 442320425 2324984130 87604424 4216329536 45038934 1482842780 224610898 115202033 371332058 2845474954 192579859
@@ -327,7 +329,12 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
     map.RangePairs.Add(new RangePair { Source = new Range { From = source, To = source + rangeLength - 1 }, Destination = new Range { From = destination, To = destination + rangeLength - 1 } });
 }
 
-//var chained = maps.ElementAt(0).Chain(maps.ElementAt(1));
+
+var chained = maps.First();
+foreach (var pMap in maps.Skip(1))
+{
+    chained = chained.Chain(pMap);
+}
 
 result = long.MaxValue;
 long progress = 0;
@@ -335,16 +342,7 @@ foreach (var seedGroup in seedGroups)
 {
     for (long i = seedGroup.From; i < seedGroup.To; i++)
     {
-        progress++;
-        if (progress % 100_000 == 0)
-        {
-            Console.WriteLine($"{progress} -> {(float)progress * 100 / totalChecks}%");
-        }
-        var cpy = i;
-        foreach (var pMap in maps)
-        {
-            cpy = pMap.Transform(cpy);
-        }
+        var cpy = chained.Transform(i);
         result = Math.Min(result, cpy);
     }
 }
@@ -356,6 +354,8 @@ Console.ReadLine();
 
 class Map
 {
+    public override string ToString() => Name;
+
     public string Name { get; set; }
     public List<RangePair> RangePairs { get; set; } = new List<RangePair>();
     public long Transform(long input)
@@ -368,48 +368,114 @@ class Map
         return input;
     }
 
-    //public Map Chain(Map other) // give my output to the next other as input
-    //{
-    //    var newMap = new Map();
-    //    foreach (var range in Ranges)
-    //    {
-    //        //var overlaps = other.Ranges.Where(x => x.HasOverlap(range));
+    public Map Chain(Map other) // give my output to the next other as input
+    {
+        var newMap = new Map() { Name = this.Name + other.Name };
+        foreach (var rangePair in RangePairs)
+        {
+            var matchFound = false;
+            foreach (var otherRangePair in other.RangePairs)
+            {
+                var newSubRanges = rangePair.Destination.GetSubRanges(otherRangePair.Source).ToList();
 
-    //        var overlaps = other.Ranges.Select(x => x.GenerateSubRange(range)).Where(x => x != null);
-    //        if (overlaps.Any())
-    //        {
-    //            newMap.Ranges.AddRange(overlaps);
-    //        }
-    //    }
-    //    return newMap;
-    //}
+                foreach (var newRange in newSubRanges)
+                {
+                    var offset = newRange.UseNewOffset ? otherRangePair.GetOffset() : rangePair.GetOffset();
+                    newRange.UseNewOffset = false;
+                    var newDestination = newRange.Copy(false);
+                    newDestination.To += offset;
+                    newDestination.From += offset;
+
+                    newMap.RangePairs.Add(new RangePair { Source = newRange, Destination = newDestination });
+                    matchFound = true;
+                }
+            }
+
+            //if (!matchFound)
+            //{
+            //    newMap.RangePairs.Add(rangePair);
+            //}
+        }
+        return newMap;
+    }
 }
 
 class RangePair
 {
     public Range Source { get; set; }
     public Range Destination { get; set; }
+
+    public long GetOffset() => Destination.From - Source.From;
+
+    public override string ToString() => $"{Source} : {Destination}";
+
 }
 class Range
 {
     public long From { get; set; }
     public long To { get; set; }
 
-    public bool HasOverlap(Range other)
+    public override string ToString() => $"{From} {To}";
+
+    public bool UseNewOffset { get; set; }
+
+    public Range Copy(bool useNewOffset)
+        => new Range
+        {
+            From = From,
+            To = To,
+            UseNewOffset = useNewOffset
+        };
+
+    public IEnumerable<Range> GetSubRanges(Range downstream)
     {
         // 1 other is larger and has me entirely
-        if (other.From <= From && other.To >= To) { return true; }
+        if (downstream.From <= From && downstream.To >= To)
+        {
+            yield return this.Copy(true);
+            yield break;
+        } 
+
+        var startLeftoverOriginal = GetStartLeftoverOriginal(downstream);
+        var endLeftoverOriginal = GetEndLeftoverOriginal(downstream);
 
         // 2 other is smaller and I have it entirely
-        if (From <= other.From && To >= other.To) { return true; }
+        if (From <= downstream.From && To >= downstream.To)
+        {
+            yield return startLeftoverOriginal;
+            yield return downstream.Copy(false);
+            yield return endLeftoverOriginal;
+            yield break;
+
+        }
 
         // 3 we overlap over my start
-        if (other.From <= From && From <= other.To) { return true; }
+        if (downstream.From <= From && From <= downstream.To)
+        {
+            yield return new Range { From = From, To = downstream.To, UseNewOffset = true };
+            yield return endLeftoverOriginal;
+            yield break;
+
+        }
 
         // 4 we overlap over my end
-        if (other.From <= To && To <= other.To) { return true; }
+        if (downstream.From <= To && To <= downstream.To)
+        {
+            yield return startLeftoverOriginal;
+            yield return new Range { From = downstream.From, To = To, UseNewOffset = true };
+            yield break;
 
-        return false;
+        }
+    }
+
+    private Range GetStartLeftoverOriginal(Range downstream)
+    {
+        return new Range { From = From, To = downstream.From, UseNewOffset = true };
+    }
+
+    private Range GetEndLeftoverOriginal(Range downstream)
+    {
+        return new Range { From = downstream.From, To = To, UseNewOffset = true };
     }
 
 }
