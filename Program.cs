@@ -15,38 +15,23 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
-foreach (var line in input.Split(Environment.NewLine))
+var T = 46828479;
+var D = 347152214061471;
+
+var disc = Math.Sqrt(Math.Pow(T, 2) + 4 * D);
+var zero1 = (T + disc) / 2;
+var zero2 = (T - disc) / 2;
+
+for (long i = 1; i < 46828479; i++)
 {
-
-}
-
-var sampleRaces = new List<Race> {
-    new Race { Time = 71530, Distance = 940200},
-};
-
-
-var realRaces = new List<Race> {
-    new Race { Time = 46828479, Distance = 347152214061471},
-};
-
-var races = sampleRaces;
-races = realRaces;
-
-var product = 1L;
-foreach (var race in races)
-{
-    for (int i = 1; i < race.Time; i++)
+    var distance = i * (46828479 - i);
+    if (distance > 347152214061471)
     {
-        var distance = i * (race.Time - i);
-        if (distance > race.Distance)
-        {
-            race.Wins++;
-        }
+        result++;
     }
-    product *= race.Wins;
 }
 
-Console.WriteLine(product);
+Console.WriteLine(result);
 
 timer.Stop();
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
