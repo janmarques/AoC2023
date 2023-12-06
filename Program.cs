@@ -51,6 +51,8 @@ Console.WriteLine(product);
 timer.Stop();
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+//28360140
+//804ms
 
 void PrintGrid<T>(T[][] grid)
 {
