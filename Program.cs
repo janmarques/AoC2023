@@ -21,23 +21,18 @@ foreach (var line in input.Split(Environment.NewLine))
 }
 
 var sampleRaces = new List<Race> {
-    new Race { Time = 7, Distance = 9},
-    new Race { Time = 15, Distance = 40},
-    new Race { Time = 30, Distance = 200},
+    new Race { Time = 71530, Distance = 940200},
 };
 
 
 var realRaces = new List<Race> {
-    new Race { Time = 46, Distance = 347},
-    new Race { Time = 82, Distance = 1522},
-    new Race { Time = 84, Distance = 1406},
-    new Race { Time = 79, Distance = 1471},
+    new Race { Time = 46828479, Distance = 347152214061471},
 };
 
 var races = sampleRaces;
 races = realRaces;
 
-var product = 1;
+var product = 1L;
 foreach (var race in races)
 {
     for (int i = 1; i < race.Time; i++)
@@ -71,7 +66,7 @@ void PrintGrid<T>(T[][] grid)
 
 class Race
 {
-    public int Time { get; set; }
-    public int Distance { get; set; }
-    public int Wins { get; set; }
+    public long Time { get; set; }
+    public long Distance { get; set; }
+    public long Wins { get; set; }
 }
