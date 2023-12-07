@@ -1,4 +1,7 @@
-﻿var fullInput =
+﻿using System.Collections.Generic;
+using System.Collections.Specialized;
+
+var fullInput =
 @"88223 818
 66JQ9 398
 6T9AT 311
@@ -1016,128 +1019,106 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
-var hands = new List<Hand>();
+var dct = new SortedDictionary<long, int>();
 foreach (var line in input.Split(Environment.NewLine))
 {
     var split = line.Split(" ");
-    var hand = new Hand
-    {
-        Cards = split[0].ToList(),
-        Bid = int.Parse(split[1])
-    };
-    hand.SortKey = hand.GetSortKey();
-    hands.Add(hand);
+    dct.Add(GetSortKey(split[0].ToCharArray()), int.Parse(split[1]));
 }
 
-result = hands.OrderByDescending(x => x.SortKey).Select((x, i) => x.Bid * (i + 1)).Sum();
+result = dct.Select((x, i) => x.Value * (i + 1)).Sum();
 
 timer.Stop();
 Console.WriteLine(result); // pt 2: 251226257 too high | 251135960 23ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
-void PrintGrid<T>(T[][] grid)
+long GetSortKey(char[] cards)
 {
-    for (int i = 0; i < grid.Length; i++)
-    {
-        for (int j = 0; j < grid[i].Length; j++)
-        {
-            Console.Write(grid[i][j]);
-        }
-        Console.WriteLine();
-    }
+    return Smort((int)GetHandType(cards), X(cards[0]), X(cards[1]), X(cards[2]), X(cards[3]), X(cards[4]));
 }
 
-class Hand
+long Smort(params int[] values)
 {
-    public List<char> Cards { get; set; }
-    public int Bid { get; set; }
-    public string SortKey { get; set; }
-
-    public override string ToString() => $"{GetHandType()} {new String(Cards.ToArray())} {Bid}";
-
-    public string GetSortKey()
+    var sum = 0L;
+    for (int i = values.Length -1; i >= 0; i--)
     {
-        return Combine((short)GetHandType() + 2, X(Cards[0]), X(Cards[1]), X(Cards[2]), X(Cards[3]), X(Cards[4]));
+        var size = values.Length - i;
+        sum += values[i] * (int)Math.Pow(20, size);
     }
+    return sum*-1;
+}
 
-    private string Combine(int v1, params int[] v2)
+int X(char card) => 15 - GetCardStrength(card);
+
+int GetCardStrength(char card)
+{
+    if (char.IsDigit(card)) { return card - 48; }
+    if (card == 'T') { return 10; }
+    if (card == 'J') { return 1; }
+    if (card == 'Q') { return 12; }
+    if (card == 'K') { return 13; }
+    if (card == 'A') { return 14; }
+    throw new Exception();
+}
+
+HandType GetHandType(IEnumerable<char> cards)
+{
+    var jCount = cards.Count(x => x == 'J');
+    if (jCount == 5 || jCount == 4) { return HandType.Five; }
+    if (jCount == 0) { return GetHandTypeInteral(cards); }
+    var withoutJoker = GetHandTypeInteral(cards.Where(x => x != 'J'));
+    if (jCount == 3) // 2 real cards
     {
-        return $"{v1}{string.Join("", v2.Select(x => $"{x:00}"))}";
+        if (withoutJoker == HandType.Pair) { return HandType.Five; }
+        return HandType.Four;
     }
-
-    public int X(char card) => 15 - GetCardStrength(card);
-
-    public int GetCardStrength(char card)
+    if (jCount == 2) // 3 real cards
     {
-        if (char.IsDigit(card)) { return int.Parse(card.ToString()); }
-        if (card == 'T') { return 10; }
-        if (card == 'J') { return 1; }
-        if (card == 'Q') { return 12; }
-        if (card == 'K') { return 13; }
-        if (card == 'A') { return 14; }
-        throw new Exception();
-
+        if (withoutJoker == HandType.Three) { return HandType.Five; }
+        if (withoutJoker == HandType.Pair) { return HandType.Four; }
+        return HandType.Three;
     }
-
-    public HandType GetHandType()
+    if (jCount == 1) // 4 real cards
     {
-        var jCount = Cards.Count(x => x == 'J');
-        if (jCount == 5 || jCount == 4) { return HandType.Five; }
-        if (jCount == 0) { return GetHandTypeInteral(Cards); }
-        var withoutJoker = GetHandTypeInteral(Cards.Where(x => x != 'J').ToList());
-        if (jCount == 3) // 2 real cards
-        {
-            if (withoutJoker == HandType.Pair) { return HandType.Five; }
-            return HandType.Four;
-        }
-        if (jCount == 2) // 3 real cards
-        {
-            if (withoutJoker == HandType.Three) { return HandType.Five; }
-            if (withoutJoker == HandType.Pair) { return HandType.Four; }
-            return HandType.Three;
-        }
-        if (jCount == 1) // 4 real cards
-        {
-            if (withoutJoker == HandType.Four) { return HandType.Five; }
-            if (withoutJoker == HandType.Three) { return HandType.Four; }
-            if (withoutJoker == HandType.TwoPair) { return HandType.Full; }
-            if (withoutJoker == HandType.Pair) { return HandType.Three; }
-            return HandType.Pair;
-        }
-        throw new Exception();
+        if (withoutJoker == HandType.Four) { return HandType.Five; }
+        if (withoutJoker == HandType.Three) { return HandType.Four; }
+        if (withoutJoker == HandType.TwoPair) { return HandType.Full; }
+        if (withoutJoker == HandType.Pair) { return HandType.Three; }
+        return HandType.Pair;
     }
+    throw new Exception();
+}
 
-    private HandType GetHandTypeInteral(List<char> cards)
+HandType GetHandTypeInteral(IEnumerable<char> cards)
+{
+    var groups = cards.GroupBy(x => x).Select(x => new { card = x.Key, count = x.Count() });
+    var groupsCount = groups.Count();
+    if (groups.Any(x => x.count == 5))
     {
-        var groups = cards.GroupBy(x => x).Select(x => new { card = x.Key, count = x.Count() });
-        var groupsCount = groups.Count();
-        if (groups.Any(x => x.count == 5))
-        {
-            return HandType.Five;
-        }
-        if (groups.Any(x => x.count == 4))
-        {
-            return HandType.Four;
-        }
-        if (groups.Any(x => x.count == 3) && groups.Any(x => x.count == 2))
-        {
-            return HandType.Full;
-        }
-        if (groups.Any(x => x.count == 3))
-        {
-            return HandType.Three;
-        }
-        if (groups.Count(x => x.count == 2) == 2)
-        {
-            return HandType.TwoPair;
-        }
-        if (groups.Any(x => x.count == 2))
-        {
-            return HandType.Pair;
-        }
-        return HandType.HighCard;
+        return HandType.Five;
     }
+    if (groups.Any(x => x.count == 4))
+    {
+        return HandType.Four;
+    }
+    if (groups.Any(x => x.count == 3) && groups.Any(x => x.count == 2))
+    {
+        return HandType.Full;
+    }
+    if (groups.Any(x => x.count == 3))
+    {
+        return HandType.Three;
+    }
+    if (groups.Count(x => x.count == 2) == 2)
+    {
+        return HandType.TwoPair;
+    }
+    if (groups.Any(x => x.count == 2))
+    {
+        return HandType.Pair;
+    }
+    return HandType.HighCard;
 }
 
 enum HandType
