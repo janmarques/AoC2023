@@ -1,58 +1,40 @@
 ﻿//using System.Collections.Generic;
 
 //var fullInput =
-//@"";
+//@"Time:        46     82     84     79
+//Distance:   347   1522   1406   1471";
 
 //var smallInput =
-//@"";
+//@"Time:      7  15   30
+//Distance:  9  40  200";
 
 //var smallest = "";
 
 //var input = smallInput;
-////var input = fullInput;
+//input = fullInput;
 ////var input = smallest;
 //var timer = System.Diagnostics.Stopwatch.StartNew();
 
 //var result = 0;
 
-//foreach (var line in input.Split(Environment.NewLine))
-//{
+//var numbers = input.Split(Environment.NewLine).Select(x => x.Split(":")).Select(x => long.Parse(x[1].Replace(" ", "")));
+//var T = numbers.First();
+//var D = numbers.Last();
 
-//}
+//var disc = Math.Sqrt(Math.Pow(T, 2) - 4 * D);
+//var zero1 = (-1 * T + disc) / 2;
+//var zero2 = (-1 * T - disc) / 2;
 
-//var sampleRaces = new List<Race> {
-//    new Race { Time = 71530, Distance = 940200},
-//};
+//result = (int)Math.Floor(zero1 - zero2);
 
 
-//var realRaces = new List<Race> {
-//    new Race { Time = 46828479, Distance = 347152214061471},
-//};
-
-//var races = sampleRaces;
-//races = realRaces;
-
-//var product = 1L;
-//foreach (var race in races)
-//{
-//    for (int i = 1; i < race.Time; i++)
-//    {
-//        var distance = i * (race.Time - i);
-//        if (distance > race.Distance)
-//        {
-//            race.Wins++;
-//        }
-//    }
-//    product *= race.Wins;
-//}
-
-//Console.WriteLine(product);
+//Console.WriteLine(result);
 
 //timer.Stop();
 //Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 //Console.ReadLine();
 ////28360140
-////804ms
+////8ms
 
 //void PrintGrid<T>(T[][] grid)
 //{
@@ -64,11 +46,4 @@
 //        }
 //        Console.WriteLine();
 //    }
-//}
-
-//class Race
-//{
-//    public long Time { get; set; }
-//    public long Distance { get; set; }
-//    public long Wins { get; set; }
 //}
