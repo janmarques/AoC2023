@@ -1089,7 +1089,7 @@ HandType GetHandType(IEnumerable<char> cards)
 
 HandType GetHandTypeInteral(IEnumerable<char> cards)
 {
-    var groups = cards.GroupBy(x => x).Select(x => x.Count()).ToHashSet();
+    var groups = cards.GroupBy(x => x).Select(x => x.Count()).ToList();
     if (groups.Any(x => x == 5))
     {
         return HandType.Five;
