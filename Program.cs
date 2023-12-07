@@ -1029,12 +1029,7 @@ foreach (var line in input.Split(Environment.NewLine))
     hands.Add(hand);
 }
 
-var sorted = hands.OrderByDescending(x => x.SortKey).Select((x, i) => new { Hand = x, Rank = i + 1 }).ToList();
-//var sorted2 = hands.OrderByDescending(x => x).Select((x, i) => new { Hand = x, Rank = i + 1 }).ToList();
-foreach (var rankBid in sorted)
-{
-    result += rankBid.Hand.Bid * rankBid.Rank;
-}
+result = hands.OrderByDescending(x => x.SortKey).Select((x, i) => x.Bid * (i + 1)).Sum();
 
 timer.Stop();
 Console.WriteLine(result); // pt 2: 251226257 too high | 251135960 93ms
@@ -1053,7 +1048,7 @@ void PrintGrid<T>(T[][] grid)
     }
 }
 
-class Hand : IComparable<Hand>
+class Hand
 {
     public List<char> Cards { get; set; }
     public int Bid { get; set; }
@@ -1063,7 +1058,7 @@ class Hand : IComparable<Hand>
 
     public string GetSortKey()
     {
-        return Combine(((short)GetHandType() + 2), X(Cards[0]), X(Cards[1]), X(Cards[2]), X(Cards[3]), X(Cards[4]));
+        return Combine((short)GetHandType() + 2, X(Cards[0]), X(Cards[1]), X(Cards[2]), X(Cards[3]), X(Cards[4]));
     }
 
     private string Combine(int v1, params int[] v2)
@@ -1071,24 +1066,7 @@ class Hand : IComparable<Hand>
         return $"{v1}{string.Join("", v2.Select(x => $"{x:00}"))}";
     }
 
-    public int CompareTo(Hand other)
-    {
-        if (other == this) { return 0; }
-        var handType = GetHandType() - other.GetHandType();
-        if (handType != 0) { return handType; }
-
-        for (int i = 0; i < Cards.Count; i++)
-        {
-            var card = GetCardStrength(Cards.ElementAt(i));
-            var otherCard = GetCardStrength(other.Cards.ElementAt(i));
-            var cardCompare = otherCard.CompareTo(card);
-            if (cardCompare != 0) { return cardCompare; }
-        }
-        throw new Exception();
-    }
-
-    public int X(char card) => GetCardStrengthReversed(card);
-    public int GetCardStrengthReversed(char card) => 15 - GetCardStrength(card);
+    public int X(char card) => 15 - GetCardStrength(card);
 
     public int GetCardStrength(char card)
     {
