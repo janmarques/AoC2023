@@ -1035,10 +1035,10 @@ Console.ReadLine();
 
 long GetSortKey(char[] cards)
 {
-    return Smort((int)GetHandType(cards), X(cards[0]), X(cards[1]), X(cards[2]), X(cards[3]), X(cards[4]));
+    return Smort((short)GetHandType(cards), GetCardStrength(cards[0]), GetCardStrength(cards[1]), GetCardStrength(cards[2]), GetCardStrength(cards[3]), GetCardStrength(cards[4]));
 }
 
-long Smort(params int[] values)
+long Smort(params short[] values)
 {
     var sum = 0L;
     for (int i = values.Length -1; i >= 0; i--)
@@ -1049,17 +1049,14 @@ long Smort(params int[] values)
     return sum*-1;
 }
 
-int X(char card) => 15 - GetCardStrength(card);
-
-int GetCardStrength(char card)
+short GetCardStrength(char card)
 {
-    if (char.IsDigit(card)) { return card - 48; }
-    if (card == 'T') { return 10; }
-    if (card == 'J') { return 1; }
-    if (card == 'Q') { return 12; }
-    if (card == 'K') { return 13; }
-    if (card == 'A') { return 14; }
-    throw new Exception();
+    if (card == 'T') { return 5; }
+    if (card == 'J') { return 14; }
+    if (card == 'Q') { return 3; }
+    if (card == 'K') { return 2; }
+    if (card == 'A') { return 1; }
+    return (short)(15 - (card - 48));
 }
 
 HandType GetHandType(IEnumerable<char> cards)
@@ -1092,29 +1089,28 @@ HandType GetHandType(IEnumerable<char> cards)
 
 HandType GetHandTypeInteral(IEnumerable<char> cards)
 {
-    var groups = cards.GroupBy(x => x).Select(x => new { card = x.Key, count = x.Count() });
-    var groupsCount = groups.Count();
-    if (groups.Any(x => x.count == 5))
+    var groups = cards.GroupBy(x => x).Select(x => x.Count()).ToHashSet();
+    if (groups.Any(x => x == 5))
     {
         return HandType.Five;
     }
-    if (groups.Any(x => x.count == 4))
+    if (groups.Any(x => x == 4))
     {
         return HandType.Four;
     }
-    if (groups.Any(x => x.count == 3) && groups.Any(x => x.count == 2))
+    if (groups.Any(x => x == 3) && groups.Any(x => x == 2))
     {
         return HandType.Full;
     }
-    if (groups.Any(x => x.count == 3))
+    if (groups.Any(x => x == 3))
     {
         return HandType.Three;
     }
-    if (groups.Count(x => x.count == 2) == 2)
+    if (groups.Count(x => x == 2) == 2)
     {
         return HandType.TwoPair;
     }
-    if (groups.Any(x => x.count == 2))
+    if (groups.Any(x => x == 2))
     {
         return HandType.Pair;
     }
