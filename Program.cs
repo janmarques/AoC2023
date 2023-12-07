@@ -1007,11 +1007,11 @@ KK677 28
 KTJJT 220
 QQQJA 483";
 
-var smallest = "";
+var smallest = "AATTJ 11";
 
-//var input = smallInput;
-var input = fullInput;
-//var input = smallest;
+var input = smallInput;
+input = fullInput;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
@@ -1034,8 +1034,7 @@ foreach (var rankBid in sorted)
 }
 
 timer.Stop();
-Console.WriteLine(result); // 247764322 too low  247848939 too low 250132311 too high
-
+Console.WriteLine(result); // pt 2: 251226257 too high | 251135960 93ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
@@ -1078,7 +1077,7 @@ class Hand : IComparable<Hand>
     {
         if (char.IsDigit(card)) { return int.Parse(card.ToString()); }
         if (card == 'T') { return 10; }
-        if (card == 'J') { return 11; }
+        if (card == 'J') { return 0; }
         if (card == 'Q') { return 12; }
         if (card == 'K') { return 13; }
         if (card == 'A') { return 14; }
@@ -1088,9 +1087,37 @@ class Hand : IComparable<Hand>
 
     public HandType GetHandType()
     {
-        var groups = Cards.GroupBy(x => x).Select(x => new { card = x.Key, count = x.Count() });
+        var jCount = Cards.Count(x => x == 'J');
+        if (jCount == 5 || jCount == 4) { return HandType.Five; }
+        if (jCount == 0) { return GetHandTypeInteral(Cards); }
+        var withoutJoker = GetHandTypeInteral(Cards.Where(x => x != 'J').ToList());
+        if (jCount == 3) // 2 real cards
+        {
+            if (withoutJoker == HandType.Pair) { return HandType.Five; }
+            return HandType.Four;
+        }
+        if (jCount == 2) // 3 real cards
+        {
+            if (withoutJoker == HandType.Three) { return HandType.Five; }
+            if (withoutJoker == HandType.Pair) { return HandType.Four; }
+            return HandType.Three;
+        }
+        if (jCount == 1) // 4 real cards
+        {
+            if (withoutJoker == HandType.Four) { return HandType.Five; }
+            if (withoutJoker == HandType.Three) { return HandType.Four; }
+            if (withoutJoker == HandType.TwoPair) { return HandType.Full; }
+            if (withoutJoker == HandType.Pair) { return HandType.Three; }
+            return HandType.Pair;
+        }
+        throw new Exception();
+    }
+
+    private HandType GetHandTypeInteral(List<char> cards)
+    {
+        var groups = cards.GroupBy(x => x).Select(x => new { card = x.Key, count = x.Count() });
         var groupsCount = groups.Count();
-        if (groupsCount == 1)
+        if (groups.Any(x => x.count == 5))
         {
             return HandType.Five;
         }
@@ -1098,7 +1125,7 @@ class Hand : IComparable<Hand>
         {
             return HandType.Four;
         }
-        if (groups.All(x => x.count == 3 || x.count == 2))
+        if (groups.Any(x => x.count == 3) && groups.Any(x => x.count == 2))
         {
             return HandType.Full;
         }
@@ -1114,11 +1141,7 @@ class Hand : IComparable<Hand>
         {
             return HandType.Pair;
         }
-        if (groupsCount == 5)
-        {
-            return HandType.HighCard;
-        }
-        throw new Exception();
+        return HandType.HighCard;
     }
 }
 
