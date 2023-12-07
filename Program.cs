@@ -1032,7 +1032,7 @@ foreach (var line in input.Split(Environment.NewLine))
 result = hands.OrderByDescending(x => x.SortKey).Select((x, i) => x.Bid * (i + 1)).Sum();
 
 timer.Stop();
-Console.WriteLine(result); // pt 2: 251226257 too high | 251135960 93ms
+Console.WriteLine(result); // pt 2: 251226257 too high | 251135960 23ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
