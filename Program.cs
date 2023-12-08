@@ -844,11 +844,14 @@ while (true)
         if (newLocation[2] == 'Z')
         {
             firstToZ[i] = result;
+            if (firstToZ.All(x => x.Value != long.MaxValue)) { goto exit; }
+
         }
         startNodes[i] = nodes[newLocation];
     }
-    if (firstToZ.All(x => x.Value != long.MaxValue)) { break; }
 }
+
+exit:
 
 result = CalcuteLeastCommonMultiple(firstToZ.Select(x => x.Value).ToArray());
 
