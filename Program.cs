@@ -791,17 +791,18 @@ CJT = (VBG, NTD)
 MQV = (LTF, KKG)";
 
 var smallInput =
-@"RL
+@"LR
 
-AAA = (BBB, CCC)
-BBB = (DDD, EEE)
-CCC = (ZZZ, GGG)
-DDD = (DDD, DDD)
-EEE = (EEE, EEE)
-GGG = (GGG, GGG)
-ZZZ = (ZZZ, ZZZ)";
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)";
 
-var smallest = 
+var smallest =
 @"LLR
 
 AAA = (BBB, BBB)
@@ -827,19 +828,27 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
 
 char GetDirection(int step)
 {
-    return steps[step%steps.Length];
+    return steps[step % steps.Length];
 }
 
-var x= GetDirection(2);
-
-var node = nodes["AAA"];
+var startNodes = nodes.Where(x => x.Key[2] == 'A').Select(x => x.Value).ToList();
 while (true)
 {
     var direction = GetDirection(result);
     result++;
-    var newLocation = direction == 'R' ? node.right : node.left;
-    if(newLocation == "ZZZ") { break; }
-    node = nodes[newLocation];
+    var newNodes = new List<(string left, string right)>();
+    var allZ = true;
+    foreach (var startNode in startNodes)
+    {
+        var newLocation = direction == 'R' ? startNode.right : startNode.left;
+        if (newLocation[2] != 'Z')
+        {
+            allZ = false;
+        }
+        newNodes.Add(nodes[newLocation]);
+    }
+    if (allZ) { break; }
+     startNodes = newNodes;
 }
 
 timer.Stop();
