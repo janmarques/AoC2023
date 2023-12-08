@@ -814,7 +814,7 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = 0;
+var result = 0L;
 
 var steps = input.Split(Environment.NewLine)[0].ToCharArray();
 
@@ -826,34 +826,48 @@ foreach (var line in input.Split(Environment.NewLine).Skip(2))
     nodes.Add(split[0], (pair[0], pair[1]));
 }
 
-char GetDirection(int step)
+char GetDirection(long step)
 {
     return steps[step % steps.Length];
 }
 
-var startNodes = nodes.Where(x => x.Key[2] == 'A').Select(x => x.Value).ToList();
+var startNodes = nodes.Where(x => x.Key[2] == 'A').Select(x => x.Value).ToArray();
+var firstToZ = startNodes.Select((_, i) => i).ToDictionary(x => x, x => long.MaxValue);
 while (true)
 {
     var direction = GetDirection(result);
     result++;
-    var newNodes = new List<(string left, string right)>();
-    var allZ = true;
-    foreach (var startNode in startNodes)
+    for (int i = 0; i < startNodes.Length; i++)
     {
+        var startNode = startNodes[i];
         var newLocation = direction == 'R' ? startNode.right : startNode.left;
-        if (newLocation[2] != 'Z')
+        if (newLocation[2] == 'Z')
         {
-            allZ = false;
+            firstToZ[i] = result;
         }
-        newNodes.Add(nodes[newLocation]);
+        startNodes[i] = nodes[newLocation];
     }
-    if (allZ) { break; }
-     startNodes = newNodes;
+    if (firstToZ.All(x => x.Value != long.MaxValue)) { break; }
+}
+
+result = CalcuteLeastCommonMultiple(firstToZ.Select(x => x.Value).ToArray());
+
+long CalcuteLeastCommonMultiple(long[] numbers) // https://stackoverflow.com/questions/147515/least-common-multiple-for-3-or-more-numbers/29717490
+{
+    return numbers.Aggregate(lcm);
+}
+static long lcm(long a, long b)
+{
+    return Math.Abs(a * b) / GCD(a, b);
+}
+static long GCD(long a, long b)
+{
+    return b == 0 ? a : GCD(b, a % b);
 }
 
 timer.Stop();
 Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 19185263738117 19ms
 Console.ReadLine();
 
 void PrintGrid<T>(T[][] grid)
