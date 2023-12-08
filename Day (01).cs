@@ -1,7 +1,4 @@
-﻿//// See https://aka.ms/new-console-template for more information
-//Console.WriteLine("Hello, World!");
-
-//var fullInput =
+﻿//var fullInput =
 //@"zlmlk1
 //vqjvxtc79mvdnktdsxcqc1sevenone
 //vsskdclbtmjmvrseven6
@@ -1017,6 +1014,7 @@
 ////var input = smallInput;
 //var input = fullInput;
 ////var input = smallest;
+//var timer = System.Diagnostics.Stopwatch.StartNew();
 
 //var bag = new Dictionary<string, int>()
 //{
@@ -1053,5 +1051,7 @@
 //    total += number;
 //}
 
+//timer.Stop();
 //Console.WriteLine(total);
+//Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 54885 18ms
 //Console.ReadLine();
