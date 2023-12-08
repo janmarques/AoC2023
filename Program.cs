@@ -832,28 +832,26 @@ char GetDirection(long step)
 }
 
 var startNodes = nodes.Where(x => x.Key[2] == 'A').Select(x => x.Value).ToArray();
-var firstToZ = startNodes.Select((_, i) => i).ToDictionary(x => x, x => long.MaxValue);
-while (true)
+var firstToZ = new List<long>();
+foreach (var node in startNodes)
 {
-    var direction = GetDirection(result);
-    result++;
-    for (int i = 0; i < startNodes.Length; i++)
+    var cpy = node;
+    int count = 0;
+    while (true)
     {
-        var startNode = startNodes[i];
-        var newLocation = direction == 'R' ? startNode.right : startNode.left;
+        var direction = GetDirection(count);
+        count++;
+        var newLocation = direction == 'R' ? cpy.right : cpy.left;
         if (newLocation[2] == 'Z')
         {
-            firstToZ[i] = result;
-            if (firstToZ.All(x => x.Value != long.MaxValue)) { goto exit; }
-
+            firstToZ.Add(count);
+            break;
         }
-        startNodes[i] = nodes[newLocation];
+        cpy = nodes[newLocation];
     }
 }
 
-exit:
-
-result = CalcuteLeastCommonMultiple(firstToZ.Select(x => x.Value).ToArray());
+result = CalcuteLeastCommonMultiple(firstToZ.ToArray());
 
 long CalcuteLeastCommonMultiple(long[] numbers) // https://stackoverflow.com/questions/147515/least-common-multiple-for-3-or-more-numbers/29717490
 {
