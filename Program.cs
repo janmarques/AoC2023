@@ -818,12 +818,18 @@ var result = 0L;
 
 var steps = input.Split(Environment.NewLine)[0].ToCharArray();
 
-var nodes = new Dictionary<string, (string left, string right)>();
+var nodes = new Dictionary<string, Node>();
 foreach (var line in input.Split(Environment.NewLine).Skip(2))
 {
     var split = line.Split(" = ");
+    var key = split[0];
     var pair = split[1].Replace("(", "").Replace(")", "").Replace(" ", "").Split(",");
-    nodes.Add(split[0], (pair[0], pair[1]));
+    nodes.Add(key, new Node { LeftKey = pair[0], RightKey = pair[1], Start = key[2] == 'A', End = key[2] == 'Z' });
+}
+foreach (var node in nodes)
+{
+    node.Value.Left = nodes[node.Value.LeftKey];
+    node.Value.Right = nodes[node.Value.RightKey];
 }
 
 char GetDirection(long step)
@@ -831,7 +837,7 @@ char GetDirection(long step)
     return steps[step % steps.Length];
 }
 
-var startNodes = nodes.Where(x => x.Key[2] == 'A').Select(x => x.Value).ToArray();
+var startNodes = nodes.Select(x => x.Value).Where(x => x.Start);
 var firstToZ = new List<long>();
 foreach (var node in startNodes)
 {
@@ -841,13 +847,13 @@ foreach (var node in startNodes)
     {
         var direction = GetDirection(count);
         count++;
-        var newLocation = direction == 'R' ? cpy.right : cpy.left;
-        if (newLocation[2] == 'Z')
+        var newLocation = direction == 'R' ? cpy.Right : cpy.Left;
+        if (newLocation.End)
         {
             firstToZ.Add(count);
             break;
         }
-        cpy = nodes[newLocation];
+        cpy = newLocation;
     }
 }
 
@@ -881,4 +887,14 @@ void PrintGrid<T>(T[][] grid)
         }
         Console.WriteLine();
     }
+}
+
+class Node
+{
+    public string LeftKey { get; set; }
+    public string RightKey { get; set; }
+    public Node Left { get; set; }
+    public Node Right { get; set; }
+    public bool Start { get; set; }
+    public bool End { get; set; }
 }
