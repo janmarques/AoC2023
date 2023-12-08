@@ -113,6 +113,8 @@
 //var input = fullInput;
 ////var input = smallest;
 
+//var timer = System.Diagnostics.Stopwatch.StartNew();
+
 //var result = 0;
 
 //var bag = new Dictionary<string, int> {
@@ -141,9 +143,10 @@
 //        }
 //    }
 //    var power = maxBalls["red"] * maxBalls["green"] * maxBalls["blue"];
-//    Console.WriteLine($"Game {gameNumber} - {power}");
 //    result += power;
 //}
 
+//timer.Stop();
 //Console.WriteLine(result);
+//Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 64097 4ms
 //Console.ReadLine();
