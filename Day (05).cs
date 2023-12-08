@@ -336,7 +336,7 @@
 
 //timer.Stop();
 //Console.WriteLine(result);
-//Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+//Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 6472060 18ms
 //Console.ReadLine();
 
 //List<Range> Transform(List<Range> transformRange, List<Range> input)
