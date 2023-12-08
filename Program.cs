@@ -1,4 +1,6 @@
-﻿var fullInput =
+﻿using System.Runtime.CompilerServices;
+
+var fullInput =
 @"LRRLRRRLLRRLRRLRRRLRLRRLRRLRRRLRRRLRRLRLLRRLRLRRLRRLRLRLRRLRRLRRRLLRLLRRLRLRRRLRRRLLRRRLRRLRLLRRLRRRLRLLRLRLLRRRLRLRRRLLRRRLRRRLRRLLRLRLLRRLRRLLRRRLLRLLRRLRRRLRLRRRLRLRRLRLRLRRLRRLRRLLLRRRLRLRLLLRRRLLRLRRLRRRLRRLRRLRRRLRRRLRRLLRLLRRLRRRLLRRRLRLRLRRRLRRRLRRLRRLRLLRLRRLLRRLLRRRR
 
 LRV = (NNC, BHD)
@@ -807,15 +809,37 @@ BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
-foreach (var line in input.Split(Environment.NewLine))
-{
+var steps = input.Split(Environment.NewLine)[0].ToCharArray();
 
+var nodes = new Dictionary<string, (string left, string right)>();
+foreach (var line in input.Split(Environment.NewLine).Skip(2))
+{
+    var split = line.Split(" = ");
+    var pair = split[1].Replace("(", "").Replace(")", "").Replace(" ", "").Split(",");
+    nodes.Add(split[0], (pair[0], pair[1]));
+}
+
+char GetDirection(int step)
+{
+    return steps[step%steps.Length];
+}
+
+var x= GetDirection(2);
+
+var node = nodes["AAA"];
+while (true)
+{
+    var direction = GetDirection(result);
+    result++;
+    var newLocation = direction == 'R' ? node.right : node.left;
+    if(newLocation == "ZZZ") { break; }
+    node = nodes[newLocation];
 }
 
 timer.Stop();
