@@ -246,7 +246,7 @@ int Traceback(List<int> numbers)
 
 timer.Stop();
 Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 18913 too high
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 933 6ms
 Console.ReadLine();
 
 void PrintGrid<T>(T[][] grid)
