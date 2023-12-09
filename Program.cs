@@ -1,4 +1,6 @@
-﻿var fullInput =
+﻿using System.Security.Cryptography;
+
+var fullInput =
 @"-7 -13 -20 -17 16 108 297 630 1163 1961 3098 4657 6730 9418 12831 17088 22317 28655 36248 45251 55828
 -9 -7 2 18 41 71 108 152 203 261 326 398 477 563 656 756 863 977 1098 1226 1361
 18 43 75 124 227 464 984 2058 4198 8412 16712 33078 65251 128055 249539 482232 923410 1750729 3283185 6082488 11117019
@@ -205,7 +207,7 @@ var smallInput =
 1 3 6 10 15 21
 10 13 16 21 30 45";
 
-var smallest = "";
+var smallest = "10 13 16 21 30 45";
 
 var input = smallInput;
 input = fullInput;
@@ -217,7 +219,7 @@ var result = 0;
 foreach (var line in input.Split(Environment.NewLine))
 {
     var numbers = line.Split(" ").Select(int.Parse).ToList();
-    var lasts = new List<int> { numbers.Last() };
+    var firsts = new List<int> { numbers.First() };
     while (numbers.Any(x => x != 0))
     {
         var newLine = new List<int>();
@@ -225,16 +227,26 @@ foreach (var line in input.Split(Environment.NewLine))
         {
             newLine.Add(numbers[i + 1] - numbers[i]);
         }
-        lasts.Add(newLine.Last());
+        firsts.Add(newLine.First());
         numbers = newLine;
     }
 
-    result += lasts.Sum();
+    result += Traceback(firsts); ;
+}
+
+int Traceback(List<int> numbers)
+{
+    var bottom = numbers.Last();
+    for (int i = numbers.Count - 2; i >= 0; i--)
+    {
+        bottom = numbers[i] - bottom;
+    }
+    return bottom;
 }
 
 timer.Stop();
 Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 18913 too high
 Console.ReadLine();
 
 void PrintGrid<T>(T[][] grid)
