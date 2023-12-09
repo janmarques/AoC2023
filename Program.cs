@@ -208,7 +208,7 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -216,7 +216,20 @@ var result = 0;
 
 foreach (var line in input.Split(Environment.NewLine))
 {
+    var numbers = line.Split(" ").Select(int.Parse).ToList();
+    var lasts = new List<int> { numbers.Last() };
+    while (numbers.Any(x => x != 0))
+    {
+        var newLine = new List<int>();
+        for (int i = 0; i < numbers.Count - 1; i++)
+        {
+            newLine.Add(numbers[i + 1] - numbers[i]);
+        }
+        lasts.Add(newLine.Last());
+        numbers = newLine;
+    }
 
+    result += lasts.Sum();
 }
 
 timer.Stop();
