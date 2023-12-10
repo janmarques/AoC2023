@@ -141,15 +141,16 @@ J|7L.FLFLF-LLFF7.F|..LF|-.||LJFJF7.LL77F|JJFF-...77F7JL|LL||7F|...FL.-J-.F7|||7F
 FJLLJL---|L7J-LLJ.J.--JJ.7..F7J.J-LF-JJ.J--7JJ|JL7JLF..LJJ-LFJJ.-JL7L-JJ.LLJLL.L-J-LLJJ-JLJ-JJJ-F--LF-J-LL-L7LJ.L-L|7-7JLLJLJLJJJ7JL-L7L|JJJ";
 
 var smallInput =
-@"...........
-.S-------7.
-.|F-----7|.
-.||.....||.
-.||.....||.
-.|L-7.F-J|.
-.|..|.|..|.
-.L--J.L--J.
-...........";
+@".F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...";
 
 var smallest = "";
 
@@ -178,18 +179,13 @@ foreach (var node in nodes.Values.Where(x => !x.IsStart))
 }
 
 var startNode = nodes.Single(x => x.Value.IsStart).Value;
-var breadCrumbs = new HashSet<Node> { startNode };
+startNode.IsInMainLoop = true;
 while (true)
 {
-    var other = startNode.GetNeighbours().Except(breadCrumbs).FirstOrDefault();
+    var other = startNode.GetNeighbours().Where(x => !x.IsInMainLoop).FirstOrDefault();
     if (other == null) { break; }
-    breadCrumbs.Add(other);
+    other.IsInMainLoop = true;
     startNode = other;
-}
-
-foreach (var node in breadCrumbs)
-{
-    node.IsInMainLoop = true;
 }
 
 foreach (var node in nodes.Values)
@@ -204,7 +200,7 @@ Flood(someOutsideNode);
 void Flood(Node node)
 {
     node.IsFlooded = true;
-    foreach (var item in node.GetNeighbours().Where(x => !x.IsInMainLoop && !x.IsFlooded))
+    foreach (var item in node.GetNeighbours().Union(node.GetWormholeNeighboursFromEmpty()).Where(x => !x.IsInMainLoop && !x.IsFlooded))
     {
         Flood(item);
     }
@@ -216,8 +212,8 @@ var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).To
 PrintGrid(tmpGrid);
 
 timer.Stop();
-Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(result); // 531 too high
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); 
 Console.ReadLine();
 
 
@@ -259,6 +255,54 @@ class Node
         }
         return breadCrumbs.Count;
     }
+
+    private new List<(Func<Node, Node> direction, char firstSymbol, char intermediateSymbol, char lastSymbol)> _wormholeDefs
+        = new List<(Func<Node, Node> direction, char firstSymbol, char intermediateSymbol, char lastSymbol)>()
+        {
+            (x => x.North, 'J', '|', '7' ),
+            (x => x.North, 'L', '|', 'F' ),
+            (x => x.South, '7', '|', 'J' ),
+            (x => x.South, 'F', '|', 'L' ),
+            (x => x.East, 'S', '|', '7' ),
+            (x => x.East, 'L', '|', 'J' ),
+            (x => x.West, '7', '|', 'S' ),
+            (x => x.West, 'J', '|', 'L' ),
+
+
+        };
+    public IEnumerable<Node> GetWormholeNeighboursFromEmpty()
+    {
+        foreach (var wormHoleDef in _wormholeDefs)
+        {
+            var neighbour = wormHoleDef.direction(this);
+            if (neighbour == null) { continue; }
+            if (neighbour.Symbol == wormHoleDef.firstSymbol)
+            {
+                while (true)
+                {
+                    neighbour = wormHoleDef.direction(neighbour);
+                    if (neighbour == null) { break; }
+                    if (neighbour.Symbol == wormHoleDef.intermediateSymbol)
+                    {
+                        continue;
+                    }
+                    if (neighbour.Symbol == wormHoleDef.lastSymbol)
+                    {
+                        var next = wormHoleDef.direction(neighbour);
+                        if (next != null)
+                        {
+                            yield return next;
+                        }
+                        break;
+                    }
+                    break;
+                }
+            }
+        }
+
+    }
+
+
 
     public IEnumerable<Node> GetNeighbours()
     {
@@ -358,7 +402,7 @@ class Node
 
 
     //public override string ToString() => Symbol.ToString();
-    //public override string ToString() => InMainLoop ? "." : " ";
+    //public override string ToString() => !IsInMainLoop && !IsFlooded ? "." : " ";
     public override string ToString()
     {
         if (IsInMainLoop)
@@ -370,5 +414,5 @@ class Node
             return ".";
         }
         return " ";
-    } 
+    }
 }
