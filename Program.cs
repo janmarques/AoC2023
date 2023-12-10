@@ -150,7 +150,7 @@ LJ...";
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -158,33 +158,166 @@ var result = 0;
 
 var grid = input.Split(Environment.NewLine).Select(x => x.ToCharArray()).ToArray();
 
-PrintGrid(grid);
-
-for (int i = 0; i < grid.Length; i++)
+var nodes = new Dictionary<(short x, short y), Node>();
+for (short x = 0; x < grid.Length; x++)
 {
-    for (int j = 0; j < grid[0].Length; j++)
+    for (short y = 0; y < grid[0].Length; y++)
     {
-
+        var symbol = grid[y][x];
+        nodes.Add((x, y), new Node { Symbol = symbol, X = x, Y = y });
     }
 }
-foreach (var line in input.Split(Environment.NewLine))
-{
 
+foreach (var node in nodes.Values.Where(x => !x.IsStart))
+{
+    node.SetNeighbours(nodes);
 }
+
+var startNode = nodes.Single(x => x.Value.IsStart).Value;
+var breadCrumbs = new HashSet<Node> { startNode };
+while (true)
+{
+    var other = startNode.GetNeighbours().Except(breadCrumbs).FirstOrDefault();
+    if (other == null) { break; }
+    breadCrumbs.Add(other);
+    startNode = other;
+}
+result = breadCrumbs.Count / 2;
+
+foreach (var node in breadCrumbs)
+{
+    node.InMainLoop = true;
+}
+
+var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
+PrintGrid(tmpGrid);
 
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
-void PrintGrid<T>(T[][] grid)
+
+void PrintGrid<T>(IEnumerable<IEnumerable<T>> grid)
 {
-    for (int i = 0; i < grid.Length; i++)
+    for (int i = 0; i < grid.Count(); i++)
     {
-        for (int j = 0; j < grid[i].Length; j++)
+        for (int j = 0; j < grid.ElementAt(i).Count(); j++)
         {
-            Console.Write(grid[i][j]);
+            Console.Write(grid.ElementAt(i).ElementAt(j));
         }
         Console.WriteLine();
     }
+}
+
+class Node
+{
+    public Node North { get; set; }
+    public Node South { get; set; }
+    public Node East { get; set; } // right
+    public Node West { get; set; } // left
+
+    public bool IsStart => Symbol == 'S';
+    public bool InMainLoop { get; set; }
+    public char Symbol { get; set; }
+    public short X { get; set; }
+    public short Y { get; set; }
+
+    public int Travel(HashSet<Node> breadCrumbs)
+    {
+        foreach (var neighbour in GetNeighbours())
+        {
+            if (!breadCrumbs.Contains(neighbour))
+            {
+                breadCrumbs.Add(neighbour);
+                return neighbour.Travel(breadCrumbs);
+            }
+        }
+        return breadCrumbs.Count;
+    }
+
+    public IEnumerable<Node> GetNeighbours()
+    {
+        if (North != null) { yield return North; }
+        if (East != null) { yield return East; }
+        if (South != null) { yield return South; }
+        if (West != null) { yield return West; }
+    }
+
+    public void SetNeighbours(Dictionary<(short x, short y), Node> nodes)
+    {
+        Node Get(int x, int y)
+        {
+            nodes.TryGetValue(((short)x, (short)y), out var found);
+            return found;
+        }
+        void SetNorth() => North = Get(X, Y - 1);
+        void SetSouth() => South = Get(X, Y + 1);
+        void SetEast() => East = Get(X + 1, Y);
+        void SetWest() => West = Get(X - 1, Y);
+
+        if (Symbol == '|')
+        {
+            SetNorth();
+            SetSouth();
+        }
+        else if (Symbol == '-')
+        {
+            SetEast();
+            SetWest();
+        }
+        else if (Symbol == 'L')
+        {
+            SetNorth();
+            SetEast();
+        }
+        else if (Symbol == 'J')
+        {
+            SetNorth();
+            SetWest();
+        }
+        else if (Symbol == '7')
+        {
+            SetSouth();
+            SetWest();
+        }
+        else if (Symbol == 'F')
+        {
+            SetSouth();
+            SetEast();
+        }
+        else if (Symbol == '.')
+        {
+        }
+        else if (Symbol == 'S')
+        {
+            throw new Exception(); // seperate setter
+        }
+        else
+        {
+            throw new ArgumentException(Symbol.ToString()); // seperate setter
+        }
+
+        if (North != null && North.IsStart)
+        {
+            North.South = this;
+        }
+        if (South != null && South.IsStart)
+        {
+            South.North = this;
+        }
+        if (East != null && East.IsStart)
+        {
+            East.West = this;
+        }
+        if (West != null && West.IsStart)
+        {
+            West.East = this;
+        }
+    }
+
+
+
+    //public override string ToString() => Symbol.ToString();
+    public override string ToString() => InMainLoop ? "." : " ";
 }
