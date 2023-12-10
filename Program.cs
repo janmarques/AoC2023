@@ -159,6 +159,14 @@ var result = 0;
 var grid = input.Split(Environment.NewLine).Select(x => x.ToCharArray()).ToArray();
 
 PrintGrid(grid);
+
+for (int i = 0; i < grid.Length; i++)
+{
+    for (int j = 0; j < grid[0].Length; j++)
+    {
+
+    }
+}
 foreach (var line in input.Split(Environment.NewLine))
 {
 
