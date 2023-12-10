@@ -141,16 +141,20 @@ J|7L.FLFLF-LLFF7.F|..LF|-.||LJFJF7.LL77F|JJFF-...77F7JL|LL||7F|...FL.-J-.F7|||7F
 FJLLJL---|L7J-LLJ.J.--JJ.7..F7J.J-LF-JJ.J--7JJ|JL7JLF..LJJ-LFJJ.-JL7L-JJ.LLJLL.L-J-LLJJ-JLJ-JJJ-F--LF-J-LL-L7LJ.L-L|7-7JLLJLJLJJJ7JL-L7L|JJJ";
 
 var smallInput =
-@"..F7.
-.FJ|.
-SJ.L7
-|F--J
-LJ...";
+@"...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........";
 
 var smallest = "";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -159,9 +163,9 @@ var result = 0;
 var grid = input.Split(Environment.NewLine).Select(x => x.ToCharArray()).ToArray();
 
 var nodes = new Dictionary<(short x, short y), Node>();
-for (short x = 0; x < grid.Length; x++)
+for (short y = 0; y < grid.Length; y++)
 {
-    for (short y = 0; y < grid[0].Length; y++)
+    for (short x = 0; x < grid[0].Length; x++)
     {
         var symbol = grid[y][x];
         nodes.Add((x, y), new Node { Symbol = symbol, X = x, Y = y });
@@ -170,7 +174,7 @@ for (short x = 0; x < grid.Length; x++)
 
 foreach (var node in nodes.Values.Where(x => !x.IsStart))
 {
-    node.SetNeighbours(nodes);
+    node.SetTunnelNeighbours(nodes);
 }
 
 var startNode = nodes.Single(x => x.Value.IsStart).Value;
@@ -182,12 +186,31 @@ while (true)
     breadCrumbs.Add(other);
     startNode = other;
 }
-result = breadCrumbs.Count / 2;
 
 foreach (var node in breadCrumbs)
 {
-    node.InMainLoop = true;
+    node.IsInMainLoop = true;
 }
+
+foreach (var node in nodes.Values)
+{
+    node.SetAllNeighbours(nodes);
+}
+
+//var floodVisits = new HashSet<Node>();
+var someOutsideNode = nodes.Values.First();
+Flood(someOutsideNode);
+
+void Flood(Node node)
+{
+    node.IsFlooded = true;
+    foreach (var item in node.GetNeighbours().Where(x => !x.IsInMainLoop && !x.IsFlooded))
+    {
+        Flood(item);
+    }
+}
+
+result = nodes.Count(x => !x.Value.IsInMainLoop && !x.Value.IsFlooded);
 
 var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
 PrintGrid(tmpGrid);
@@ -218,7 +241,8 @@ class Node
     public Node West { get; set; } // left
 
     public bool IsStart => Symbol == 'S';
-    public bool InMainLoop { get; set; }
+    public bool IsInMainLoop { get; set; }
+    public bool IsFlooded { get; set; }
     public char Symbol { get; set; }
     public short X { get; set; }
     public short Y { get; set; }
@@ -244,7 +268,22 @@ class Node
         if (West != null) { yield return West; }
     }
 
-    public void SetNeighbours(Dictionary<(short x, short y), Node> nodes)
+
+    public void SetAllNeighbours(Dictionary<(short x, short y), Node> nodes)
+    {
+        Node Get(int x, int y)
+        {
+            nodes.TryGetValue(((short)x, (short)y), out var found);
+            return found;
+        }
+        North = Get(X, Y - 1);
+        South = Get(X, Y + 1);
+        East = Get(X + 1, Y);
+        West = Get(X - 1, Y);
+    }
+
+
+    public void SetTunnelNeighbours(Dictionary<(short x, short y), Node> nodes)
     {
         Node Get(int x, int y)
         {
@@ -319,5 +358,17 @@ class Node
 
 
     //public override string ToString() => Symbol.ToString();
-    public override string ToString() => InMainLoop ? "." : " ";
+    //public override string ToString() => InMainLoop ? "." : " ";
+    public override string ToString()
+    {
+        if (IsInMainLoop)
+        {
+            return Symbol.ToString();
+        }
+        if (IsFlooded)
+        {
+            return ".";
+        }
+        return " ";
+    } 
 }
