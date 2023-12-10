@@ -156,6 +156,9 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
+var grid = input.Split(Environment.NewLine).Select(x => x.ToCharArray()).ToArray();
+
+PrintGrid(grid);
 foreach (var line in input.Split(Environment.NewLine))
 {
 
