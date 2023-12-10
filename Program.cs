@@ -1,4 +1,4 @@
-﻿var fullInput =
+﻿var fullInput = // with original S
 @"..FL-77L|7FL--J.F.77.F--F7J7FF-JJ.F-7J77.LJ7.L77F7F.F7777FFJ---7-77.FF-|.7---L7FL.-J.L-7F-J77FL7FF----|----J.FLF-F7.F-F-LJ..-FJJ7.FJ-7J-FJFL
 L-7|FJJ||F77J.F-F7FJ-7FL|.LFJ|.L|.|.||7L7JLJFLJ-F---7L.FL7L-L-FL-|-F7JLLLJ|-|-F77L77-.L7|.|FF7L7-FFJ7.LF-L7.--||.-F-7.L77F|7.|JF-7|.L|J.L||7
 LFL|||.J-JJ7.FF.F|7J|LFJFJ...LJLFLJ.FF-LJ7.F7J.LLF-L|7F7J|J.|J|.F|LJ|--.|-F-L7|L-F-L.7FFJF|7|JFJJJ|.|JFF-..|7..-.FLLJ-.L--J--LFLJFL7-FJFFLJ7
@@ -152,10 +152,56 @@ L--J.L7...LJS7F-7L7.
 ....FJL-7.||.||||...
 ....L---J.LJ.LJLJ...";
 
+smallInput =
+@"...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........";
+
+smallInput =
+@".F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...";
+
+smallInput =
+@"FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L";
+
+smallInput =
+@"..........
+.S------7.
+.|F----7|.
+.||....||.
+.||....||.
+.|L-7F-J|.
+.|..||..|.
+.L--JL--J.
+..........";
+
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -164,14 +210,22 @@ var result = 0;
 var grid = input.Split(Environment.NewLine).Select(x => x.ToCharArray()).ToArray();
 
 var nodes = new Dictionary<(short x, short y), Node>();
+var borders = new List<Node>();
 for (short y = 0; y < grid.Length; y++)
 {
     for (short x = 0; x < grid[0].Length; x++)
     {
         var symbol = grid[y][x];
-        nodes.Add((x, y), new Node { Symbol = symbol, X = x, Y = y });
+        var isBorder = y == 0 || x == 0 || y == grid.Length - 1 || x == grid[0].Length - 1;
+        var node = new Node { Symbol = symbol, X = x, Y = y };
+        nodes.Add((x, y), node);
+        if (isBorder)
+        {
+            borders.Add(node);
+        }
     }
 }
+
 
 foreach (var node in nodes.Values.Where(x => !x.IsStart))
 {
@@ -179,6 +233,12 @@ foreach (var node in nodes.Values.Where(x => !x.IsStart))
 }
 
 var startNode = nodes.Single(x => x.Value.IsStart).Value;
+if (startNode.North != null && startNode.South != null) { startNode.Symbol = '|'; }
+if (startNode.North != null && startNode.East != null) { startNode.Symbol = 'L'; }
+if (startNode.North != null && startNode.West != null) { startNode.Symbol = 'J'; }
+if (startNode.South != null && startNode.East != null) { startNode.Symbol = 'F'; }
+if (startNode.South != null && startNode.West != null) { startNode.Symbol = '7'; }
+if (startNode.East != null && startNode.West != null) { startNode.Symbol = '-'; }
 startNode.IsInMainLoop = true;
 while (true)
 {
@@ -191,14 +251,27 @@ while (true)
 foreach (var node in nodes.Values)
 {
     node.SetAllNeighbours(nodes);
+    if (!node.IsInMainLoop)
+    {
+        node.Symbol = '.';
+    }
 }
 
-//var floodVisits = new HashSet<Node>();
-var someOutsideNode = nodes.Values.First();
-Flood(someOutsideNode);
+foreach (var node in borders)
+{
+    Flood(node);
+}
 
 void Flood(Node node)
 {
+    if (node.IsInMainLoop)
+    {
+
+    }
+    //if (node.X == 14 && node.Y == 3)
+    //{
+
+    //}
     node.IsFlooded = true;
     foreach (var item in node.GetNeighbours().Union(node.GetWormholeNeighboursFromEmpty()).Where(x => !x.IsInMainLoop && !x.IsFlooded))
     {
@@ -213,7 +286,7 @@ PrintGrid(tmpGrid);
 
 timer.Stop();
 Console.WriteLine(result); // 531 too high
-Console.WriteLine(timer.ElapsedMilliseconds + "ms"); 
+Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
 
@@ -239,6 +312,7 @@ class Node
     public bool IsStart => Symbol == 'S';
     public bool IsInMainLoop { get; set; }
     public bool IsFlooded { get; set; }
+    public bool WormholeConsidered { get; set; }
     public char Symbol { get; set; }
     public short X { get; set; }
     public short Y { get; set; }
@@ -263,15 +337,17 @@ class Node
             (x => x.North, 'L', '|', 'F' ),
             (x => x.South, '7', '|', 'J' ),
             (x => x.South, 'F', '|', 'L' ),
-            (x => x.East, 'S', '|', '7' ),
-            (x => x.East, 'L', '|', 'J' ),
-            (x => x.West, '7', '|', 'S' ),
-            (x => x.West, 'J', '|', 'L' ),
+            (x => x.East, 'S', '-', '7' ),
+            (x => x.East, 'L', '-', 'J' ),
+            (x => x.West, '7', '-', 'S' ),
+            (x => x.West, 'J', '-', 'L' ),
 
 
         };
     public IEnumerable<Node> GetWormholeNeighboursFromEmpty()
     {
+        if (WormholeConsidered) { yield break; }
+        WormholeConsidered = true;
         foreach (var wormHoleDef in _wormholeDefs)
         {
             var neighbour = wormHoleDef.direction(this);
@@ -292,6 +368,10 @@ class Node
                         if (next != null)
                         {
                             yield return next;
+                            foreach (var item in next.GetWormholeNeighboursFromEmpty())
+                            {
+                                if (item != null) { yield return item; }
+                            }
                         }
                         break;
                     }
@@ -400,16 +480,42 @@ class Node
     }
 
 
+    char Better()
+    {
+        switch (Symbol)
+        {
+            case '-': return '─';
+            case '|': return '│';
+            case 'F': return '┌';
+            case '7': return '┐';
+            case 'L': return '└';
+            case 'J': return '┘';
+            default:
+                return Symbol;
+        }
+    }
 
     //public override string ToString() => Symbol.ToString();
     //public override string ToString() => !IsInMainLoop && !IsFlooded ? "." : " ";
+    //public override string ToString()
+    //{
+
+    //    if (!IsInMainLoop && !IsFlooded)
+    //    {
+    //        return "I";
+    //    }
+    //    else
+    //    {
+    //        return Better().ToString();
+    //    }
+    //}
     public override string ToString()
     {
         if (IsInMainLoop)
         {
-            return Symbol.ToString();
+            return Better().ToString();
         }
-        if (IsFlooded)
+        if (!IsFlooded)
         {
             return ".";
         }
