@@ -140,6 +140,8 @@ J|7L.FLFLF-LLFF7.F|..LF|-.||LJFJF7.LL77F|JJFF-...77F7JL|LL||7F|...FL.-J-.F7|||7F
 |L-.LJFL-F-F.|L-7-|.7FFF.FFLJL--7.|.L|7-|-7|LLL77LL7LF-77|LF||L7-77FJ-|.LL|7J7L7J|J|7F-J|FJJF7FF||.7||.L7FL|-J777JLJ7LJ|7|L||JF|7.LJLJFL|FJ.
 FJLLJL---|L7J-LLJ.J.--JJ.7..F7J.J-LF-JJ.J--7JJ|JL7JLF..LJJ-LFJJ.-JL7L-JJ.LLJLL.L-J-LLJJ-JLJ-JJJ-F--LF-J-LL-L7LJ.L-L|7-7JLLJLJLJJJ7JL-L7L|JJJ";
 
+
+
 var smallInput =
 @".F----7F7F7F7F-7....
 .|F--7||||||||FJ....
@@ -163,17 +165,19 @@ smallInput =
 .L--J.L--J.
 ...........";
 
+
+
 smallInput =
-@".F----7F7F7F7F-7....
-.|F--7||||||||FJ....
-.||.FJ||||||||L7....
-FJL7L7LJLJ||LJ.L-7..
-L--J.L7...LJS7F-7L7.
-....F-J..F7FJ|L7L7L7
-....L7.F7||L7|.L7L7|
-.....|FJLJ|FJ|F7|.LJ
-....FJL-7.||.||||...
-....L---J.LJ.LJLJ...";
+@"..........
+.S------7.
+.|F----7|.
+.||....||.
+.||....||.
+.|L-7F-J|.
+.|..||..|.
+.L--JL--J.
+..........";
+
 
 smallInput =
 @"FF7FSF7F7F7F7F7F---7
@@ -187,18 +191,19 @@ L---JF-JLJ.||-FJLJJ7
 L.L7LFJ|||||FJL7||LJ
 L7JLJL-JLJLJL--JLJ.L";
 
-smallInput =
-@"..........
-.S------7.
-.|F----7|.
-.||....||.
-.||....||.
-.|L-7F-J|.
-.|..||..|.
-.L--JL--J.
-..........";
 
-var smallest = "";
+var smallest =
+@".F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...";
+
 
 var input = smallInput;
 input = fullInput;
@@ -257,13 +262,10 @@ foreach (var node in nodes.Values)
     }
 }
 
-foreach (var node in borders)
+foreach (var node in borders.Where(x => !x.IsInMainLoop && !x.IsFlooded))
 {
     Flood(node);
 }
-
-var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
-//PrintGrid(tmpGrid);
 
 var windRose = new List<Func<Node, Node>>()
         {
@@ -271,30 +273,32 @@ var windRose = new List<Func<Node, Node>>()
         };
 
 var insideDirection = 3;
-var initWallTravel = nodes.Values.First(x => x.East != null && x.East.IsInMainLoop && x.East.Symbol == '|').East;
+var initWallTravel = nodes.Values.First(x => x.IsFlooded && x.East != null && x.East.IsInMainLoop && x.East.Symbol == '|').East;
 var hiddemGems = new List<Node>();
-Travel(initWallTravel, initWallTravel.South);
 
-foreach (var node in hiddemGems)
+var currentNode = initWallTravel;
+var previousNode = currentNode.South;
+
+void CheckNeighbour()
 {
-    Flood(node);
+    var inside = windRose.ElementAt((insideDirection + 4000) % 4);
+    var insideNeighbour = inside(currentNode);
+    if (insideNeighbour != null && !insideNeighbour.IsFlooded && !insideNeighbour.IsInMainLoop)
+    {
+        //insideNeighbour.IsFlooded = true;
+        hiddemGems.Add(insideNeighbour);
+    }
 }
-
-void Travel(Node currentNode, Node previousNode)
+while (true)
 {
+    CheckNeighbour();
     if (currentNode.Symbol == '|' || currentNode.Symbol == '-')
     {
-        var inside = windRose.ElementAt((insideDirection + 4000) % 4);
-        var insideNeighbour = inside(currentNode);
-        if (insideNeighbour != null && !insideNeighbour.IsFlooded && !insideNeighbour.IsInMainLoop)
-        {
-            //insideNeighbour.IsFlooded = true;
-            hiddemGems.Add(insideNeighbour);
-        }
+
     }
     else if (currentNode.Symbol == 'F') // south east
     {
-        if(currentNode.South == previousNode)
+        if (currentNode.South == previousNode)
         {
             insideDirection++;
         }
@@ -337,21 +341,21 @@ void Travel(Node currentNode, Node previousNode)
         }
     }
 
+    CheckNeighbour();
+
     var next = currentNode.GetTunnelNeighbours().Single(x => x != previousNode);
-    if (next == initWallTravel) { return; }
-    Travel(next, currentNode);
+    if (next == initWallTravel) { break; }
+    previousNode = currentNode;
+    currentNode = next;
+}
+
+foreach (var node in hiddemGems.Where(x => !x.IsFlooded))
+{
+    Flood(node);
 }
 
 void Flood(Node node)
 {
-    if (node.IsInMainLoop)
-    {
-
-    }
-    //if (node.X == 14 && node.Y == 3)
-    //{
-
-    //}
     node.IsFlooded = true;
     foreach (var item in node.GetNeighbours().Where(x => !x.IsInMainLoop && !x.IsFlooded))
     {
@@ -361,11 +365,11 @@ void Flood(Node node)
 
 result = nodes.Count(x => !x.Value.IsInMainLoop && !x.Value.IsFlooded);
 
-tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
-PrintGrid(tmpGrid);
+//var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
+//PrintGrid(tmpGrid);
 
 timer.Stop();
-Console.WriteLine(result); // 531 too high
+Console.WriteLine(result); // 531 too high | 273 29ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
@@ -386,8 +390,8 @@ class Node
 {
     public Node North { get; set; }
     public Node South { get; set; }
-    public Node East { get; set; } // right
-    public Node West { get; set; } // left
+    public Node East { get; set; } 
+    public Node West { get; set; } 
 
     public bool IsStart => Symbol == 'S';
     public bool IsInMainLoop { get; set; }
@@ -558,20 +562,6 @@ class Node
         }
     }
 
-    //public override string ToString() => Symbol.ToString();
-    //public override string ToString() => !IsInMainLoop && !IsFlooded ? "." : " ";
-    //public override string ToString()
-    //{
-
-    //    if (!IsInMainLoop && !IsFlooded)
-    //    {
-    //        return "I";
-    //    }
-    //    else
-    //    {
-    //        return Better().ToString();
-    //    }
-    //}
     public override string ToString()
     {
         if (IsInMainLoop)
