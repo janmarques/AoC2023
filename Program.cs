@@ -155,15 +155,48 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
-
-foreach (var line in input.Split(Environment.NewLine))
+var byLine = input.Split(Environment.NewLine);
+var width = byLine[0].Length;
+var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i);
+var copy = byLine.ToList();
+foreach (var i in emptyRows.OrderByDescending(x => x))
 {
+    copy.Insert(i, new string('.', width));
+}
+var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.'));
+foreach (var i in emptyColumns.OrderByDescending(x => x))
+{
+    for (int j = 0; j < copy.Count; j++)
+    {
+        copy[j] = copy[j].Insert(i, ".");
+    }
+}
 
+
+var nodes = new List<(int x, int y)>();
+for (int i = 0; i < copy.First().Length; i++)
+{
+    for (int j = 0; j < copy.Count; j++)
+    {
+        if(copy.ElementAt(j).ElementAt(i) == '#')
+        {
+            nodes.Add((i, j));
+        }
+    }
+}
+
+foreach (var node in nodes)
+{
+    foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
+    {
+        result += Math.Abs(node.y - otherNode.y);
+        result += Math.Abs(node.x - otherNode.x);
+    }
 }
 
 timer.Stop();
