@@ -201,10 +201,8 @@ foreach (var node in nodes)
 {
     foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
     {
-        var xMin = Math.Min(node.x, otherNode.x);
-        var xMax = Math.Max(node.x, otherNode.x);
-        var yMin = Math.Min(node.y, otherNode.y);
-        var yMax = Math.Max(node.y, otherNode.y);
+        var (xMin, xMax) = node.x < otherNode.x ? (node.x, otherNode.x) : (otherNode.x, node.x);
+        var (yMin, yMax) = node.y < otherNode.y ? (node.y, otherNode.y) : (otherNode.y, node.y);
         result += yMax - yMin;
         result += PassThrough(emptyRows, yMin, yMax) * (expansion - 1);
 
