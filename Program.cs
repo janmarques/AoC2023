@@ -159,23 +159,23 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = 0;
+var result = 0L;
 var byLine = input.Split(Environment.NewLine);
 var width = byLine[0].Length;
-var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i);
+var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i).ToList();
+var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.')).ToList();
 var copy = byLine.ToList();
-foreach (var i in emptyRows.OrderByDescending(x => x))
-{
-    copy.Insert(i, new string('.', width));
-}
-var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.'));
-foreach (var i in emptyColumns.OrderByDescending(x => x))
-{
-    for (int j = 0; j < copy.Count; j++)
-    {
-        copy[j] = copy[j].Insert(i, ".");
-    }
-}
+//foreach (var i in emptyRows.OrderByDescending(x => x))
+//{
+//    copy.Insert(i, new string('.', width));
+//}
+//foreach (var i in emptyColumns.OrderByDescending(x => x))
+//{
+//    for (int j = 0; j < copy.Count; j++)
+//    {
+//        copy[j] = copy[j].Insert(i, ".");
+//    }
+//}
 
 
 var nodes = new List<(int x, int y)>();
@@ -183,24 +183,38 @@ for (int i = 0; i < copy.First().Length; i++)
 {
     for (int j = 0; j < copy.Count; j++)
     {
-        if(copy.ElementAt(j).ElementAt(i) == '#')
+        if (copy.ElementAt(j).ElementAt(i) == '#')
         {
             nodes.Add((i, j));
         }
     }
 }
 
+var expansion = 1000000;
+
+int PassThrough(List<int> expands, int from, int to)
+{
+    return expands.Count(x => from < x && x < to);
+}
+
 foreach (var node in nodes)
 {
     foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
     {
-        result += Math.Abs(node.y - otherNode.y);
-        result += Math.Abs(node.x - otherNode.x);
+        var xMin = Math.Min(node.x, otherNode.x);
+        var xMax = Math.Max(node.x, otherNode.x);
+        var yMin = Math.Min(node.y, otherNode.y);
+        var yMax = Math.Max(node.y, otherNode.y);
+        result += yMax - yMin;
+        result += PassThrough(emptyRows, yMin, yMax) * (expansion - 1);
+
+        result += xMax - xMin;
+        result += PassThrough(emptyColumns, xMin, xMax) * (expansion - 1);
     }
 }
 
 timer.Stop();
-Console.WriteLine(result);
+Console.WriteLine(result); // 649862989626 54ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
