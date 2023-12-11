@@ -1,4 +1,6 @@
-﻿var input =
+﻿using System.Xml.Linq;
+
+var input =
 @"...........#...............................................#...................#.....#.............#........................................
 ..................#..................................#..................#.....................#................#...................#.......#
 ....#........................................................................................................................#..............
@@ -149,23 +151,22 @@ var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(
 var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.')).ToList();
 
 var nodes = new List<(int x, int y)>(byLine.Length);
+
 for (int i = 0; i < byLine.Length; i++)
 {
     for (int j = 0; j < width; j++)
     {
         if (byLine[j][i] == '#')
         {
-            foreach (var node in nodes)
-            {
+            result += nodes.Sum(node => {
                 var (xMin, xMax) = node.x < i ? (node.x, i) : (i, node.x);
                 var (yMin, yMax) = node.y < j ? (node.y, j) : (j, node.y);
-                result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
-            }
+                return (long)yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
+            });
             nodes.Add((i, j));
         }
     }
 }
-
 
 timer.Stop();
 Console.WriteLine(result); // 649862989626 54ms
