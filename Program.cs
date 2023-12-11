@@ -165,25 +165,13 @@ var width = byLine[0].Length;
 var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i).ToList();
 var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.')).ToList();
 var copy = byLine.ToList();
-//foreach (var i in emptyRows.OrderByDescending(x => x))
-//{
-//    copy.Insert(i, new string('.', width));
-//}
-//foreach (var i in emptyColumns.OrderByDescending(x => x))
-//{
-//    for (int j = 0; j < copy.Count; j++)
-//    {
-//        copy[j] = copy[j].Insert(i, ".");
-//    }
-//}
-
 
 var nodes = new List<(int x, int y)>();
-for (int i = 0; i < copy.First().Length; i++)
+for (int i = 0; i < byLine.Length; i++)
 {
-    for (int j = 0; j < copy.Count; j++)
+    for (int j = 0; j < width; j++)
     {
-        if (copy.ElementAt(j).ElementAt(i) == '#')
+        if (byLine[j][i] == '#')
         {
             nodes.Add((i, j));
         }
@@ -191,23 +179,13 @@ for (int i = 0; i < copy.First().Length; i++)
 }
 
 var expansion = 1000000;
-
-int PassThrough(List<int> expands, int from, int to)
-{
-    return expands.Count(x => from < x && x < to);
-}
-
 foreach (var node in nodes)
 {
     foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
     {
         var (xMin, xMax) = node.x < otherNode.x ? (node.x, otherNode.x) : (otherNode.x, node.x);
         var (yMin, yMax) = node.y < otherNode.y ? (node.y, otherNode.y) : (otherNode.y, node.y);
-        result += yMax - yMin;
-        result += PassThrough(emptyRows, yMin, yMax) * (expansion - 1);
-
-        result += xMax - xMin;
-        result += PassThrough(emptyColumns, xMin, xMax) * (expansion - 1);
+        result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * (999999)) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * (999999));
     }
 }
 
