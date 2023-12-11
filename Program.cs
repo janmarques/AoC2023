@@ -250,36 +250,122 @@ while (true)
 
 foreach (var node in nodes.Values)
 {
+    node.SetAllNeighbours(nodes);
     if (!node.IsInMainLoop)
     {
         node.Symbol = '.';
     }
 }
 
-for (short y = 0; y < grid.Length; y++)
+foreach (var node in borders)
 {
-    var flood = true;
-    for (short x = 0; x < grid[0].Length; x++)
-    {
-        var node = nodes[(x, y)];
-        if (node.Symbol == '|' || node.Symbol == 'J' || node.Symbol == 'L')
+    Flood(node);
+}
+
+var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
+//PrintGrid(tmpGrid);
+
+var windRose = new List<Func<Node, Node>>()
         {
-            flood = !flood;
+        x=>x.North, x => x.East, x => x.South, x => x.West
+        };
+
+var insideDirection = 3;
+var initWallTravel = nodes.Values.First(x => x.East != null && x.East.IsInMainLoop && x.East.Symbol == '|').East;
+var hiddemGems = new List<Node>();
+Travel(initWallTravel, initWallTravel.South);
+
+foreach (var node in hiddemGems)
+{
+    Flood(node);
+}
+
+void Travel(Node currentNode, Node previousNode)
+{
+    if (currentNode.Symbol == '|' || currentNode.Symbol == '-')
+    {
+        var inside = windRose.ElementAt((insideDirection + 4000) % 4);
+        var insideNeighbour = inside(currentNode);
+        if (insideNeighbour != null && !insideNeighbour.IsFlooded && !insideNeighbour.IsInMainLoop)
+        {
+            //insideNeighbour.IsFlooded = true;
+            hiddemGems.Add(insideNeighbour);
+        }
+    }
+    else if (currentNode.Symbol == 'F') // south east
+    {
+        if(currentNode.South == previousNode)
+        {
+            insideDirection++;
         }
         else
         {
-            node.IsFlooded = flood;
+            insideDirection--;
         }
+    }
+    else if (currentNode.Symbol == '7') // south west
+    {
+        if (currentNode.South == previousNode)
+        {
+            insideDirection--;
+        }
+        else
+        {
+            insideDirection++;
+        }
+    }
+    else if (currentNode.Symbol == 'L') // north east
+    {
+        if (currentNode.North == previousNode)
+        {
+            insideDirection--;
+        }
+        else
+        {
+            insideDirection++;
+        }
+    }
+    else if (currentNode.Symbol == 'J') // north west
+    {
+        if (currentNode.North == previousNode)
+        {
+            insideDirection++;
+        }
+        else
+        {
+            insideDirection--;
+        }
+    }
+
+    var next = currentNode.GetTunnelNeighbours().Single(x => x != previousNode);
+    if (next == initWallTravel) { return; }
+    Travel(next, currentNode);
+}
+
+void Flood(Node node)
+{
+    if (node.IsInMainLoop)
+    {
+
+    }
+    //if (node.X == 14 && node.Y == 3)
+    //{
+
+    //}
+    node.IsFlooded = true;
+    foreach (var item in node.GetNeighbours().Where(x => !x.IsInMainLoop && !x.IsFlooded))
+    {
+        Flood(item);
     }
 }
 
 result = nodes.Count(x => !x.Value.IsInMainLoop && !x.Value.IsFlooded);
 
-//var tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
-//PrintGrid(tmpGrid);
+tmpGrid = nodes.GroupBy(x => x.Key.y).Select(x => x.Select(y => y.Value)).ToArray();
+PrintGrid(tmpGrid);
 
 timer.Stop();
-Console.WriteLine(result); // 531 too high 275 too high 273
+Console.WriteLine(result); // 531 too high
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
@@ -300,15 +386,66 @@ class Node
 {
     public Node North { get; set; }
     public Node South { get; set; }
-    public Node East { get; set; }
-    public Node West { get; set; }
+    public Node East { get; set; } // right
+    public Node West { get; set; } // left
 
     public bool IsStart => Symbol == 'S';
     public bool IsInMainLoop { get; set; }
     public bool IsFlooded { get; set; }
+    public bool WormholeConsidered { get; set; }
     public char Symbol { get; set; }
     public short X { get; set; }
     public short Y { get; set; }
+
+    public int Travel(HashSet<Node> breadCrumbs)
+    {
+        foreach (var neighbour in GetNeighbours())
+        {
+            if (!breadCrumbs.Contains(neighbour))
+            {
+                breadCrumbs.Add(neighbour);
+                return neighbour.Travel(breadCrumbs);
+            }
+        }
+        return breadCrumbs.Count;
+    }
+
+
+    public IEnumerable<Node> GetTunnelNeighbours()
+    {
+        if (Symbol == '|')
+        {
+            yield return North;
+            yield return South;
+        }
+        else if (Symbol == '-')
+        {
+            yield return East;
+            yield return West;
+        }
+        else if (Symbol == 'L')
+        {
+            yield return North;
+            yield return East;
+        }
+        else if (Symbol == 'J')
+        {
+            yield return North;
+            yield return West;
+        }
+        else if (Symbol == '7')
+        {
+            yield return South;
+            yield return West;
+        }
+        else if (Symbol == 'F')
+        {
+            yield return South;
+            yield return East;
+        }
+    }
+
+
 
     public IEnumerable<Node> GetNeighbours()
     {
@@ -317,6 +454,21 @@ class Node
         if (South != null) { yield return South; }
         if (West != null) { yield return West; }
     }
+
+
+    public void SetAllNeighbours(Dictionary<(short x, short y), Node> nodes)
+    {
+        Node Get(int x, int y)
+        {
+            nodes.TryGetValue(((short)x, (short)y), out var found);
+            return found;
+        }
+        North = Get(X, Y - 1);
+        South = Get(X, Y + 1);
+        East = Get(X + 1, Y);
+        West = Get(X - 1, Y);
+    }
+
 
     public void SetTunnelNeighbours(Dictionary<(short x, short y), Node> nodes)
     {
@@ -390,6 +542,7 @@ class Node
         }
     }
 
+
     char Better()
     {
         switch (Symbol)
@@ -404,6 +557,21 @@ class Node
                 return Symbol;
         }
     }
+
+    //public override string ToString() => Symbol.ToString();
+    //public override string ToString() => !IsInMainLoop && !IsFlooded ? "." : " ";
+    //public override string ToString()
+    //{
+
+    //    if (!IsInMainLoop && !IsFlooded)
+    //    {
+    //        return "I";
+    //    }
+    //    else
+    //    {
+    //        return Better().ToString();
+    //    }
+    //}
     public override string ToString()
     {
         if (IsInMainLoop)
