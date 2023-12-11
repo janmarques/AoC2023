@@ -164,7 +164,6 @@ var byLine = input.Split(Environment.NewLine);
 var width = byLine[0].Length;
 var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i).ToList();
 var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.')).ToList();
-var copy = byLine.ToList();
 
 var nodes = new List<(int x, int y)>();
 for (int i = 0; i < byLine.Length; i++)
@@ -178,14 +177,13 @@ for (int i = 0; i < byLine.Length; i++)
     }
 }
 
-var expansion = 1000000;
 foreach (var node in nodes)
 {
     foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
     {
         var (xMin, xMax) = node.x < otherNode.x ? (node.x, otherNode.x) : (otherNode.x, node.x);
         var (yMin, yMax) = node.y < otherNode.y ? (node.y, otherNode.y) : (otherNode.y, node.y);
-        result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * (999999)) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * (999999));
+        result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
     }
 }
 
@@ -193,15 +191,3 @@ timer.Stop();
 Console.WriteLine(result); // 649862989626 54ms
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
-
-void PrintGrid<T>(T[][] grid)
-{
-    for (int i = 0; i < grid.Length; i++)
-    {
-        for (int j = 0; j < grid[i].Length; j++)
-        {
-            Console.Write(grid[i][j]);
-        }
-        Console.WriteLine();
-    }
-}
