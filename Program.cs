@@ -161,13 +161,14 @@ for (int i = 0; i < byLine.Length; i++)
             {
                 var (xMin, xMax) = node.x < i ? (node.x, i) : (i, node.x);
                 var (yMin, yMax) = node.y < j ? (node.y, j) : (j, node.y);
-                result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
+                result += yMax - yMin + xMax - xMin;
             }
             nodes.Add((i, j));
         }
     }
 }
 
+result += (long)(emptyColumns.Sum(row => nodes.Count(p => p.x < row) * nodes.Count(p => p.x > row)) + emptyRows.Sum(column => nodes.Count(p => p.y < column) * nodes.Count(p => p.y > column))) * 999999;
 
 timer.Stop();
 Console.WriteLine(result); // 649862989626 54ms
