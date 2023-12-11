@@ -1,4 +1,4 @@
-﻿var fullInput =
+﻿var input =
 @"...........#...............................................#...................#.....#.............#........................................
 ..................#..................................#..................#.....................#................#...................#.......#
 ....#........................................................................................................................#..............
@@ -140,23 +140,6 @@
 ........................................................#..........#........................................................................
 .....#.............................................#.........#....................#.............................#.........#.................";
 
-var smallInput =
-@"...#......
-.......#..
-#.........
-..........
-......#...
-.#........
-.........#
-..........
-.......#..
-#...#.....";
-
-var smallest = "";
-
-var input = smallInput;
-input = fullInput;
-//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0L;
@@ -165,27 +148,24 @@ var width = byLine[0].Length;
 var emptyRows = input.Split(Environment.NewLine).Select((x, i) => (x, i)).Where(x => x.x.All(y => y == '.')).Select(x => x.i).ToList();
 var emptyColumns = Enumerable.Range(0, width).Where(x => byLine.All(y => y[x] == '.')).ToList();
 
-var nodes = new List<(int x, int y)>();
+var nodes = new List<(int x, int y)>(byLine.Length);
 for (int i = 0; i < byLine.Length; i++)
 {
     for (int j = 0; j < width; j++)
     {
         if (byLine[j][i] == '#')
         {
+            foreach (var node in nodes)
+            {
+                var (xMin, xMax) = node.x < i ? (node.x, i) : (i, node.x);
+                var (yMin, yMax) = node.y < j ? (node.y, j) : (j, node.y);
+                result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
+            }
             nodes.Add((i, j));
         }
     }
 }
 
-foreach (var node in nodes)
-{
-    foreach (var otherNode in nodes.SkipWhile(x => x != node).Skip(1))
-    {
-        var (xMin, xMax) = node.x < otherNode.x ? (node.x, otherNode.x) : (otherNode.x, node.x);
-        var (yMin, yMax) = node.y < otherNode.y ? (node.y, otherNode.y) : (otherNode.y, node.y);
-        result += yMax - yMin + (emptyRows.Count(x => yMin < x && x < yMax) * 999999) + xMax - xMin + (emptyColumns.Count(x => xMin < x && x < xMax) * 999999);
-    }
-}
 
 timer.Stop();
 Console.WriteLine(result); // 649862989626 54ms
