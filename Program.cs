@@ -1,4 +1,7 @@
-﻿var fullInput =
+﻿using System.Diagnostics;
+using System.Text;
+
+var fullInput =
 @"????.??.??. 1,1
 ????#???..?.?? 5,1,1
 ????????#????#?.# 1,2,3,2,1
@@ -1008,18 +1011,88 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "???? 1,1";
+var smallest = "????# 1,1";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
+
 foreach (var line in input.Split(Environment.NewLine))
 {
+    var split = line.Split(" ");
+    var condition = split[0];
+    var groups = split[1].Split(",").Select(short.Parse).ToList();
+    var bucketCount = groups.Count + 1;
+    var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
+    var buckets = new List<List<int>>() { Enumerable.Repeat(0, bucketCount).ToList() };
+    for (int i = 0; i < leftToFill; i++)
+    {
+        var copies = new List<List<int>>();
+        foreach (var item in buckets)
+        {
+            for (int j = 0; j < item.Count; j++)
+            {
+                var cpy = item.ToList();
+                cpy[j]++;
+                copies.Add(cpy);
+            }
+        }
+        buckets = copies;
+    }
+
+    var possibleStrings = new HashSet<string>();
+
+    foreach (var bucket in buckets)
+    {
+        var i = 0;
+        var str = new StringBuilder();
+        str.Append('.', bucket.ElementAtOrDefault(i));
+        foreach (var item in groups)
+        {
+            if (i != 0)
+            {
+                str.Append('.');
+            }
+            str.Append('#', item);
+            i++;
+            str.Append('.', bucket.ElementAtOrDefault(i));
+        }
+        possibleStrings.Add(str.ToString());
+    }
+
+    bool Valid(string mask, string attempt)
+    {
+        if (mask.Length != attempt.Length)
+        {
+            Debugger.Break();
+        }
+        if (attempt.Contains('?'))
+        {
+            Debugger.Break();
+        }
+
+
+        for (int i = 0; i < mask.Length; i++)
+        {
+            if (mask[i] == attempt[i] || mask[i] == '?')
+            {
+
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    possibleStrings = possibleStrings.Where(x => Valid(condition, x)).ToHashSet();
+    result += possibleStrings.Count;
 }
 
 timer.Stop();
@@ -1037,4 +1110,13 @@ void PrintGrid<T>(T[][] grid)
         }
         Console.WriteLine();
     }
+}
+
+enum State
+{
+    Damaged,
+    Operational
+}
+class Node
+{
 }
