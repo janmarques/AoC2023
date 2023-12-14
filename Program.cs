@@ -1028,6 +1028,7 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = 0;
 
 
+
 (string, List<short>, bool) Sanitize(string condition, List<short> groups)
 {
     var didSomething = false;
@@ -1057,6 +1058,7 @@ var result = 0;
         }
     }
     {
+        // fout want aaneensluitende stuk op het einde (niet afgedwongen)
         if (condition.StartsWith('#'))
         {
             groups[0]--;
@@ -1064,7 +1066,7 @@ var result = 0;
             didSomething = true;
         }
 
-        if (condition.EndsWith('#'))
+        if (condition.EndsWith('#')) 
         {
             groups[groups.Count - 1]--;
             condition = new string(condition.SkipLast(1).ToArray());
