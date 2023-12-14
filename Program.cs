@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 var fullInput =
@@ -1011,7 +1012,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "????# 1,1";
+var smallest = ".....#..????.###....... 1,1,1,3"; //3
 
 var input = smallInput;
 input = fullInput;
@@ -1021,11 +1022,50 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = 0;
 
 
+(string, List<short>, bool) Sanitize(string condition, List<short> groups)
+{
+    var didSomething = false;
+    condition = condition.Trim('.');
+
+    {
+        var indexOf = condition.IndexOf("#.");
+        if (indexOf != -1 && indexOf < condition.IndexOf("?"))
+        {
+            var match = new string('#', groups.First());
+            if (condition.IndexOf(match) != 0) { Debugger.Break(); }
+            condition = condition.TrimStart('#');
+            groups.RemoveAt(0);
+            didSomething = true;
+        }
+    }
+    {
+        var indexOf = condition.LastIndexOf(".#");
+        var qIndex = condition.LastIndexOf("?");
+        if (indexOf != -1 && qIndex != -1 && indexOf > condition.LastIndexOf("?"))
+        {
+            var match = new string('#', groups.Last());
+            //if (condition.IndexOf(match) != 0) { Debugger.Break(); }
+            condition = condition.TrimEnd('#');
+            groups = groups.SkipLast(1).ToList();
+            didSomething = true;
+        }
+    }
+
+    return (condition, groups, didSomething);
+}
+
 foreach (var line in input.Split(Environment.NewLine))
 {
     var split = line.Split(" ");
     var condition = split[0];
     var groups = split[1].Split(",").Select(short.Parse).ToList();
+
+    var didSth = true;
+    do
+    {
+        (condition, groups, didSth) = Sanitize(condition, groups);
+    } while (didSth);
+
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
@@ -1095,10 +1135,12 @@ foreach (var line in input.Split(Environment.NewLine))
     result += possibleStrings.Count;
 }
 
+
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+if (result != 7251) { Debugger.Break(); }
 
 void PrintGrid<T>(T[][] grid)
 {
@@ -1112,6 +1154,7 @@ void PrintGrid<T>(T[][] grid)
     }
 }
 
+
 enum State
 {
     Damaged,
@@ -1120,3 +1163,4 @@ enum State
 class Node
 {
 }
+
