@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.RegularExpressions;
 
 var fullInput =
 @"????.??.??. 1,1
@@ -1004,6 +1007,9 @@ var fullInput =
 ??????#??#? 1,1,5
 ?????.?#??.????.?. 3,4,1,1";
 
+//@"??.???.### 1,1,3
+
+//@"???.### 1,1,3
 var smallInput =
 @"???.### 1,1,3
 .??..??...?##. 1,1,3
@@ -1012,7 +1018,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = ".....#..????.###....... 1,1,1,3"; //3
+var smallest = ".??..??...?##. 1,1,3";
 
 var input = smallInput;
 input = fullInput;
@@ -1050,9 +1056,25 @@ var result = 0;
             didSomething = true;
         }
     }
+    {
+        if (condition.StartsWith('#'))
+        {
+            groups[0]--;
+            condition = new string(condition.Skip(1).ToArray());
+            didSomething = true;
+        }
+
+        if (condition.EndsWith('#'))
+        {
+            groups[groups.Count - 1]--;
+            condition = new string(condition.SkipLast(1).ToArray());
+            didSomething = true;
+        }
+    }
 
     return (condition, groups, didSomething);
 }
+
 
 foreach (var line in input.Split(Environment.NewLine))
 {
@@ -1066,73 +1088,74 @@ foreach (var line in input.Split(Environment.NewLine))
         (condition, groups, didSth) = Sanitize(condition, groups);
     } while (didSth);
 
-    var bucketCount = groups.Count + 1;
-    var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
+    var missingHashes = groups.Sum(x => x) - condition.Count(x => x == '#');
+    var options = condition.Count(x => x == '?');
+    if (missingHashes > options) { Debugger.Break(); }
 
-    var buckets = new List<List<int>>() { Enumerable.Repeat(0, bucketCount).ToList() };
-    for (int i = 0; i < leftToFill; i++)
+
+    var buckets = new List<List<bool>>() { Enumerable.Repeat(false, options).ToList() };
+    for (int i = 0; i < missingHashes; i++)
     {
-        var copies = new List<List<int>>();
+        var copies = new List<List<bool>>();
         foreach (var item in buckets)
         {
             for (int j = 0; j < item.Count; j++)
             {
                 var cpy = item.ToList();
-                cpy[j]++;
+                cpy[j] = true;
                 copies.Add(cpy);
             }
         }
         buckets = copies;
     }
+    buckets = buckets.Where(x => x.Count(y => y) == missingHashes).ToList();
 
-    var possibleStrings = new HashSet<string>();
-
-    foreach (var bucket in buckets)
+    var grps = buckets.Select(x => Split(x).ToList()).ToList();
+    grps = grps.Distinct(new StructuralComparer()).ToList();
+    IEnumerable<short> Split(List<bool> bucket)
     {
-        var i = 0;
-        var str = new StringBuilder();
-        str.Append('.', bucket.ElementAtOrDefault(i));
-        foreach (var item in groups)
+        short count = 0;
+        foreach (var item in bucket)
         {
-            if (i != 0)
+            if (item)
             {
-                str.Append('.');
-            }
-            str.Append('#', item);
-            i++;
-            str.Append('.', bucket.ElementAtOrDefault(i));
-        }
-        possibleStrings.Add(str.ToString());
-    }
-
-    bool Valid(string mask, string attempt)
-    {
-        if (mask.Length != attempt.Length)
-        {
-            Debugger.Break();
-        }
-        if (attempt.Contains('?'))
-        {
-            Debugger.Break();
-        }
-
-
-        for (int i = 0; i < mask.Length; i++)
-        {
-            if (mask[i] == attempt[i] || mask[i] == '?')
-            {
-
+                count++;
             }
             else
             {
-                return false;
+                if (count != 0)
+                {
+                    yield return count;
+                }
+                count = 0;
             }
         }
-        return true;
+        if (count != 0)
+        {
+            yield return count;
+        }
     }
 
-    possibleStrings = possibleStrings.Where(x => Valid(condition, x)).ToHashSet();
-    result += possibleStrings.Count;
+
+    //var optionIndices = condition.Select((x, i) => (i, x)).Where(x => x.x == '?').Select(x => x.i).ToList();
+
+
+
+    //var possibleStrings = new HashSet<string>();
+    //foreach (var bucket in buckets)
+    //{
+    //    var str = condition.ToCharArray();
+    //    foreach (var item in bucket.Select((x, i) => (i, x)).Where(y => y.x).Select(x => x.i))
+    //    {
+    //        str[optionIndices[item]] = '#';
+    //    }
+    //    possibleStrings.Add(new string(str).Replace("?", "."));
+    //}
+
+    var count = grps.Count(x => (new StructuralComparer()).Equals(x, groups));
+
+    result += count;
+    Console.WriteLine($"{line} {count}");
 }
 
 
@@ -1164,3 +1187,34 @@ class Node
 {
 }
 
+class X : IEqualityComparer<List<bool>>
+{
+    public bool Equals(List<bool>? x, List<bool>? y)
+    {
+        return Enumerable.SequenceEqual(x, y);
+    }
+
+    public int GetHashCode([DisallowNull] List<bool> obj)
+    {
+        return obj.GetHashCode();
+    }
+}
+
+class StructuralComparer : IEqualityComparer<List<short>>
+{
+    public bool Equals(List<short>? x, List<short>? y)
+    {
+        for (int i = 0; i < x.Count; i++)
+        {
+            if (x[i] != y[i]) { return false; }
+        }
+        return true;
+    }
+
+
+
+    public int GetHashCode([DisallowNull] List<short> obj)
+    {
+        return 0;
+    }
+}
