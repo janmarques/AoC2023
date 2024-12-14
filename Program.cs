@@ -1016,11 +1016,11 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "???#?.#?.? 1,2,1";
+var smallest = "?#.?.##?? 1,3";
 
 var input = smallInput;
-//input = fullInput;
-//input = smallest;
+input = fullInput;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 //repeats = 0;
@@ -1032,6 +1032,8 @@ while (input.Contains(".."))
 {
     input = input.Replace("..", ".");
 }
+
+var aa = HasSingleSolution("##?#", 2);
 
 var lines = input.Split(Environment.NewLine)
     .OrderBy(x => x.Length)
@@ -1074,6 +1076,8 @@ foreach (var (condition, groups) in lines)
     //    Debugger.Break();
     //    Console.ReadLine();
     //}
+    Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
@@ -1146,9 +1150,13 @@ int Solve(string condition, List<short> groups)
         //    break;
         //}
         var x = Solve3Cached(start, xGroups);
-        if (HasSingleSolution(start, i) && x.Count == 1)
+        if (i == 1 && !HasSingleSolution(start, xGroups.First()))
         {
-            var xLookahead = Solve3Cached(lookaheadFurther, xGroups);
+            return default;
+        }
+        if (x.Count == 1)
+        {
+            var xLookahead = Solve3Cached(lookaheadFurther, groups.Take(i+1).ToList());
             if (xLookahead.Count == 0)
             {
                 var groupsCpy = groups.Skip(i).ToList();
@@ -1253,7 +1261,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     {
         cpyGroup.RemoveAt(0);
         var startGroup = cpy.IndexOf('#');
-        condition = condition[(startGroup + firstGroupLength + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
+        condition = condition[(startGroup + firstGroupLength + 1)..].Trim('.');
         foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
         {
             yield return (item.condition, item.groups);
@@ -1270,7 +1278,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     {
         cpyGroup.RemoveAt(cpyGroup.Count - 1);
         var startGroup = cpy.IndexOf('#');
-        condition = condition[..(condition.Length - startGroup - lastGroupLength - 1)];// also remove a leading space, to make sure numbers are not right next to each other
+        condition = condition[..(condition.Length - startGroup - lastGroupLength - 1)].Trim('.');// also remove a leading space, to make sure numbers are not right next to each other
         foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
         {
             yield return (item.condition, item.groups);
@@ -1673,8 +1681,18 @@ short ConsecutiveChars(string s, char v)
 
 bool HasSingleSolution(string input, int length)
 {
-    if (input.Contains(".")) { throw new Exception(); }
-    return ConsecutiveChars(input.Replace("?", "#"), '#') == length;
+    var mustIndices = input.Select((x, i) => (x, i)).Where(x => x.x == '#').Select(x => x.i).ToList();
+
+    var count = 0;
+    for (int i = 0; i <= input.Length - length; i++)
+    {
+        if (mustIndices.All(x => x >= i && x < i + length))
+        {
+            count++;
+        }
+    }
+
+    return count == 1;
 }
 string ExtendGroups(string input)
 {
