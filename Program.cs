@@ -1011,7 +1011,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = ".??#?####.## 1,4,2";
+var smallest = ".?.#####.?.??? 5,1";
 
 var input = smallInput;
 input = fullInput;
@@ -1021,27 +1021,35 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = 0;
 var result2 = 0;
 
+while (input.Contains(".."))
+{
+    input = input.Replace("..", ".");
+}
+
 var lines = input.Split(Environment.NewLine).OrderBy(x => x.Length).Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 var maxGroup = lines.SelectMany(x => x.groups).Max();
 
 var cacheWithUnknowns = new Dictionary<string, int>();
 var cachePrecise = new Dictionary<string, bool>();
 var cacheReduce = new Dictionary<string, (string, List<short>)>();
+var cacheGroupCounts = new Dictionary<string, List<short>>();
+
+//var xx = GetGroups("###..##.###").ToList();
 
 bool trim = true;
 foreach (var (condition, groups) in lines)
 {
-    //Console.WriteLine(Hash(condition, groups));
+    Console.WriteLine(Hash(condition, groups));
     trim = true;
     var algo1 = SolveCached(condition, groups.ToList());
     result += algo1;
-    //trim = false;
-    //var algo2 = SolveCached(condition, groups.ToList());
-    //result2 += algo2;
-    //if (algo1 != algo2)
-    //{
+    trim = false;
+    var algo2 = SolveCached(condition, groups.ToList());
+    result2 += algo2;
+    if (algo1 != algo2)
+    {
 
-    //}
+    }
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
@@ -1149,7 +1157,49 @@ int Solve(string condition, List<short> groups)
         return RemoveCertaintiesCached(condition, cpyGroup);
     }
 
+    //middle
+    var groupsThatOccurOnce = cpyGroup.GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
+    if (!groupsThatOccurOnce.Any())
+    {
+        return (condition, cpyGroup);
+    }
+    cpy = condition/*.Replace("?", "#")*/.ToString();
+    var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
+    var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
+    if (match != default)
+    {
+        var index = cpy.IndexOf($".{new string('#', match)}.");
+        var left = cpyGroup.TakeWhile(x => x != match).ToList();
+        var leftCondition = condition[..(index+1)];
+
+        var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
+        var rightCondition = condition[(match + index + 1)..];
+
+        if (right.Count > 0 && left.Count > 0)
+        {
+        }
+        
+        condition = new string(condition.Take(index).Concat(condition.Skip(index + match + 1)).ToArray());
+        return RemoveCertaintiesCached(condition, cpyGroup);
+    }
+
+
     return (condition, cpyGroup);
+}
+
+
+List<short> GetGroupsCached(string input)
+{
+    if (!cacheGroupCounts.ContainsKey(input))
+    {
+        cacheGroupCounts[input] = GetAbsoluteGroups(input);
+    }
+    return cacheGroupCounts[input];
+}
+
+List<short> GetAbsoluteGroups(string input)
+{
+    return input.Split('.', StringSplitOptions.RemoveEmptyEntries).Where(x => !x.Contains('?')).Select(x => (short)x.Count()).ToList();
 }
 
 bool ValidCached(string mask, string attempt)
