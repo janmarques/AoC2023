@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 
 var fullInput =
@@ -1011,7 +1012,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = ".?.#####.?.??? 5,1";
+var smallest = "?#?#.?# 3,1";
 
 var input = smallInput;
 input = fullInput;
@@ -1069,11 +1070,23 @@ int SolveCached(string condition, List<short> groups)
 }
 int Solve(string condition, List<short> groups)
 {
-
+    var count = 1;
     if (trim)
     {
         condition = condition.Trim('.');
-        (condition, groups) = RemoveCertaintiesCached(condition, groups);
+        var result = RemoveCertainties(condition, groups).ToList();
+        if (result.Count == 1)
+        {
+            (condition, groups) = result.Single();
+        }
+        else
+        {
+            foreach (var item in result)
+            {
+                count *= Solve(item.condition, item.groups);
+            }
+            return count;
+        }
     }
     if (groups.Count == 0) { return 1; }
     var bucketCount = groups.Count + 1;
@@ -1119,21 +1132,23 @@ int Solve(string condition, List<short> groups)
     return possibleStrings.Count;
 }
 
-(string condition, List<short> groups) RemoveCertaintiesCached(string condition, List<short> groups)
-{
-    var key = Hash(condition, groups);
-    if (!cacheReduce.ContainsKey(key))
-    {
-        var result = RemoveCertainties(condition, groups);
-        cacheReduce.Add(key, (result.condition, result.groups.ToList()));
-    }
-    return cacheReduce[key];
-}
-(string condition, List<short> groups) RemoveCertainties(string condition, List<short> groups)
+//(string condition, List<short> groups) RemoveCertaintiesXXX(string condition, List<short> groups)
+//{
+//    var key = Hash(condition, groups);
+//    if (!cacheReduce.ContainsKey(key))
+//    {
+//        var result = RemoveCertainties(condition, groups);
+//        cacheReduce.Add(key, (result.condition, result.groups.ToList()));
+//    }
+//    return cacheReduce[key];
+//}
+
+IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string condition, List<short> groups)
 {
     if (!groups.Any())
     {
-        return (condition, groups);
+        yield return (condition, groups);
+        yield break;
     }
     condition = condition.Trim('.');
     var cpy = condition.ToString();//.Replace("?", "#");
@@ -1144,7 +1159,12 @@ int Solve(string condition, List<short> groups)
         cpyGroup.RemoveAt(0);
         var startGroup = cpy.IndexOf('#');
         condition = condition[(startGroup + firstGroupLength + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
-        return RemoveCertaintiesCached(condition, cpyGroup);
+        foreach (var item in RemoveCertainties(condition, cpyGroup))
+        {
+            yield return (item.condition, item.groups);
+        }
+        yield break;
+
     }
 
     cpy = new string(cpy.Reverse().ToArray());
@@ -1154,37 +1174,42 @@ int Solve(string condition, List<short> groups)
         cpyGroup.RemoveAt(cpyGroup.Count - 1);
         var startGroup = cpy.IndexOf('#');
         condition = condition[..(condition.Length - startGroup - lastGroupLength - 1)];// also remove a leading space, to make sure numbers are not right next to each other
-        return RemoveCertaintiesCached(condition, cpyGroup);
+        foreach (var item in RemoveCertainties(condition, cpyGroup))
+        {
+            yield return (item.condition, item.groups);
+        }
+        yield break;
     }
 
     //middle
     var groupsThatOccurOnce = cpyGroup.GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
     if (!groupsThatOccurOnce.Any())
     {
-        return (condition, cpyGroup);
+        yield return (condition, cpyGroup);
+        yield break;
     }
-    cpy = condition/*.Replace("?", "#")*/.ToString();
-    var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
-    var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
-    if (match != default)
-    {
-        var index = cpy.IndexOf($".{new string('#', match)}.");
-        var left = cpyGroup.TakeWhile(x => x != match).ToList();
-        var leftCondition = condition[..(index+1)];
+    //cpy = condition/*.Replace("?", "#")*/.ToString();
+    //var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
+    //var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
+    //if (match != default)
+    //{
+    //    var index = cpy.IndexOf($".{new string('#', match)}.");
+    //    var left = cpyGroup.TakeWhile(x => x != match).ToList();
+    //    var leftCondition = condition[..(index + 1)];
 
-        var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
-        var rightCondition = condition[(match + index + 1)..];
+    //    var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
+    //    var rightCondition = condition[(match + index + 1)..];
 
-        if (right.Count > 0 && left.Count > 0)
-        {
-        }
-        
-        condition = new string(condition.Take(index).Concat(condition.Skip(index + match + 1)).ToArray());
-        return RemoveCertaintiesCached(condition, cpyGroup);
-    }
+    //    if (right.Count > 0 && left.Count > 0)
+    //    {
+    //    }
+
+    //    condition = new string(condition.Take(index).Concat(condition.Skip(index + match + 1)).ToArray());
+    //    return RemoveCertainties(condition, cpyGroup);
+    //}
 
 
-    return (condition, cpyGroup);
+    yield return (condition, cpyGroup);
 }
 
 
