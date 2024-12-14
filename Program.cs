@@ -1032,7 +1032,7 @@ var maxGroup = lines.SelectMany(x => x.groups).Max();
 
 var cacheWithUnknowns = new Dictionary<string, int>();
 var cachePrecise = new Dictionary<string, bool>();
-var cacheReduce = new Dictionary<string, (string, List<short>)>();
+var cacheReduce = new Dictionary<string, List<(string, List<short>)>>();
 var cacheGroupCounts = new Dictionary<string, List<short>>();
 
 //var xx = GetGroups("###..##.###").ToList();
@@ -1040,7 +1040,7 @@ var cacheGroupCounts = new Dictionary<string, List<short>>();
 bool trim = true;
 foreach (var (condition, groups) in lines)
 {
-    Console.WriteLine(Hash(condition, groups));
+    //Console.WriteLine(Hash(condition, groups));
     trim = true;
     var algo1 = SolveCached(condition, groups.ToList());
     result += algo1;
@@ -1074,7 +1074,7 @@ int Solve(string condition, List<short> groups)
     if (trim)
     {
         condition = condition.Trim('.');
-        var result = RemoveCertainties(condition, groups).ToList();
+        var result = RemoveCertaintiesCached(condition, groups);
         if (result.Count == 1)
         {
             (condition, groups) = result.Single();
@@ -1132,16 +1132,16 @@ int Solve(string condition, List<short> groups)
     return possibleStrings.Count;
 }
 
-//(string condition, List<short> groups) RemoveCertaintiesXXX(string condition, List<short> groups)
-//{
-//    var key = Hash(condition, groups);
-//    if (!cacheReduce.ContainsKey(key))
-//    {
-//        var result = RemoveCertainties(condition, groups);
-//        cacheReduce.Add(key, (result.condition, result.groups.ToList()));
-//    }
-//    return cacheReduce[key];
-//}
+List<(string condition, List<short> groups)> RemoveCertaintiesCached(string condition, List<short> groups)
+{
+    var key = Hash(condition, groups);
+    if (!cacheReduce.ContainsKey(key))
+    {
+        var result = RemoveCertainties(condition, groups).ToList();
+        cacheReduce.Add(key, result);
+    }
+    return cacheReduce[key];
+}
 
 IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string condition, List<short> groups)
 {
@@ -1159,7 +1159,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         cpyGroup.RemoveAt(0);
         var startGroup = cpy.IndexOf('#');
         condition = condition[(startGroup + firstGroupLength + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
-        foreach (var item in RemoveCertainties(condition, cpyGroup))
+        foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
         {
             yield return (item.condition, item.groups);
         }
@@ -1174,7 +1174,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         cpyGroup.RemoveAt(cpyGroup.Count - 1);
         var startGroup = cpy.IndexOf('#');
         condition = condition[..(condition.Length - startGroup - lastGroupLength - 1)];// also remove a leading space, to make sure numbers are not right next to each other
-        foreach (var item in RemoveCertainties(condition, cpyGroup))
+        foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
         {
             yield return (item.condition, item.groups);
         }
@@ -1200,13 +1200,13 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
         var rightCondition = condition[(match + index + 1)..];
 
-        if (right.Count > 0)
+        foreach (var item in RemoveCertaintiesCached(rightCondition, right))
         {
-            yield return (rightCondition, right);
+            yield return (item.condition, item.groups);
         }
-        if (left.Count > 0)
+        foreach (var item in RemoveCertaintiesCached(leftCondition, left))
         {
-            yield return (leftCondition, left);
+            yield return (item.condition, item.groups);
         }
         yield break;
     }
