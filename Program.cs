@@ -1012,7 +1012,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "????.######..#####. 1,6,5";
+var smallest = "?###???????? 3,2,1";
 
 var input = smallInput;
 //input = fullInput;
@@ -1044,7 +1044,7 @@ foreach (var (condition, groups) in lines)
     var largeGroup = groups.ToList();
     for (int i = 0; i < 4; i++)
     {
-        largeCondition += "?"+condition;
+        largeCondition += "?" + condition;
         largeGroup.AddRange(groups);
     }
     Console.WriteLine(Hash(condition, groups));
@@ -1090,7 +1090,7 @@ int Solve(string condition, List<short> groups)
         {
             foreach (var item in result)
             {
-                count *= Solve(item.condition, item.groups);
+                count *= SolveCached(item.condition, item.groups);
             }
             return count;
         }
@@ -1188,24 +1188,56 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         yield break;
     }
 
-    //middle
-    var groupsThatOccurOnce = cpyGroup.GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
-    if (!groupsThatOccurOnce.Any())
-    {
-        yield return (condition, cpyGroup);
-        yield break;
-    }
+    //middle pure match
+    var groupsWithCount = cpyGroup.GroupBy(x => x).ToList();
     cpy = condition/*.Replace("?", "#")*/.ToString();
-    var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
-    var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
+    var stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+    var match = groupsWithCount.FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count())); ;
     if (match != default)
     {
-        var index = cpy.IndexOf($".{new string('#', match)}.");
-        var left = cpyGroup.TakeWhile(x => x != match).ToList();
+        var index = cpy.IndexOf($".{new string('#', match.Key)}.");
+        var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
         var leftCondition = condition[..(index + 1)];
 
-        var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
-        var rightCondition = condition[(match + index + 1)..];
+        var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+        var rightCondition = condition[(match.Key + index + 1)..];
+
+        foreach (var item in RemoveCertaintiesCached(rightCondition, right))
+        {
+            yield return (item.condition, item.groups);
+        }
+        foreach (var item in RemoveCertaintiesCached(leftCondition, left))
+        {
+            yield return (item.condition, item.groups);
+        }
+        yield break;
+    }
+
+
+    //middle derived match
+    cpy = ExtendGroups(condition);
+    stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+    match = groupsWithCount.FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count())); ;
+    if (match != default)
+    {
+        var index = cpy.IndexOf($".{new string('#', match.Key)}.");
+        if (index == -1)
+        {
+            index = cpy.IndexOf($".{new string('#', match.Key)}");
+        }
+        if (index == -1)
+        {
+            index = cpy.IndexOf($"{new string('#', match.Key)}.");
+        }
+        if (index == -1)
+        {
+            index = cpy.IndexOf($"{new string('#', match.Key)}");
+        }
+        var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+        var leftCondition = condition[..(index + 1)];
+
+        var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+        var rightCondition = condition[(match.Key + index + 1)..];
 
         foreach (var item in RemoveCertaintiesCached(rightCondition, right))
         {
@@ -1222,8 +1254,14 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     yield return (condition, cpyGroup);
 }
 
+string ExtendGroups(string input)
+{
+    while (input.Contains("#?")) { input = input.Replace("#?", "##"); }
+    while (input.Contains("?#")) { input = input.Replace("?#", "##"); }
+    return input;
+}
 
-List<short> GetGroupsCached(string input)
+List<short> GetAbsoluteGroupsCached(string input)
 {
     if (!cacheGroupCounts.ContainsKey(input))
     {
