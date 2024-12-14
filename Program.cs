@@ -1026,6 +1026,13 @@ foreach (var line in input.Split(Environment.NewLine))
     var split = line.Split(" ");
     var condition = split[0];
     var groups = split[1].Split(",").Select(short.Parse).ToList();
+
+    result += Solve(condition, groups);
+
+}
+
+int Solve(string condition, List<short> groups)
+{
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
@@ -1065,34 +1072,36 @@ foreach (var line in input.Split(Environment.NewLine))
         possibleStrings.Add(str.ToString());
     }
 
-    bool Valid(string mask, string attempt)
-    {
-        if (mask.Length != attempt.Length)
-        {
-            Debugger.Break();
-        }
-        if (attempt.Contains('?'))
-        {
-            Debugger.Break();
-        }
 
-
-        for (int i = 0; i < mask.Length; i++)
-        {
-            if (mask[i] == attempt[i] || mask[i] == '?')
-            {
-
-            }
-            else
-            {
-                return false;
-            }
-        }
-        return true;
-    }
 
     possibleStrings = possibleStrings.Where(x => Valid(condition, x)).ToHashSet();
-    result += possibleStrings.Count;
+    return possibleStrings.Count;
+}
+
+bool Valid(string mask, string attempt)
+{
+    if (mask.Length != attempt.Length)
+    {
+        Debugger.Break();
+    }
+    if (attempt.Contains('?'))
+    {
+        Debugger.Break();
+    }
+
+
+    for (int i = 0; i < mask.Length; i++)
+    {
+        if (mask[i] == attempt[i] || mask[i] == '?')
+        {
+
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 timer.Stop();
