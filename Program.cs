@@ -1014,14 +1014,14 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "????.#.#. 4,1,1";
+var smallest = ".??.??.?##. 1,1,3";
 
 var input = smallInput;
-input = fullInput;
-//input = smallest;
+//input = fullInput;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-repeats = 0;
+//repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1059,16 +1059,18 @@ foreach (var (condition, groups) in lines)
     }
     Console.WriteLine(j++);
     Console.WriteLine(Hash(condition, groups));
+    Console.WriteLine(Hash(largeCondition, largeGroup));
     trim = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    //trim = false;
-    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    //result2 += algo2;
-    //if (algo1 != algo2)
-    //{
-
-    //}
+    trim = false;
+    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    result2 += algo2;
+    if (algo1 != algo2)
+    {
+        Debugger.Break();
+        Console.ReadLine();
+    }
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
@@ -1208,60 +1210,170 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         yield break;
     }
 
-    ////middle pure match
-    //var groupsWithCount = cpyGroup.GroupBy(x => x).ToList();
-    //cpy = condition/*.Replace("?", "#")*/.ToString();
-    //var stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
-    //var match = groupsWithCount.FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
-    //if (match != default)
-    //{
-    //    var index = cpy.IndexOf($".{new string('#', match.Key)}.");
-    //    var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
-    //    var leftCondition = condition[..(index + 1)];
 
-    //    var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
-    //    var rightCondition = condition[(match.Key + index + 1)..];
-
-    //    foreach (var item in RemoveCertaintiesCached(rightCondition, right))
-    //    {
-    //        yield return (item.condition, item.groups);
-    //    }
-    //    foreach (var item in RemoveCertaintiesCached(leftCondition, left))
-    //    {
-    //        yield return (item.condition, item.groups);
-    //    }
-    //    yield break;
-    //}
 
     if (trim)
     {
 
-        // partial start search
-        var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
-        var firstGroup = cpyGroup.First();
-        if (partialStart.Contains('#') && partialStart.Count() == firstGroup && GetNumberOfPossibleMatches(partialStart, firstGroup) == 1)
+        //middle pure match
+        var groupsWithCount = cpyGroup.GroupBy(x => x).ToList();
+        cpy = condition/*.Replace("?", "#")*/.ToString();
+        var stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+        var match = groupsWithCount.FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+        if (match != default)
         {
-            if (partialStart == condition)
+            var index = cpy.IndexOf($".{new string('#', match.Key)}.");
+            var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+            var leftCondition = condition[..(index + 1)];
+
+            var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+            var rightCondition = condition[(match.Key + index + 1)..];
+
+            foreach (var item in RemoveCertaintiesCached(rightCondition, right))
             {
-                yield break;
+                yield return (item.condition, item.groups);
             }
-            cpyGroup.RemoveAt(0);
-            condition = condition[(partialStart.Length + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
-            foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+            foreach (var item in RemoveCertaintiesCached(leftCondition, left))
             {
                 yield return (item.condition, item.groups);
             }
             yield break;
         }
 
-        // partial start end
-        var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
-        var lastGroup = cpyGroup.Last();
-        if (partialEnd.Contains('#') && partialEnd.Count() == lastGroup && GetNumberOfPossibleMatches(partialEnd, lastGroup) == 1)
+        if (condition.Contains('.'))
         {
-            cpyGroup.RemoveAt(cpyGroup.Count - 1);
-            condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
-            foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+
+            // partial start search
+            var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
+            var firstGroup = cpyGroup.First();
+            if (partialStart.Contains('#') && partialStart.Count(x => x == '#') <= firstGroup && GetNumberOfPossibleMatches(partialStart, firstGroup) == 1)
+            {
+                if (partialStart == condition)
+                {
+                    yield break;
+                }
+                cpyGroup.RemoveAt(0);
+                condition = condition[(partialStart.Length + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
+                foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
+
+            // partial start end
+            var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
+            var lastGroup = cpyGroup.Last();
+            if (partialEnd.Contains('#') && partialEnd.Count(x => x == '#') <= lastGroup && GetNumberOfPossibleMatches(partialEnd, lastGroup) == 1)
+            {
+                cpyGroup.RemoveAt(cpyGroup.Count - 1);
+                condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
+                foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
+        }
+
+        // WRONG because order of groups doesnt respect the pattern group order
+        ////middle derived match
+        //cpy = ExtendGroups(condition);
+        //stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+        //match = groupsWithCount.OrderByDescending(x => x.Count()).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+        //var needle = new string('#', match?.Key ?? 0);
+        //if (match != default && cpy.Split(needle).Count() == 2)
+        //{
+        //    var finalNeedle = $".{needle}.";
+        //    var index = cpy.IndexOf(finalNeedle);
+        //    if (index == -1)
+        //    {
+        //        var last = new string(cpy.TakeLast(match.Key + 1).ToArray());
+        //        finalNeedle = $".{needle}";
+        //        if (finalNeedle == last)
+        //        {
+        //            index = cpy.Length - match.Key - 1;
+        //        }
+        //    }
+        //    if (index == -1)
+        //    {
+        //        var start = new string(cpy.Take(match.Key + 1).ToArray());
+        //        finalNeedle = $"{needle}.";
+        //        if (finalNeedle == start)
+        //        {
+        //            index = 0;
+        //        }
+        //    }
+        //    if (index == -1)
+        //    {
+        //        if (cpy == needle)
+        //        {
+        //            yield break;
+        //        }
+        //        else
+        //        {
+        //            Debugger.Break();
+        //        }
+        //    }
+
+        //    var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+        //    var leftCondition = condition[..(index)];
+
+        //    var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+        //    var rightCondition = condition[(match.Key + index + 1)..];
+
+        //    foreach (var item in RemoveCertaintiesCached(rightCondition, right))
+        //    {
+        //        yield return (item.condition, item.groups);
+        //    }
+        //    foreach (var item in RemoveCertaintiesCached(leftCondition, left))
+        //    {
+        //        yield return (item.condition, item.groups);
+        //    }
+        //    yield break;
+        //}
+
+
+
+        //middle largest possible match
+        cpy = condition.ToString();
+        var qqqq = GetGroupSurroundedByAnything(cpy);
+        stringGroupsWithCount = GetGroupSurroundedByAnything(cpy).GroupBy(x => x).ToList();
+        if (!stringGroupsWithCount.Any())
+        {
+            yield return (condition, cpyGroup);
+            yield break;
+        }
+        var max = stringGroupsWithCount.Max(x => x.Key);
+        match = groupsWithCount.Where(x => x.Key == max).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+        if (match != default && max > 4)
+        {
+            var aaa = new string('#', match.Key);
+            var needles = new[] { $"?{aaa}?", $"?{aaa}", $"{aaa}?", $"{aaa}" };
+
+            var found = "xxxxx";
+            foreach (var needle in needles)
+            {
+                if (cpy.Contains(needle))
+                {
+                    found = needle;
+                    break;
+                }
+            }
+
+            var split = condition.Split(found, 2);
+
+            var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+            var leftCondition = split[0];
+
+            var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+            var rightCondition = split[1];
+
+            foreach (var item in RemoveCertaintiesCached(rightCondition, right))
+            {
+                yield return (item.condition, item.groups);
+            }
+            foreach (var item in RemoveCertaintiesCached(leftCondition, left))
             {
                 yield return (item.condition, item.groups);
             }
