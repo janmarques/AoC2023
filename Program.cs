@@ -1012,15 +1012,15 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "?#?#.?# 3,1";
+var smallest = "????.######..#####. 1,6,5";
 
 var input = smallInput;
-input = fullInput;
-//input = smallest;
+//input = fullInput;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = 0;
-var result2 = 0;
+var result = 0l;
+var result2 = 0l;
 
 while (input.Contains(".."))
 {
@@ -1040,9 +1040,16 @@ var cacheGroupCounts = new Dictionary<string, List<short>>();
 bool trim = true;
 foreach (var (condition, groups) in lines)
 {
-    //Console.WriteLine(Hash(condition, groups));
+    var largeCondition = condition;
+    var largeGroup = groups.ToList();
+    for (int i = 0; i < 4; i++)
+    {
+        largeCondition += "?"+condition;
+        largeGroup.AddRange(groups);
+    }
+    Console.WriteLine(Hash(condition, groups));
     trim = true;
-    var algo1 = SolveCached(condition, groups.ToList());
+    var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
     //trim = false;
     //var algo2 = SolveCached(condition, groups.ToList());
