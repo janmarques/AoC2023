@@ -1011,7 +1011,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "....#..#..#..##?##.. 5,1,5";
+var smallest = ".??#?####.## 1,4,2";
 
 var input = smallInput;
 input = fullInput;
@@ -1019,6 +1019,7 @@ input = fullInput;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
+var result2 = 0;
 
 var lines = input.Split(Environment.NewLine).OrderBy(x => x.Length).Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 var maxGroup = lines.SelectMany(x => x.groups).Max();
@@ -1027,15 +1028,30 @@ var cacheWithUnknowns = new Dictionary<string, int>();
 var cachePrecise = new Dictionary<string, bool>();
 var cacheReduce = new Dictionary<string, (string, List<short>)>();
 
+bool trim = true;
 foreach (var (condition, groups) in lines)
 {
-    result += SolveCached(condition, groups);
+    //Console.WriteLine(Hash(condition, groups));
+    trim = true;
+    var algo1 = SolveCached(condition, groups.ToList());
+    result += algo1;
+    //trim = false;
+    //var algo2 = SolveCached(condition, groups.ToList());
+    //result2 += algo2;
+    //if (algo1 != algo2)
+    //{
+
+    //}
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
 
 int SolveCached(string condition, List<short> groups)
 {
+    if (!trim)
+    {
+        return Solve(condition, groups);
+    }
     var hash = Hash(condition, groups);
     if (!cacheWithUnknowns.ContainsKey(hash))
     {
@@ -1045,8 +1061,13 @@ int SolveCached(string condition, List<short> groups)
 }
 int Solve(string condition, List<short> groups)
 {
-    //Console.WriteLine(Hash(condition, groups)); 
-    (condition, groups) = ReduceEndsCached(condition, groups);
+
+    if (trim)
+    {
+        condition = condition.Trim('.');
+        (condition, groups) = RemoveCertaintiesCached(condition, groups);
+    }
+    if (groups.Count == 0) { return 1; }
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
@@ -1090,43 +1111,45 @@ int Solve(string condition, List<short> groups)
     return possibleStrings.Count;
 }
 
-(string condition, List<short> groups) ReduceEndsCached(string condition, List<short> groups)
+(string condition, List<short> groups) RemoveCertaintiesCached(string condition, List<short> groups)
 {
     var key = Hash(condition, groups);
     if (!cacheReduce.ContainsKey(key))
     {
-        var result = ReduceEnds(condition, groups);
+        var result = RemoveCertainties(condition, groups);
         cacheReduce.Add(key, (result.condition, result.groups.ToList()));
     }
     return cacheReduce[key];
 }
-(string condition, List<short> groups) ReduceEnds(string condition, List<short> groups)
+(string condition, List<short> groups) RemoveCertainties(string condition, List<short> groups)
 {
     if (!groups.Any())
     {
         return (condition, groups);
     }
+    condition = condition.Trim('.');
     var cpy = condition.ToString();//.Replace("?", "#");
-    var firstGroupLength = cpy.SkipWhile(x => x == '.').TakeWhile(x => x == '#').Count();
-    if (firstGroupLength == groups.First())
+    var cpyGroup = groups.ToList();
+    var firstGroupLength = cpy.TakeWhile(x => x == '#').Count();
+    if (firstGroupLength == cpyGroup.First())
     {
-        groups.RemoveAt(0);
+        cpyGroup.RemoveAt(0);
         var startGroup = cpy.IndexOf('#');
-        condition = condition[(startGroup + firstGroupLength)..];
-        return ReduceEndsCached(condition, groups);
+        condition = condition[(startGroup + firstGroupLength + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
+        return RemoveCertaintiesCached(condition, cpyGroup);
     }
 
     cpy = new string(cpy.Reverse().ToArray());
-    var lastGroupLength = cpy.SkipWhile(x => x == '.').TakeWhile(x => x == '#').Count();
-    if (lastGroupLength == groups.Last())
+    var lastGroupLength = cpy.TakeWhile(x => x == '#').Count();
+    if (lastGroupLength == cpyGroup.Last())
     {
-        groups.RemoveAt(groups.Count - 1);
+        cpyGroup.RemoveAt(cpyGroup.Count - 1);
         var startGroup = cpy.IndexOf('#');
-        condition = condition[..(condition.Length - startGroup - lastGroupLength)];
-        return ReduceEndsCached(condition, groups);
+        condition = condition[..(condition.Length - startGroup - lastGroupLength - 1)];// also remove a leading space, to make sure numbers are not right next to each other
+        return RemoveCertaintiesCached(condition, cpyGroup);
     }
 
-    return (condition, groups);
+    return (condition, cpyGroup);
 }
 
 bool ValidCached(string mask, string attempt)
@@ -1167,5 +1190,6 @@ bool Valid(string mask, string attempt)
 
 timer.Stop();
 Console.WriteLine(result);
+Console.WriteLine(result2);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
