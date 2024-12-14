@@ -1044,13 +1044,13 @@ foreach (var (condition, groups) in lines)
     trim = true;
     var algo1 = SolveCached(condition, groups.ToList());
     result += algo1;
-    trim = false;
-    var algo2 = SolveCached(condition, groups.ToList());
-    result2 += algo2;
-    if (algo1 != algo2)
-    {
+    //trim = false;
+    //var algo2 = SolveCached(condition, groups.ToList());
+    //result2 += algo2;
+    //if (algo1 != algo2)
+    //{
 
-    }
+    //}
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
@@ -1188,25 +1188,28 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         yield return (condition, cpyGroup);
         yield break;
     }
-    //cpy = condition/*.Replace("?", "#")*/.ToString();
-    //var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
-    //var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
-    //if (match != default)
-    //{
-    //    var index = cpy.IndexOf($".{new string('#', match)}.");
-    //    var left = cpyGroup.TakeWhile(x => x != match).ToList();
-    //    var leftCondition = condition[..(index + 1)];
+    cpy = condition/*.Replace("?", "#")*/.ToString();
+    var stringGroupsThatOccurOnce = GetAbsoluteGroups(cpy).GroupBy(x => x).Where(x => x.Count() == 1).Select(x => x.Key).ToList();
+    var match = groupsThatOccurOnce.Intersect(stringGroupsThatOccurOnce).FirstOrDefault();
+    if (match != default)
+    {
+        var index = cpy.IndexOf($".{new string('#', match)}.");
+        var left = cpyGroup.TakeWhile(x => x != match).ToList();
+        var leftCondition = condition[..(index + 1)];
 
-    //    var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
-    //    var rightCondition = condition[(match + index + 1)..];
+        var right = cpyGroup.SkipWhile(x => x != match).Skip(1).ToList();
+        var rightCondition = condition[(match + index + 1)..];
 
-    //    if (right.Count > 0 && left.Count > 0)
-    //    {
-    //    }
-
-    //    condition = new string(condition.Take(index).Concat(condition.Skip(index + match + 1)).ToArray());
-    //    return RemoveCertainties(condition, cpyGroup);
-    //}
+        if (right.Count > 0)
+        {
+            yield return (rightCondition, right);
+        }
+        if (left.Count > 0)
+        {
+            yield return (leftCondition, left);
+        }
+        yield break;
+    }
 
 
     yield return (condition, cpyGroup);
