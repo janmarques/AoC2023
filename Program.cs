@@ -4,6 +4,7 @@ using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 var fullInput =
 @"????.??.??. 1,1
@@ -1015,11 +1016,11 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "?###???????? 3,2,1";
+var smallest = "???#?.#?.? 1,2,1";
 
 var input = smallInput;
 //input = fullInput;
-input = smallest;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 //repeats = 0;
@@ -1041,6 +1042,7 @@ var cacheWithUnknowns = new Dictionary<string, int>();
 var cachePrecise = new Dictionary<string, bool>();
 var cacheReduce = new Dictionary<string, List<(string, List<short>)>>();
 var cacheGroupCounts = new Dictionary<string, List<short>>();
+var cacheSolve3 = new Dictionary<string, HashSet<string>>();
 
 //var eex = Solve2("?##?#???", new short[] { 5 }.ToList());
 
@@ -1111,10 +1113,74 @@ int Solve(string condition, List<short> groups)
     }
     if (groups.Count == 0) { return 1; }
 
+
+    if (trim)
+    {
+        (condition, groups) = MultiLevelShit(condition, groups);
+    }
+
     return Solve2(condition, groups);
 }
 
+(string condition, List<short> groups) MultiLevelShit(string condition, List<short> groups)
+{
+    var start = new string(condition.TakeWhile(x => x != '.').ToArray());
+    if (start == "" || !condition.Contains(".") || !start.Contains("#"))
+    {
+        return (condition, groups);
+    }
+    var conditionCpy = condition.Substring(start.Length).Trim('.');
+    var lookaheadFurther = new string(condition.Substring(start.Length).Skip(1).TakeWhile(x => x != '.').ToArray());
+    lookaheadFurther = start + "." + lookaheadFurther;
+
+    var evals = Enumerable.Range(1, groups.Count()).Select(i =>
+    {
+        var xGroups = groups.Take(i).ToList();
+        var expectedChars = xGroups.Sum(x => (int)x) + i - 1;
+        if (expectedChars > start.Length)
+        {
+            return default;
+        }
+        //if (xGroups.All(x => x < 3))
+        //{
+        //    break;
+        //}
+        var x = Solve3Cached(start, xGroups);
+        if (HasSingleSolution(start, i) && x.Count == 1)
+        {
+            var xLookahead = Solve3Cached(lookaheadFurther, xGroups);
+            if (xLookahead.Count == 0)
+            {
+                var groupsCpy = groups.Skip(i).ToList();
+                return (conditionCpy, groupsCpy);
+            }
+        }
+        return default;
+    }).Where(x => x != default).ToList();
+
+    if (evals.Count == 1)
+    {
+        return MultiLevelShit(evals.Single().conditionCpy, evals.Single().groupsCpy);
+    }
+
+    return (condition, groups);
+}
+
 int Solve2(string condition, List<short> groups)
+{
+    return Solve3Cached(condition, groups).Count;
+}
+HashSet<string> Solve3Cached(string condition, List<short> groups)
+{
+    var key = Hash(condition, groups);
+    if (!cacheSolve3.ContainsKey(key))
+    {
+        cacheSolve3[key] = Solve3(condition, groups);
+    }
+    return cacheSolve3[key];
+}
+
+HashSet<string> Solve3(string condition, List<short> groups)
 {
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
@@ -1156,8 +1222,9 @@ int Solve2(string condition, List<short> groups)
     }
 
     possibleStrings = possibleStrings.Where(x => ValidCached(condition, x)).ToHashSet();
-    return possibleStrings.Count;
+    return possibleStrings;
 }
+
 
 
 List<(string condition, List<short> groups)> RemoveCertaintiesCached(string condition, List<short> groups)
@@ -1241,21 +1308,24 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             yield break;
         }
 
-        if (condition.Contains('.'))
+        if (condition.Contains('.') /*&& false*/)
         {
 
             // partial start search
             var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
             var firstGroup = cpyGroup.First();
-            if (partialStart.Contains('#') && partialStart.Count(x => x == '#') <= firstGroup && GetNumberOfPossibleMatches(partialStart, firstGroup) == 1)
+            if (partialStart.Contains('#') && HasSingleSolution(partialStart, firstGroup) && firstGroup > 1/* && partialStart.Length == firstGroup && ConsecutiveChars(partialStart, '?') < firstGroup*/)
             {
                 if (partialStart == condition)
                 {
                     yield break;
                 }
                 cpyGroup.RemoveAt(0);
-                condition = condition[(partialStart.Length + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
-                foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+
+                var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
+                var index = matchesX.Single().LastIndexOf('#');
+                var conditionCpy = condition[(index + 2)..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
                 {
                     yield return (item.condition, item.groups);
                 }
@@ -1265,15 +1335,30 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             // partial start end
             var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
             var lastGroup = cpyGroup.Last();
-            if (partialEnd.Contains('#') && partialEnd.Count(x => x == '#') <= lastGroup && GetNumberOfPossibleMatches(partialEnd, lastGroup) == 1)
+            if (partialEnd.Contains('#') && HasSingleSolution(partialEnd, lastGroup) && lastGroup > 1/* && partialStart.Length == firstGroup && ConsecutiveChars(partialEnd, '?') < lastGroup*/)
             {
+                if (partialEnd == condition)
+                {
+                    yield break;
+                }
                 cpyGroup.RemoveAt(cpyGroup.Count - 1);
-                condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
-                foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+
+                var matchesX = Solve3Cached(partialEnd, new List<short>() { lastGroup });
+                var index = matchesX.Single().IndexOf('#');
+                var conditionCpy = condition[..(condition.Length - matchesX.Single().Length + index - 1)];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
                 {
                     yield return (item.condition, item.groups);
                 }
                 yield break;
+
+                //cpyGroup.RemoveAt(cpyGroup.Count - 1);
+                //condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
+                //foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+                //{
+                //    yield return (item.condition, item.groups);
+                //}
+                //yield break;
             }
         }
 
@@ -1397,6 +1482,67 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             yield break;
         }
 
+        //middle largest possible match to solve sth like
+        // ?###??????????###??????????###??????????###??????????###???????? 3,2,1,3,2,1,3,2,1,3,2,1,3,2,1
+        cpy = condition.Replace("?", ".").ToString();
+        stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+        if (!stringGroupsWithCount.Any())
+        {
+            yield return (condition, cpyGroup);
+            yield break;
+        }
+        max = stringGroupsWithCount.Max(x => x.Key);
+        matches = groupsWithCount.Where(x => x.Key == max).Where(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+
+        if (matches.Any() && stringGroupsWithCount.Count(x => x.Key == max) == matches.Count() && !groups.Any(x => x > max))
+        {
+            match = matches.First();
+            var aaa = new string('#', match.Key);
+            var needles = new[] { $".{aaa}.", $".{aaa}", $"{aaa}.", $"{aaa}" };
+
+            var found = "xxxxx";
+            foreach (var needle in needles)
+            {
+                if (cpy.Contains(needle))
+                {
+                    found = needle;
+                    break;
+                }
+            }
+
+            var index = cpy.IndexOf(found);
+            found = condition.Substring(index, found.Length);
+            //if (found.Count(x => x == '.') == 2)
+            //{
+            //    found = found.Substring(1);
+            //}
+            //else if (found.StartsWith('.'))
+            //{
+            //    found = found.Substring(1);
+            //}
+            //else if (found.EndsWith('.'))
+            //{
+            //    found = found.Substring(0, found.Length - 1);
+            //}
+
+            var split = condition.Split(found, 2);
+
+            var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+            var leftCondition = split[0];
+
+            var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+            var rightCondition = split[1];
+
+            foreach (var item in RemoveCertaintiesCached(rightCondition, right))
+            {
+                yield return (item.condition, item.groups);
+            }
+            foreach (var item in RemoveCertaintiesCached(leftCondition, left))
+            {
+                yield return (item.condition, item.groups);
+            }
+            yield break;
+        }
     }
 
     //middle derived match
@@ -1503,12 +1649,33 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     yield return (condition, cpyGroup);
 }
 
-int GetNumberOfPossibleMatches(string condition, short v)
+short ConsecutiveChars(string s, char v)
 {
-    var xx = Solve2(condition, new List<short>() { v });
-    return xx;
+    var maxResult = 0;
+    var result = 0;
+    var previous = char.MinValue;
+    foreach (var item in s)
+    {
+        if (item == v)
+        {
+            result++;
+        }
+        else
+        {
+            maxResult = Math.Max(maxResult, result);
+            result = 0;
+        }
+
+        previous = item;
+    }
+    return (short)Math.Max(maxResult, result);
 }
 
+bool HasSingleSolution(string input, int length)
+{
+    if (input.Contains(".")) { throw new Exception(); }
+    return ConsecutiveChars(input.Replace("?", "#"), '#') == length;
+}
 string ExtendGroups(string input)
 {
     while (input.Contains("#?")) { input = input.Replace("#?", "##"); }
