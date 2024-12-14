@@ -1014,11 +1014,11 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "..??..#?#?#? 1,6";
+var smallest = "????.#.#. 4,1,1";
 
 var input = smallInput;
 input = fullInput;
-input = smallest;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 repeats = 0;
@@ -1063,7 +1063,7 @@ foreach (var (condition, groups) in lines)
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
     //trim = false;
-    //var algo2 = SolveCached(condition, groups.ToList());
+    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
     //result2 += algo2;
     //if (algo1 != algo2)
     //{
@@ -1108,6 +1108,11 @@ int Solve(string condition, List<short> groups)
     }
     if (groups.Count == 0) { return 1; }
 
+    return Solve2(condition, groups);
+}
+
+int Solve2(string condition, List<short> groups)
+{
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
@@ -1228,32 +1233,42 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     //    yield break;
     //}
 
-    // partial start search
-    var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
-    if (GetNumberOfPossibleMatches(partialStart, cpyGroup.First()) == 1)
+    if (trim)
     {
-        cpyGroup.RemoveAt(0);
-        condition = condition[(partialStart.Length + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
-        foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
-        {
-            yield return (item.condition, item.groups);
-        }
-        yield break;
-    }
 
-    // partial start end
-    var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
-    if (GetNumberOfPossibleMatches(partialEnd, cpyGroup.Last()) == 1)
-    {
-        cpyGroup.RemoveAt(cpyGroup.Count - 1);
-        condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
-        foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+        // partial start search
+        var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
+        var firstGroup = cpyGroup.First();
+        if (partialStart.Contains('#') && partialStart.Count() == firstGroup && GetNumberOfPossibleMatches(partialStart, firstGroup) == 1)
         {
-            yield return (item.condition, item.groups);
+            if (partialStart == condition)
+            {
+                yield break;
+            }
+            cpyGroup.RemoveAt(0);
+            condition = condition[(partialStart.Length + 1)..]; // also remove a trailing space, to make sure numbers are not right next to each other
+            foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+            {
+                yield return (item.condition, item.groups);
+            }
+            yield break;
         }
-        yield break;
-    }
 
+        // partial start end
+        var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
+        var lastGroup = cpyGroup.Last();
+        if (partialEnd.Contains('#') && partialEnd.Count() == lastGroup && GetNumberOfPossibleMatches(partialEnd, lastGroup) == 1)
+        {
+            cpyGroup.RemoveAt(cpyGroup.Count - 1);
+            condition = condition[..(condition.Length - partialEnd.Length - 1)]; // also remove a trailing space, to make sure numbers are not right next to each other
+            foreach (var item in RemoveCertaintiesCached(condition, cpyGroup))
+            {
+                yield return (item.condition, item.groups);
+            }
+            yield break;
+        }
+
+    }
 
     //middle derived match
     //cpy = ExtendGroups(condition);
@@ -1361,24 +1376,8 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
 int GetNumberOfPossibleMatches(string condition, short v)
 {
-    var possibleStrings = new HashSet<string>();
-    var qs = condition.Select((x, i) => (x, i)).Where(x => x.x == '?');
-    var qPow = Math.Pow(2, qs.Count());
-    for (int i = 0; i < qPow; i++)
-    {
-        var j = i;
-        var copy = new StringBuilder(condition);
-        foreach (var q in qs)
-        {
-            copy.Remove(q.i, 1);
-            copy.Insert(q.i, j % 2 == 0 ? '#' : '.');
-            j /= 2;
-        }
-        possibleStrings.Add(copy.ToString());
-    }
-
-    possibleStrings = possibleStrings.Where(x => ValidCached(condition, x)).ToHashSet();
-    return possibleStrings.Count;
+    var xx = Solve2(condition, new List<short>() { v });
+    return xx;
 }
 
 string ExtendGroups(string input)
