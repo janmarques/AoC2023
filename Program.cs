@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
@@ -1016,7 +1017,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "?#.?.##?? 1,3";
+var smallest = "??#?.??.? 1,1";
 
 var input = smallInput;
 input = fullInput;
@@ -1120,22 +1121,43 @@ int Solve(string condition, List<short> groups)
 
     if (trim)
     {
-        (condition, groups) = MultiLevelShit(condition, groups);
+        var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
+        (newCondition, newGroups) = MultiLevelShit(newCondition, newGroups, 1);
+        condition = newCondition;
+        groups = newGroups;
+
+        (condition, groups) = RemoveAllSames(condition, groups);
+
     }
 
     return Solve2(condition, groups);
 }
 
-(string condition, List<short> groups) MultiLevelShit(string condition, List<short> groups)
+(string condition, List<short> groups) RemoveAllSames(string condition, List<short> groups)
 {
-    var start = new string(condition.TakeWhile(x => x != '.').ToArray());
+    if (groups.Distinct().Count() != 1) { return (condition, groups); }
+    var group = groups.First();
+    var groupString = $"?{new string('#', group)}?";
+    var count = condition.Count(x => x == '#');
+    condition = condition.Replace(groupString, "?");
+    for (var i = 0; i < count; i++)
+    {
+        groups.RemoveAt(0);
+    }
+
+    return (condition, groups);
+}
+
+(string condition, List<short> groups) MultiLevelShit(string condition, List<short> groups, int level)
+{
+    var split = condition.Split('.');
+    var start = string.Join(".", split.Take(level + 1));
     if (start == "" || !condition.Contains(".") || !start.Contains("#"))
     {
         return (condition, groups);
     }
-    var conditionCpy = condition.Substring(start.Length).Trim('.');
-    var lookaheadFurther = new string(condition.Substring(start.Length).Skip(1).TakeWhile(x => x != '.').ToArray());
-    lookaheadFurther = start + "." + lookaheadFurther;
+    var conditionCpy = string.Join(".", split.Skip(level + 1));
+    var lookaheadFurther = string.Join(".", split.Take(level + 2));
 
     var evals = Enumerable.Range(1, groups.Count()).Select(i =>
     {
@@ -1156,7 +1178,7 @@ int Solve(string condition, List<short> groups)
         }
         if (x.Count == 1)
         {
-            var xLookahead = Solve3Cached(lookaheadFurther, groups.Take(i+1).ToList());
+            var xLookahead = Solve3Cached(lookaheadFurther, groups.Take(i + 1).ToList());
             if (xLookahead.Count == 0)
             {
                 var groupsCpy = groups.Skip(i).ToList();
@@ -1168,7 +1190,7 @@ int Solve(string condition, List<short> groups)
 
     if (evals.Count == 1)
     {
-        return MultiLevelShit(evals.Single().conditionCpy, evals.Single().groupsCpy);
+        return MultiLevelShit(evals.Single().conditionCpy, evals.Single().groupsCpy, level); // pass level or 0??
     }
 
     return (condition, groups);
