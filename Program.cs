@@ -1020,17 +1020,29 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0;
 
+var lines = input.Split(Environment.NewLine).OrderBy(x => x.Length).Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
+var maxGroup = lines.SelectMany(x => x.groups).Max();
 
-foreach (var line in input.Split(Environment.NewLine))
+var cacheWithUnknowns = new Dictionary<string, int>();
+var cachePrecise = new Dictionary<string, bool>();
+
+foreach (var (condition, groups) in lines)
 {
-    var split = line.Split(" ");
-    var condition = split[0];
-    var groups = split[1].Split(",").Select(short.Parse).ToList();
-
-    result += Solve(condition, groups);
-
+    result += SolveCached(condition, groups);
 }
 
+
+string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
+
+int SolveCached(string condition, List<short> groups)
+{
+    var hash = Hash(condition, groups);
+    if (!cacheWithUnknowns.ContainsKey(hash))
+    {
+        cacheWithUnknowns[hash] = Solve(condition, groups);
+    }
+    return cacheWithUnknowns[hash];
+}
 int Solve(string condition, List<short> groups)
 {
     var bucketCount = groups.Count + 1;
@@ -1072,10 +1084,18 @@ int Solve(string condition, List<short> groups)
         possibleStrings.Add(str.ToString());
     }
 
-
-
-    possibleStrings = possibleStrings.Where(x => Valid(condition, x)).ToHashSet();
+    possibleStrings = possibleStrings.Where(x => ValidCached(condition, x)).ToHashSet();
     return possibleStrings.Count;
+}
+
+bool ValidCached(string mask, string attempt)
+{
+    var key = $"{mask}|{attempt}";
+    if (!cachePrecise.ContainsKey(key))
+    {
+        cachePrecise[key] = Valid(mask, attempt);
+    }
+    return cachePrecise[key];
 }
 
 bool Valid(string mask, string attempt)
@@ -1108,24 +1128,3 @@ timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
-
-void PrintGrid<T>(T[][] grid)
-{
-    for (int i = 0; i < grid.Length; i++)
-    {
-        for (int j = 0; j < grid[i].Length; j++)
-        {
-            Console.Write(grid[i][j]);
-        }
-        Console.WriteLine();
-    }
-}
-
-enum State
-{
-    Damaged,
-    Operational
-}
-class Node
-{
-}
