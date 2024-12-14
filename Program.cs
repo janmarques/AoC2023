@@ -1011,7 +1011,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "????# 1,1";
+var smallest = "....#..#..#..##?##.. 5,1,5";
 
 var input = smallInput;
 input = fullInput;
@@ -1025,12 +1025,12 @@ var maxGroup = lines.SelectMany(x => x.groups).Max();
 
 var cacheWithUnknowns = new Dictionary<string, int>();
 var cachePrecise = new Dictionary<string, bool>();
+var cacheReduce = new Dictionary<string, (string, List<short>)>();
 
 foreach (var (condition, groups) in lines)
 {
     result += SolveCached(condition, groups);
 }
-
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
 
@@ -1045,6 +1045,8 @@ int SolveCached(string condition, List<short> groups)
 }
 int Solve(string condition, List<short> groups)
 {
+    //Console.WriteLine(Hash(condition, groups)); 
+    (condition, groups) = ReduceEndsCached(condition, groups);
     var bucketCount = groups.Count + 1;
     var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
 
@@ -1086,6 +1088,45 @@ int Solve(string condition, List<short> groups)
 
     possibleStrings = possibleStrings.Where(x => ValidCached(condition, x)).ToHashSet();
     return possibleStrings.Count;
+}
+
+(string condition, List<short> groups) ReduceEndsCached(string condition, List<short> groups)
+{
+    var key = Hash(condition, groups);
+    if (!cacheReduce.ContainsKey(key))
+    {
+        var result = ReduceEnds(condition, groups);
+        cacheReduce.Add(key, (result.condition, result.groups.ToList()));
+    }
+    return cacheReduce[key];
+}
+(string condition, List<short> groups) ReduceEnds(string condition, List<short> groups)
+{
+    if (!groups.Any())
+    {
+        return (condition, groups);
+    }
+    var cpy = condition.ToString();//.Replace("?", "#");
+    var firstGroupLength = cpy.SkipWhile(x => x == '.').TakeWhile(x => x == '#').Count();
+    if (firstGroupLength == groups.First())
+    {
+        groups.RemoveAt(0);
+        var startGroup = cpy.IndexOf('#');
+        condition = condition[(startGroup + firstGroupLength)..];
+        return ReduceEndsCached(condition, groups);
+    }
+
+    cpy = new string(cpy.Reverse().ToArray());
+    var lastGroupLength = cpy.SkipWhile(x => x == '.').TakeWhile(x => x == '#').Count();
+    if (lastGroupLength == groups.Last())
+    {
+        groups.RemoveAt(groups.Count - 1);
+        var startGroup = cpy.IndexOf('#');
+        condition = condition[..(condition.Length - startGroup - lastGroupLength)];
+        return ReduceEndsCached(condition, groups);
+    }
+
+    return (condition, groups);
 }
 
 bool ValidCached(string mask, string attempt)
