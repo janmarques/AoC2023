@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1014,7 +1015,7 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = ".??.??.?##. 1,1,3";
+var smallest = "?###???????? 3,2,1";
 
 var input = smallInput;
 //input = fullInput;
@@ -1063,14 +1064,14 @@ foreach (var (condition, groups) in lines)
     trim = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    trim = false;
-    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    result2 += algo2;
-    if (algo1 != algo2)
-    {
-        Debugger.Break();
-        Console.ReadLine();
-    }
+    //trim = false;
+    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    //result2 += algo2;
+    //if (algo1 != algo2)
+    //{
+    //    Debugger.Break();
+    //    Console.ReadLine();
+    //}
 }
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
@@ -1336,20 +1337,21 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
 
         //middle largest possible match
-        cpy = condition.ToString();
-        var qqqq = GetGroupSurroundedByAnything(cpy);
-        stringGroupsWithCount = GetGroupSurroundedByAnything(cpy).GroupBy(x => x).ToList();
+        cpy = condition.Replace("?", "#").ToString();
+        stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
         if (!stringGroupsWithCount.Any())
         {
             yield return (condition, cpyGroup);
             yield break;
         }
         var max = stringGroupsWithCount.Max(x => x.Key);
-        match = groupsWithCount.Where(x => x.Key == max).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
-        if (match != default && max > 4)
+        var matches = groupsWithCount.Where(x => x.Key == max).Where(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+
+        if (matches.Any() && stringGroupsWithCount.Count(x => x.Key == max) == matches.Count())
         {
+            match = matches.First();
             var aaa = new string('#', match.Key);
-            var needles = new[] { $"?{aaa}?", $"?{aaa}", $"{aaa}?", $"{aaa}" };
+            var needles = new[] { $".{aaa}.", $".{aaa}", $"{aaa}.", $"{aaa}" };
 
             var found = "xxxxx";
             foreach (var needle in needles)
@@ -1360,6 +1362,21 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
                     break;
                 }
             }
+
+            var index = cpy.IndexOf(found);
+            found = condition.Substring(index, found.Length);
+            //if (found.Count(x => x == '.') == 2)
+            //{
+            //    found = found.Substring(1);
+            //}
+            //else if (found.StartsWith('.'))
+            //{
+            //    found = found.Substring(1);
+            //}
+            //else if (found.EndsWith('.'))
+            //{
+            //    found = found.Substring(0, found.Length - 1);
+            //}
 
             var split = condition.Split(found, 2);
 
