@@ -1025,11 +1025,11 @@ var smallInput =
 var smallest = ".??.??.?##. 1,1,3";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-repeats = 0;
+//repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1063,6 +1063,7 @@ int j = 0;
 bool trim = true;
 
 bool printSolve = true;
+printSolve = false;
 
 
 //var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
@@ -1790,27 +1791,7 @@ int SolutionCount(string input, int length)
 
 int SolutionCountAlt(string input, List<short> nums)
 {
-    if (printSolve) { Console.WriteLine(Hash(input, nums)); }
-
-    var bitboard = input.Select(x => x == '?' ? (bool?)null : x == '#').ToList();
-    var count = 0;
-    for (var i = (int)Math.Pow(2, input.Length) - 1; i > 0; i--)
-    {
-        if (i == 10)
-        {
-
-        }
-        var ba = new bool[128];
-        new BitArray(new[] { i }).CopyTo(ba, 0);
-        ba = ba.Take(input.Length).Reverse().ToArray();
-        if (FitsMask(ba, bitboard, nums))
-        {
-            if (printSolve) { Console.WriteLine(string.Join("", ba.Select(x => x ? '1' : '0'))); }
-            count++;
-        }
-    }
-
-    return count;
+    return Solve3Cached(input, nums).Count();
 }
 
 IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nums)
@@ -1829,12 +1810,12 @@ IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nu
         ba = ba.Take(input.Length).Reverse().ToArray();
         if (FitsMask(ba, bitboard, nums))
         {
+            var result = string.Join("", ba.Select(x => x ? '#' : '.'));
             if (printSolve)
             {
-                var result = string.Join("", ba.Select(x => x ? '#' : '.'));
                 Console.WriteLine(result);
-                yield return result;
             }
+            yield return result;
         }
     }
 }
