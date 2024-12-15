@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Numerics;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -1026,10 +1027,11 @@ var smallInput =
 //var containsCount = ContainsCount("aa.a", ".aa");
 
 var smallest = "???.??.? 1,1";
+//smallest = "??.? 1,1";
 
 var input = smallInput;
 input = fullInput;
-input = smallest;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 repeats = 0;
@@ -1066,7 +1068,7 @@ int j = 0;
 bool useCache = true;
 
 bool printSolve = true;
-//printSolve = false;
+printSolve = false;
 
 
 //var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
@@ -1224,17 +1226,70 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
         return null;
     }
 
-    var qGroups = GetGroups(condition, '?');
-    var qqq = qGroups.Select(x => (count: x, ServeWays(x, 1).ToList())).ToList();
+    var qGroups = GetGroups(condition, '?').Select((x, i) => (key: i, count: x, serves: ServeWays(x, 1).ToList())).ToList();
 
-    return SolutionCountAlt(condition, groups);
+    var results = new Dictionary<string, long>();
+
+    void Discover(int count, HashSet<string> keygen, HashSet<int> visited, long product)
+    {
+        foreach (var item in qGroups.Where(x => !visited.Contains(x.key)))
+        {
+            var visitedClone = new HashSet<int>(visited);
+            visitedClone.Add(item.key);
+            foreach (var grp in item.serves.Where(x => x.elements <= count))
+            {
+                var keyCombined = $"{item.key}:{grp.elements}";
+                var keygenClone = new HashSet<string>(keygen);
+                if (keygen.Contains(keyCombined))
+                {
+                    Debugger.Break();
+                }
+                keygenClone.Add(keyCombined);
+                var countCpy = count;
+                var productCpy = product;
+                countCpy -= grp.elements;
+                productCpy *= grp.ways;
+
+                if (countCpy == 0)
+                {
+                    var hash = string.Join("|", keygenClone.OrderBy(x => x));
+                    if (results.TryGetValue(hash, out var result))
+                    {
+                        if (result != productCpy)
+                        {
+                            Debugger.Break();
+                        }
+                    }
+                    else
+                    {
+                        results.Add(hash, productCpy);
+                    }
+                }
+                else if (countCpy < 0)
+                {
+                    Debugger.Break();
+                }
+                else
+                {
+                    Discover(countCpy, keygenClone, visitedClone, productCpy);
+                }
+            }
+        }
+    }
+
+    Discover(groups.Count, new HashSet<string>(), new HashSet<int>(), 1);
+
+    return results.Sum(x => x.Value);
+
+    //return SolutionCountAlt(condition, groups);
 
 }
+
 
 // n??? can serve v in these ways
 IEnumerable<(short elements, short ways)> ServeWays(short n, short group)
 {
-    for (short i = 1; i <= n ; i++)
+    for (short i = 1; i <= n; i++)
     {
         var result = (short)SolutionCountAlt(new string('?', n), Enumerable.Repeat(group, i).ToList());
         if (result == 0)
