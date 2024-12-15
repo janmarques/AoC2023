@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1026,7 +1027,7 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "???.??.? 1,1";
+var smallest = "#??.????.?##?.? 1,4,4";
 //smallest = "??.? 1,1";
 
 var input = smallInput;
@@ -1088,18 +1089,18 @@ foreach (var (condition, groups) in lines)
     useCache = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    //useCache = false;
-    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    //result2 += algo2;
-    //if (algo1 != algo2)
-    //{
+    useCache = false;
+    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    result2 += algo2;
+    if (algo1 != algo2)
+    {
 
-    //    var algo3 = Solve3(largeCondition, largeGroup);
+        var algo3 = Solve3(largeCondition, largeGroup);
 
-    //    Console.WriteLine("broken!");
-    //    Debugger.Break();
-    //    Console.ReadLine();
-    //}
+        Console.WriteLine("broken!");
+        Debugger.Break();
+        Console.ReadLine();
+    }
 
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
@@ -1194,17 +1195,45 @@ long Solve(string condition, List<short> groups)
             return 1;
         }
         //SolutionCountAlt(condition, groups);
-        var tmpResult = OnlyQuestionMarks(condition, groups);
-        if (tmpResult != null)
+        var onlyOnes = OnlyQuestionMarks(condition, groups);
+        if (onlyOnes != null)
         {
-            return tmpResult.Value;
+            return onlyOnes.Value;
+        }
+
+        var groupsDeterministic = WithGroupsDeterministic(condition, groups);
+        if (groupsDeterministic != null)
+        {
+            return groupsDeterministic.Value;
         }
     }
 
     return Solve2(condition, groups);
 }
 
+long? WithGroupsDeterministic(string condition, List<short> groups)
+{
+    var squashed = condition.Replace("?", "");
+    if (squashed.Length == 0) { return null; }
+    var atLeastGroups = GetGroups(squashed, '#').ToList();
+    if (atLeastGroups.Count() != groups.Count())
+    {
+        return null;
+    }
+    var split = condition.Split(".").Where(x => x.Contains("#")).ToList();
+    if (split.Count() != groups.Count())
+    {
+        Debugger.Break();
+    }
 
+    var result = 1l;
+    for (int i = 0; i < split.Count(); i++)
+    {
+        result *= Solve2(split[i], new List<short>() { groups[i] });
+    }
+
+    return result;
+}
 
 long? OnlyQuestionMarks(string condition, List<short> groups)
 {
@@ -1380,7 +1409,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveAllLargests(string con
     }
     else
     {
-        Debugger.Break(); /*TODO!!!!*/
+        //Debugger.Break(); /*TODO!!!!*/
 
     }
 
@@ -1535,6 +1564,16 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
     condition = condition.Trim('.');
 
+    var minGroup = groups.First();
+    for (int i = 1; i < minGroup; i++)
+    {
+        var uselessStart = new string('?', i) + ".";
+        if (condition.StartsWith(uselessStart))
+        {
+            condition = ReplaceOnce(condition, uselessStart, "");
+        }
+    }
+
     if (groups.Count == 1 && condition.All(x => x == '#' || x == '?') && condition.Length == groups.Single())
     {
         yield return ("", new List<short>());
@@ -1543,6 +1582,10 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
     var cpy = condition.ToString();//.Replace("?", "#");
     var cpyGroup = groups.ToList();
+
+   
+
+
     var firstGroupLength = cpy.TakeWhile(x => x == '#').Count();
     if (firstGroupLength == cpyGroup.First())
     {
@@ -1795,7 +1838,9 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         var max = stringGroupsWithCount.Max(x => x.Key);
         var matches = groupsWithCount.Where(x => x.Key == max).Where(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
 
-        if (matches.Any() && stringGroupsWithCount.Count(x => x.Key == max) == matches.Count())
+        // ALSO HERE WRONG because order of groups doesnt respect the pattern group order. So only if 1 match
+
+        if (matches.Any() && matches.First().Count() == 1 &&  stringGroupsWithCount.Count(x => x.Key == max) == matches.Count())
         {
             match = matches.First();
             var aaa = new string('#', match.Key);
