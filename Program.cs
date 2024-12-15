@@ -1024,14 +1024,14 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = ".?#?#.?.##????#?? 4,1,5,1";
+var smallest = "?#?#?#?#?#?#?#? 1,3,1,6";
 
 var input = smallInput;
 //input = fullInput;
-//input = smallest;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-repeats = 0;
+//repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1085,18 +1085,18 @@ foreach (var (condition, groups) in lines)
     useCache = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    useCache = false;
-    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    result2 += algo2;
-    if (algo1 != algo2)
-    {
+    //useCache = false;
+    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    //result2 += algo2;
+    //if (algo1 != algo2)
+    //{
 
-        var algo3 = Solve3(largeCondition, largeGroup);
+    //    var algo3 = Solve3(largeCondition, largeGroup);
 
-        Console.WriteLine("broken!");
-        Debugger.Break();
-        Console.ReadLine();
-    }
+    //    Console.WriteLine("broken!");
+    //    Debugger.Break();
+    //    Console.ReadLine();
+    //}
 
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
