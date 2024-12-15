@@ -1027,11 +1027,11 @@ var smallInput =
 var smallest = "?#?#?#?#?#?#?#? 1,3,1,6";
 
 var input = smallInput;
-//input = fullInput;
-input = smallest;
+input = fullInput;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-//repeats = 0;
+repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1587,25 +1587,25 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         {
 
             // partial start search
-            var partialStart = condition.Substring(0, condition.TakeWhile(x => x != '?').Count() + 2);
             var firstGroup = cpyGroup.First();
-            //if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart, cpyGroup.Take(2).ToList()).Count == 0)
-            //{
-            //    if (partialStart == condition)
-            //    {
-            //        yield break;
-            //    }
-            //    cpyGroup.RemoveAt(0);
+            var partialStart = condition.Substring(0, firstGroup + 1);
+            if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart + "?", cpyGroup.Take(1).ToList()).Count == 1)
+            {
+                if (partialStart == condition)
+                {
+                    yield break;
+                }
+                cpyGroup.RemoveAt(0);
 
-            //    var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
-            //    var index = matchesX.Single().LastIndexOf('#');
-            //    var conditionCpy = condition[(index + 2)..];
-            //    foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
-            //    {
-            //        yield return (item.condition, item.groups);
-            //    }
-            //    yield break;
-            //}
+                var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
+                var index = matchesX.Single().LastIndexOf('#');
+                var conditionCpy = condition[(index + 2)..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
 
             if (partialStart.StartsWith('#'))
             {
