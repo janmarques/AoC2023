@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Numerics;
@@ -1018,9 +1019,9 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var containsCount = ContainsCount("aa.a", ".aa");
+//var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "??##????#?? 4,4";
+var smallest = "???#??.#?# 1,2,3";
 
 var input = smallInput;
 //input = fullInput;
@@ -1051,7 +1052,7 @@ var cacheSolve3 = new Dictionary<string, HashSet<string>>();
 
 //var eex = Solve2("?##?#???", new short[] { 5 }.ToList());
 
-var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
+//var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
 
 
 //var xx = GetGroups("###..##.###").ToList();
@@ -1073,14 +1074,15 @@ foreach (var (condition, groups) in lines)
     trim = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    //trim = false;
-    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    //result2 += algo2;
-    //if (algo1 != algo2)
-    //{
-    //    Debugger.Break();
-    //    Console.ReadLine();
-    //}
+    trim = false;
+    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    result2 += algo2;
+    if (algo1 != algo2)
+    {
+        Console.WriteLine("broken!");
+        Debugger.Break();
+        Console.ReadLine();
+    }
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
 }
@@ -1125,17 +1127,18 @@ long Solve(string condition, List<short> groups)
 
     if (trim)
     {
-        var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
-        (newCondition, newGroups) = MultiLevelShit(newCondition, newGroups, 1);
-        condition = newCondition;
-        groups = newGroups;
+        //var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
+        //(newCondition, newGroups) = MultiLevelShit(newCondition, newGroups, 1);
+        //condition = newCondition;
+        //groups = newGroups;
 
         (condition, groups) = RemoveAllSames(condition, groups);
-        //var tmpResult = OnlyQuestionMarks(condition, groups);
-        //if (tmpResult != null)
-        //{
-        //    return tmpResult.Value;
-        //}
+        //SolutionCountAlt(condition, groups);
+        var tmpResult = OnlyQuestionMarks(condition, groups);
+        if (tmpResult != null)
+        {
+            return tmpResult.Value;
+        }
     }
 
     return Solve2(condition, groups);
@@ -1147,33 +1150,51 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
     {
         return null;
     }
+    if (!condition.Any(x => x == '.'))
+    {
+        return null;
+    }
 
     if (groups.Any(x => x != groups.First()))
     {
         return null;
     }
-
-    var groupNumber = groups.First();
-    var count = groups.Count();
-
-    //var qGroups = condition.Split('.').Select(x => x.Count()).ToList();
-    var qGroups = condition.Split('.').ToList();
-
-    var positions = 1l;
-    foreach (var qGroup in qGroups)
+    if (groups.Any(x => x != 1))
     {
-        var sCount = SolutionCount(qGroup, groupNumber);
-        if (sCount > 0)
-        {
-            positions *= sCount;
-        }
-
-        var more = Solve3(qGroup, Enumerable.Repeat(groupNumber, 2).ToList());
+        return null;
     }
 
-    return positions;
 
-    return CalculateCombinations(positions, count);
+    return SolutionCountAlt(condition, groups);
+    //var groupNumber = groups.First();
+    //var count = groups.Count();
+
+    ////var qGroups = condition.Split('.').Select(x => x.Count()).ToList();
+    //var qGroups = condition.Split('.').ToList();
+
+    //var positions = 0;
+    //var moreTotal = 0;
+    //foreach (var qGroup in qGroups)
+    //{
+    //    var sCount = SolutionCount(qGroup, groupNumber);
+    //    if (sCount > 0)
+    //    {
+    //        positions += sCount;
+    //    }
+
+    //    var more = Solve3(qGroup, Enumerable.Repeat(groupNumber, 2).ToList());
+    //    moreTotal += more.Count;
+    //}
+
+    //var result = positions + moreTotal;
+    //Console.WriteLine(Hash(condition, groups) + " => " + result);
+
+
+    //return result;
+
+
+
+    //return CalculateCombinations(positions, count);
 }
 
 long CalculateCombinations(long n, long k)
@@ -1202,6 +1223,10 @@ BigInteger Factorial(BigInteger n)
     var group = groups.First();
     var groupString = $"?{new string('#', group)}?";
     var count = ContainsCount(condition, groupString);
+    if(count != groups.Count)
+    {
+        return (condition, groups);
+    }
     condition = condition.Replace(groupString, "?");
     for (var i = 0; i < count; i++)
     {
@@ -1411,7 +1436,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             yield break;
         }
 
-        if (condition.Contains('.') /*&& false*/)
+        if (condition.Contains('.') && false)
         {
 
             // partial start search
@@ -1794,6 +1819,57 @@ int SolutionCount(string input, int length)
 
     return count;
 }
+
+int SolutionCountAlt(string input, List<short> nums)
+{
+    var bitboard = input.Select(x => x == '?').ToList();
+    var count = 0;
+    for (var i = (int)Math.Pow(2, input.Length) - 1; i > 0; i--)
+    {
+        if (i == 65)
+        {
+
+        }
+        var ba = new bool[128];
+        new BitArray(new[] { i }).CopyTo(ba, 0);
+        ba = ba.Take(input.Length).Reverse().ToArray();
+        if (FitsMask(ba, bitboard, nums))
+        {
+            //Console.WriteLine(string.Join("", ba.Select(x => x ? '1' : '0')));
+            count++;
+        }
+    }
+
+    return count;
+}
+
+bool FitsMask(bool[] ba, List<bool> bitboard, List<short> nums)
+{
+    var encountered = 0;
+    for (int i = 0; i < bitboard.Count; i++)
+    {
+        var bit = ba[i];
+        var mask = bitboard[i];
+        if (bit)
+        {
+            if (!mask)
+            {
+                return false;
+            }
+            if (i==0 || !ba[i-1])
+            {
+                encountered++;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return encountered == nums.Count;
+}
+
 string ExtendGroups(string input)
 {
     while (input.Contains("#?")) { input = input.Replace("#?", "##"); }
