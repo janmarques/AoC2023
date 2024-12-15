@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http.Headers;
+using System.Numerics;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
@@ -1017,11 +1018,13 @@ var smallInput =
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
 
-var smallest = "??#?.??.? 1,1";
+var containsCount = ContainsCount("aa.a", ".aa");
+
+var smallest = "??##????#?? 4,4";
 
 var input = smallInput;
-input = fullInput;
-input = smallest;
+//input = fullInput;
+//input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 //repeats = 0;
@@ -1034,20 +1037,21 @@ while (input.Contains(".."))
     input = input.Replace("..", ".");
 }
 
-var aa = HasSingleSolution("##?#", 2);
 
 var lines = input.Split(Environment.NewLine)
     .OrderBy(x => x.Length)
     .Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 var maxGroup = lines.SelectMany(x => x.groups).Max();
 
-var cacheWithUnknowns = new Dictionary<string, int>();
+var cacheWithUnknowns = new Dictionary<string, long>();
 var cachePrecise = new Dictionary<string, bool>();
 var cacheReduce = new Dictionary<string, List<(string, List<short>)>>();
 var cacheGroupCounts = new Dictionary<string, List<short>>();
 var cacheSolve3 = new Dictionary<string, HashSet<string>>();
 
 //var eex = Solve2("?##?#???", new short[] { 5 }.ToList());
+
+var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
 
 
 //var xx = GetGroups("###..##.###").ToList();
@@ -1083,7 +1087,7 @@ foreach (var (condition, groups) in lines)
 
 string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
 
-int SolveCached(string condition, List<short> groups)
+long SolveCached(string condition, List<short> groups)
 {
     if (!trim)
     {
@@ -1096,9 +1100,9 @@ int SolveCached(string condition, List<short> groups)
     }
     return cacheWithUnknowns[hash];
 }
-int Solve(string condition, List<short> groups)
+long Solve(string condition, List<short> groups)
 {
-    var count = 1;
+    var count = 1l;
     if (trim)
     {
         condition = condition.Trim('.');
@@ -1127,10 +1131,69 @@ int Solve(string condition, List<short> groups)
         groups = newGroups;
 
         (condition, groups) = RemoveAllSames(condition, groups);
-
+        //var tmpResult = OnlyQuestionMarks(condition, groups);
+        //if (tmpResult != null)
+        //{
+        //    return tmpResult.Value;
+        //}
     }
 
     return Solve2(condition, groups);
+}
+
+long? OnlyQuestionMarks(string condition, List<short> groups)
+{
+    if (condition.Any(x => x == '#'))
+    {
+        return null;
+    }
+
+    if (groups.Any(x => x != groups.First()))
+    {
+        return null;
+    }
+
+    var groupNumber = groups.First();
+    var count = groups.Count();
+
+    //var qGroups = condition.Split('.').Select(x => x.Count()).ToList();
+    var qGroups = condition.Split('.').ToList();
+
+    var positions = 1l;
+    foreach (var qGroup in qGroups)
+    {
+        var sCount = SolutionCount(qGroup, groupNumber);
+        if (sCount > 0)
+        {
+            positions *= sCount;
+        }
+
+        var more = Solve3(qGroup, Enumerable.Repeat(groupNumber, 2).ToList());
+    }
+
+    return positions;
+
+    return CalculateCombinations(positions, count);
+}
+
+long CalculateCombinations(long n, long k)
+{
+    var a = Factorial(n);
+    var b = Factorial(k);
+    var c = Factorial(n - k);
+
+    var d = a / (b * c);
+
+    return (long)d;
+    //return Factorial(n) / (Factorial(k) * Factorial(n - k));
+    //return Factorial(n) / (Factorial(k) * Factorial(n - k));
+}
+
+BigInteger Factorial(BigInteger n)
+{
+    var product = n;
+    if (n == 1) { return 1; }
+    return n * Factorial(n - 1);
 }
 
 (string condition, List<short> groups) RemoveAllSames(string condition, List<short> groups)
@@ -1138,7 +1201,7 @@ int Solve(string condition, List<short> groups)
     if (groups.Distinct().Count() != 1) { return (condition, groups); }
     var group = groups.First();
     var groupString = $"?{new string('#', group)}?";
-    var count = condition.Count(x => x == '#');
+    var count = ContainsCount(condition, groupString);
     condition = condition.Replace(groupString, "?");
     for (var i = 0; i < count; i++)
     {
@@ -1146,6 +1209,16 @@ int Solve(string condition, List<short> groups)
     }
 
     return (condition, groups);
+}
+
+int ContainsCount(string condition, string groupString)
+{
+    var count = 0;
+    for (int i = 0; i <= condition.Length - groupString.Length; i++)
+    {
+        count += condition.Substring(i, groupString.Length) == groupString ? 1 : 0;
+    }
+    return count;
 }
 
 (string condition, List<short> groups) MultiLevelShit(string condition, List<short> groups, int level)
@@ -1703,6 +1776,11 @@ short ConsecutiveChars(string s, char v)
 
 bool HasSingleSolution(string input, int length)
 {
+    return SolutionCount(input, length) == 1;
+}
+
+int SolutionCount(string input, int length)
+{
     var mustIndices = input.Select((x, i) => (x, i)).Where(x => x.x == '#').Select(x => x.i).ToList();
 
     var count = 0;
@@ -1714,7 +1792,7 @@ bool HasSingleSolution(string input, int length)
         }
     }
 
-    return count == 1;
+    return count;
 }
 string ExtendGroups(string input)
 {
@@ -1756,6 +1834,7 @@ bool Valid(string mask, string attempt)
 {
     if (mask.Length != attempt.Length)
     {
+        return false;
         Debugger.Break();
     }
     if (attempt.Contains('?'))
