@@ -1022,14 +1022,14 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = ".??.??.?##. 1,1,3";
+var smallest = "?.?.?????#. 1,1,5";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-//repeats = 0;
+repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1175,55 +1175,7 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
 
 
     return SolutionCountAlt(condition, groups);
-    //var groupNumber = groups.First();
-    //var count = groups.Count();
 
-    ////var qGroups = condition.Split('.').Select(x => x.Count()).ToList();
-    //var qGroups = condition.Split('.').ToList();
-
-    //var positions = 0;
-    //var moreTotal = 0;
-    //foreach (var qGroup in qGroups)
-    //{
-    //    var sCount = SolutionCount(qGroup, groupNumber);
-    //    if (sCount > 0)
-    //    {
-    //        positions += sCount;
-    //    }
-
-    //    var more = Solve3(qGroup, Enumerable.Repeat(groupNumber, 2).ToList());
-    //    moreTotal += more.Count;
-    //}
-
-    //var result = positions + moreTotal;
-    //Console.WriteLine(Hash(condition, groups) + " => " + result);
-
-
-    //return result;
-
-
-
-    //return CalculateCombinations(positions, count);
-}
-
-long CalculateCombinations(long n, long k)
-{
-    var a = Factorial(n);
-    var b = Factorial(k);
-    var c = Factorial(n - k);
-
-    var d = a / (b * c);
-
-    return (long)d;
-    //return Factorial(n) / (Factorial(k) * Factorial(n - k));
-    //return Factorial(n) / (Factorial(k) * Factorial(n - k));
-}
-
-BigInteger Factorial(BigInteger n)
-{
-    var product = n;
-    if (n == 1) { return 1; }
-    return n * Factorial(n - 1);
 }
 
 (string condition, List<short> groups) RemoveAllSames(string condition, List<short> groups)
@@ -1405,13 +1357,13 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             yield break;
         }
 
-        if (condition.Contains('.') && false)
+        if (condition.Contains('.'))
         {
 
             // partial start search
             var partialStart = new string(condition.TakeWhile(x => x != '.').ToArray());
             var firstGroup = cpyGroup.First();
-            if (partialStart.Contains('#') && HasSingleSolution(partialStart, firstGroup) && firstGroup > 1/* && partialStart.Length == firstGroup && ConsecutiveChars(partialStart, '?') < firstGroup*/)
+            if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart, cpyGroup.Take(2).ToList()).Count == 0)
             {
                 if (partialStart == condition)
                 {
@@ -1430,9 +1382,9 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             }
 
             // partial start end
-            var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray());
+            var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '.').ToArray().Reverse().ToArray());
             var lastGroup = cpyGroup.Last();
-            if (partialEnd.Contains('#') && HasSingleSolution(partialEnd, lastGroup) && lastGroup > 1/* && partialStart.Length == firstGroup && ConsecutiveChars(partialEnd, '?') < lastGroup*/)
+            if (partialEnd.Contains('#') && Solve3Cached(partialEnd, cpyGroup.TakeLast(1).ToList()).Count == 1 && Solve3Cached(partialEnd, cpyGroup.TakeLast(2).ToList()).Count == 0)
             {
                 if (partialEnd == condition)
                 {
@@ -1533,7 +1485,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         {
             match = matches.First();
             var aaa = new string('#', match.Key);
-            var needles = new[] { $".{aaa}.", $".{aaa}", $"{aaa}.", $"{aaa}" };
+            var needles = new[] { $".{aaa}.", $"{aaa}.", $".{aaa}", $"{aaa}" };
 
             var found = "xxxxx";
             foreach (var needle in needles)
@@ -1595,7 +1547,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         {
             match = matches.First();
             var aaa = new string('#', match.Key);
-            var needles = new[] { $".{aaa}.", $".{aaa}", $"{aaa}.", $"{aaa}" };
+            var needles = new[] { $".{aaa}.", $"{aaa}.", $".{aaa}", $"{aaa}" };
 
             var found = "xxxxx";
             foreach (var needle in needles)
@@ -1744,28 +1696,6 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
 
     yield return (condition, cpyGroup);
-}
-
-short ConsecutiveChars(string s, char v)
-{
-    var maxResult = 0;
-    var result = 0;
-    var previous = char.MinValue;
-    foreach (var item in s)
-    {
-        if (item == v)
-        {
-            result++;
-        }
-        else
-        {
-            maxResult = Math.Max(maxResult, result);
-            result = 0;
-        }
-
-        previous = item;
-    }
-    return (short)Math.Max(maxResult, result);
 }
 
 bool HasSingleSolution(string input, int length)
