@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Net.Http.Headers;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -1027,7 +1028,7 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "#??.????.?##?.? 1,4,4";
+var smallest = "??.??.??.? 1,1";
 //smallest = "??.? 1,1";
 
 var input = smallInput;
@@ -1089,17 +1090,24 @@ foreach (var (condition, groups) in lines)
     useCache = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    useCache = false;
-    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    result2 += algo2;
-    if (algo1 != algo2)
+
+    var debug = false;
+    debug = true;
+    if (debug)
     {
 
-        var algo3 = Solve3(largeCondition, largeGroup);
+        useCache = false;
+        var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+        result2 += algo2;
+        if (algo1 != algo2)
+        {
 
-        Console.WriteLine("broken!");
-        Debugger.Break();
-        Console.ReadLine();
+            var algo3 = Solve3(largeCondition, largeGroup);
+
+            Console.WriteLine("broken!");
+            Debugger.Break();
+            Console.ReadLine();
+        }
     }
 
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
@@ -1152,6 +1160,24 @@ long Solve(string condition, List<short> groups)
         var (newCondition2, newGroups2) = MultiLevelShit(newCondition, newGroups, 1);
         condition = newCondition2;
         groups = newGroups2;
+
+
+        var yieldResult2 = MultiLevelQuestions(condition, groups).ToList();
+        if (yieldResult2.Count == 1)
+        {
+            newCondition = yieldResult2.Single().condition;
+            newGroups = yieldResult2.Single().groups;
+        }
+        else
+        {
+            foreach (var item in yieldResult2)
+            {
+                count *= SolveCached(item.condition, item.groups);
+            }
+            return count;
+        }
+
+
 
         (condition, groups) = RemoveAllSames(condition, groups);
         while (true)
@@ -1457,6 +1483,54 @@ int ContainsCount(string condition, string groupString)
     return count;
 }
 
+
+IEnumerable<(string condition, List<short> groups)> MultiLevelQuestions(string condition, List<short> groups)
+{
+    if (condition.Contains("#"))
+    {
+        yield return (condition, groups);
+        yield break;
+    }
+    var split = condition.Split('.');
+    for (int i = 1; i < 10; i++)
+    {
+        var start = string.Join(".", split.Take(i));
+        var lookahead = string.Join(".", split.Take(i + 1));
+        var lookahead2 = string.Join(".", split.Take(i + 2));
+
+        if (start == "")
+        {
+            yield return (condition, groups);
+            yield break;
+        }
+
+        var fitsMe = Solve3Cached(start, groups.Take(i).ToList()).Count > 0;
+        if (fitsMe)
+        {
+            var fitsNext = Solve3Cached(start, groups.Take(i + 1).ToList()).Count > 0;
+            if (!fitsNext)
+            {
+
+                var fitsNext2 = Solve3Cached(lookahead, groups.Take(i + 1).ToList()).Count > 0;
+                if (fitsNext2)
+                {
+                    var fitsNext3 = Solve3Cached(lookahead2, groups.Take(i + 1).ToList()).Count > 0;
+                    if (!fitsNext3)
+                    {
+                        yield return (start, groups.Take(i).ToList());
+                        yield return (ReplaceOnce(condition, start, ""), groups.Skip(i).ToList());
+                        yield break;
+                    }
+                }
+            }
+        }
+    }
+
+    yield return (condition, groups);
+    yield break;
+}
+
+
 (string condition, List<short> groups) MultiLevelShit(string condition, List<short> groups, int level)
 {
     var split = condition.Split('.');
@@ -1583,7 +1657,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
     var cpy = condition.ToString();//.Replace("?", "#");
     var cpyGroup = groups.ToList();
 
-   
+
 
 
     var firstGroupLength = cpy.TakeWhile(x => x == '#').Count();
@@ -1840,7 +1914,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
         // ALSO HERE WRONG because order of groups doesnt respect the pattern group order. So only if 1 match
 
-        if (matches.Any() && matches.First().Count() == 1 &&  stringGroupsWithCount.Count(x => x.Key == max) == matches.Count())
+        if (matches.Any() && matches.First().Count() == 1 && stringGroupsWithCount.Count(x => x.Key == max) == matches.Count())
         {
             match = matches.First();
             var aaa = new string('#', match.Key);
