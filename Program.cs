@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Net.Http.Headers;
@@ -1024,11 +1025,11 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "?#?#?#?#?#?#?#? 1,3,1,6";
+var smallest = "???.??.? 1,1";
 
 var input = smallInput;
 input = fullInput;
-//input = smallest;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 repeats = 0;
@@ -1065,7 +1066,7 @@ int j = 0;
 bool useCache = true;
 
 bool printSolve = true;
-printSolve = false;
+//printSolve = false;
 
 
 //var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
@@ -1223,9 +1224,25 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
         return null;
     }
 
+    var qGroups = GetGroups(condition, '?');
+    var qqq = qGroups.Select(x => (count: x, ServeWays(x, 1).ToList())).ToList();
 
     return SolutionCountAlt(condition, groups);
 
+}
+
+// n??? can serve v in these ways
+IEnumerable<(short elements, short ways)> ServeWays(short n, short group)
+{
+    for (short i = 1; i <= n ; i++)
+    {
+        var result = (short)SolutionCountAlt(new string('?', n), Enumerable.Repeat(group, i).ToList());
+        if (result == 0)
+        {
+            yield break;
+        }
+        yield return (i, result);
+    }
 }
 
 (string condition, List<short> groups) RemoveAllSames(string condition, List<short> groups)
@@ -1316,15 +1333,16 @@ IEnumerable<(string condition, List<short> groups)> RemoveAllLargests(string con
 
 }
 
-List<short> GetFixedGroups(string condition)
+List<short> GetFixedGroups(string condition) => GetGroups(condition, '#');
+List<short> GetGroups(string condition, char needle)
 {
     var list = new List<short>();
     var previous = condition[0];
-    var count = previous == '#' ? (short)1 : (short)0;
+    var count = previous == needle ? (short)1 : (short)0;
     for (int i = 1; i < condition.Length; i++)
     {
         var current = condition[i];
-        if (current == '#')
+        if (current == needle)
         {
             count++;
         }
@@ -1958,6 +1976,8 @@ int SolutionCountAlt(string input, List<short> nums)
 
 IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nums)
 {
+    input = input.Replace("..", ".");
+
     if (printSolve) { Console.WriteLine(Hash(input, nums)); }
 
     var bitboard = input.Select(x => x == '?' ? (bool?)null : x == '#').ToList();
