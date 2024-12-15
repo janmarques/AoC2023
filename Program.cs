@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Numerics;
 using System.Reflection.PortableExecutable;
@@ -1021,14 +1022,14 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "???#??.#?# 1,2,3";
+var smallest = ".??.??.?##. 1,1,3";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-//repeats = 0;
+repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1038,6 +1039,8 @@ while (input.Contains(".."))
     input = input.Replace("..", ".");
 }
 
+
+//var xqqqx = SolutionCountAlt("??#.???#?", new List<short> { 2, 1, 2 });
 
 var lines = input.Split(Environment.NewLine)
     .OrderBy(x => x.Length)
@@ -1052,13 +1055,18 @@ var cacheSolve3 = new Dictionary<string, HashSet<string>>();
 
 //var eex = Solve2("?##?#???", new short[] { 5 }.ToList());
 
-//var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
 
 
 //var xx = GetGroups("###..##.###").ToList();
 
 int j = 0;
 bool trim = true;
+
+bool printSolve = true;
+
+
+//var aa = OnlyQuestionMarks("???.??", new List<short> { 1, 1 });
+
 foreach (var (condition, groups) in lines)
 {
     var largeCondition = condition;
@@ -1223,7 +1231,7 @@ BigInteger Factorial(BigInteger n)
     var group = groups.First();
     var groupString = $"?{new string('#', group)}?";
     var count = ContainsCount(condition, groupString);
-    if(count != groups.Count)
+    if (count != groups.Count)
     {
         return (condition, groups);
     }
@@ -1310,47 +1318,7 @@ HashSet<string> Solve3Cached(string condition, List<short> groups)
 
 HashSet<string> Solve3(string condition, List<short> groups)
 {
-    var bucketCount = groups.Count + 1;
-    var leftToFill = condition.Length - (groups.Sum(x => x) + groups.Count - 1);
-
-    var buckets = new List<List<int>>() { Enumerable.Repeat(0, bucketCount).ToList() };
-    for (int i = 0; i < leftToFill; i++)
-    {
-        var copies = new List<List<int>>();
-        foreach (var item in buckets)
-        {
-            for (int j = 0; j < item.Count; j++)
-            {
-                var cpy = item.ToList();
-                cpy[j]++;
-                copies.Add(cpy);
-            }
-        }
-        buckets = copies;
-    }
-
-    var possibleStrings = new HashSet<string>();
-
-    foreach (var bucket in buckets)
-    {
-        var i = 0;
-        var str = new StringBuilder();
-        str.Append('.', bucket.ElementAtOrDefault(i));
-        foreach (var item in groups)
-        {
-            if (i != 0)
-            {
-                str.Append('.');
-            }
-            str.Append('#', item);
-            i++;
-            str.Append('.', bucket.ElementAtOrDefault(i));
-        }
-        possibleStrings.Add(str.ToString());
-    }
-
-    possibleStrings = possibleStrings.Where(x => ValidCached(condition, x)).ToHashSet();
-    return possibleStrings;
+    return SolutionCountAltStringsInternal(condition, groups).ToHashSet();
 }
 
 
@@ -1822,11 +1790,13 @@ int SolutionCount(string input, int length)
 
 int SolutionCountAlt(string input, List<short> nums)
 {
-    var bitboard = input.Select(x => x == '?').ToList();
+    if (printSolve) { Console.WriteLine(Hash(input, nums)); }
+
+    var bitboard = input.Select(x => x == '?' ? (bool?)null : x == '#').ToList();
     var count = 0;
     for (var i = (int)Math.Pow(2, input.Length) - 1; i > 0; i--)
     {
-        if (i == 65)
+        if (i == 10)
         {
 
         }
@@ -1835,7 +1805,7 @@ int SolutionCountAlt(string input, List<short> nums)
         ba = ba.Take(input.Length).Reverse().ToArray();
         if (FitsMask(ba, bitboard, nums))
         {
-            //Console.WriteLine(string.Join("", ba.Select(x => x ? '1' : '0')));
+            if (printSolve) { Console.WriteLine(string.Join("", ba.Select(x => x ? '1' : '0'))); }
             count++;
         }
     }
@@ -1843,31 +1813,81 @@ int SolutionCountAlt(string input, List<short> nums)
     return count;
 }
 
-bool FitsMask(bool[] ba, List<bool> bitboard, List<short> nums)
+IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nums)
 {
+    if (printSolve) { Console.WriteLine(Hash(input, nums)); }
+
+    var bitboard = input.Select(x => x == '?' ? (bool?)null : x == '#').ToList();
+    for (var i = (int)Math.Pow(2, input.Length) - 1; i > 0; i--)
+    {
+        if (i == 87)
+        {
+
+        }
+        var ba = new bool[128];
+        new BitArray(new[] { i }).CopyTo(ba, 0);
+        ba = ba.Take(input.Length).Reverse().ToArray();
+        if (FitsMask(ba, bitboard, nums))
+        {
+            if (printSolve)
+            {
+                var result = string.Join("", ba.Select(x => x ? '#' : '.'));
+                Console.WriteLine(result);
+                yield return result;
+            }
+        }
+    }
+}
+
+bool FitsMask(bool[] ba, List<bool?> bitboard, List<short> nums)
+{
+    var cpy = nums.ToList();
+    cpy.Reverse();
+    var stack = new Stack<short>(cpy);
+
     var encountered = 0;
+
     for (int i = 0; i < bitboard.Count; i++)
     {
         var bit = ba[i];
         var mask = bitboard[i];
+        if (bit && mask.HasValue && !mask.Value)
+        {
+            return false;
+        }
+        if (mask.HasValue && mask.Value && !bit)
+        {
+            return false;
+        }
+
         if (bit)
         {
-            if (!mask)
+            encountered++;
+        }
+        else
+        {
+            if (encountered > 0)
             {
-                return false;
+                if (!stack.TryPop(out var num2))
+                {
+                    return false;
+                }
+                if (num2 != encountered) { return false; }
             }
-            if (i==0 || !ba[i-1])
-            {
-                encountered++;
-            }
-            else
-            {
-                return false;
-            }
+            encountered = 0;
         }
     }
 
-    return encountered == nums.Count;
+    if (encountered > 0)
+    {
+        if (!stack.TryPop(out var num2))
+        {
+            return false;
+        }
+        if (num2 != encountered) { return false; }
+    }
+
+    return stack.Count == 0;
 }
 
 string ExtendGroups(string input)
