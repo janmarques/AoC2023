@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Net.Http.Headers;
 using System.Numerics;
 using System.Reflection.PortableExecutable;
@@ -1023,7 +1024,7 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "?#?#?#?#?#?#?#? 1,3,1,6";
+var smallest = "?#.?.##?? 1,3";
 
 var input = smallInput;
 input = fullInput;
@@ -1146,6 +1147,16 @@ long Solve(string condition, List<short> groups)
         groups = newGroups2;
 
         (condition, groups) = RemoveAllSames(condition, groups);
+        (condition, groups) = RemoveAllLargests(condition, groups);
+        (condition, groups) = RemoveAllLargests(condition, groups);
+        if (groups.Count == 0)
+        {
+            if (condition.Any(x => x == '#'))
+            {
+                Debugger.Break();
+            }
+            return 1;
+        }
         //SolutionCountAlt(condition, groups);
         var tmpResult = OnlyQuestionMarks(condition, groups);
         if (tmpResult != null)
@@ -1156,6 +1167,8 @@ long Solve(string condition, List<short> groups)
 
     return Solve2(condition, groups);
 }
+
+
 
 long? OnlyQuestionMarks(string condition, List<short> groups)
 {
@@ -1200,6 +1213,80 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
 
     return (condition, groups);
 }
+
+// ?#.?.##????#.?.##????#.?.##????#.?.##????#.?.##?? 1,3,1,3,1,3,1,3,1,3
+(string condition, List<short> groups) RemoveAllLargests(string condition, List<short> groups)
+{
+    var grpd = groups.GroupBy(x => x);
+    var max = grpd.Max(x => x.Key);
+    var maxGroup = groups.Where(x => x == max);
+    var nextBiggestGroup = groups.Where(x => x != max).OrderBy(x => x).LastOrDefault();
+
+    var conditionGroups = GetFixedGroups(condition);
+    var notUsableByOtherGroups = conditionGroups.Where(x => nextBiggestGroup < x).ToList();
+
+    if (notUsableByOtherGroups.Count != maxGroup.Count())
+    {
+        return (condition, groups);
+    }
+
+    foreach (var item in notUsableByOtherGroups)
+    {
+        var needle = "." + new string('#', item) + new string('?', max - item);
+        var index = condition.IndexOf(needle);
+        if (index != -1)
+        {
+            condition = condition.Remove(index + 1, needle.Length);
+            groups.RemoveAt(groups.IndexOf(max));
+        }
+        else
+        {
+            needle = new string('#', item) + new string('?', max - item) + '.';
+            index = condition.IndexOf(needle);
+            if (index != -1)
+            {
+                condition = condition.Remove(index - 1, needle.Length);
+                groups.RemoveAt(groups.IndexOf(max));
+            }
+            else
+            {
+                Debugger.Break();
+            }
+        }
+    }
+
+    return (condition, groups);
+
+}
+
+List<short> GetFixedGroups(string condition)
+{
+    var list = new List<short>();
+    var previous = condition[0];
+    var count = previous == '#' ? (short)1 : (short)0;
+    for (int i = 1; i < condition.Length; i++)
+    {
+        var current = condition[i];
+        if (current == '#')
+        {
+            count++;
+        }
+        else
+        {
+            if (count > 0)
+            {
+                list.Add(count);
+            }
+            count = 0;
+        }
+    }
+    if (count > 0)
+    {
+        list.Add(count);
+    }
+    return list;
+}
+
 
 int ContainsCount(string condition, string groupString)
 {
@@ -1459,7 +1546,37 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             }
 
 
+            // partial End search
+            var partialEnd = new string(new string(condition.Reverse().ToArray()).Substring(0, condition.Skip(1).TakeWhile(x => x != '?').Count() + 2).Reverse().ToArray());
+            var lastGroup = cpyGroup.Last();
+            if (partialEnd.Contains('#') && Solve3Cached(partialEnd, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialEnd, cpyGroup.Take(2).ToList()).Count == 0)
+            {
+                if (partialEnd == condition)
+                {
+                    yield break;
+                }
+                cpyGroup.RemoveAt(0);
 
+                var matchesX = Solve3Cached(partialEnd, new List<short>() { lastGroup });
+                var index = matchesX.Single().LastIndexOf('#');
+                var conditionCpy = condition[(index + 2)..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
+
+            if (partialEnd.EndsWith('#'))
+            {
+                cpyGroup.RemoveAt(0);
+                var conditionCpy = condition[Math.Min(condition.Length, (lastGroup + 1))..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
         }
 
         // WRONG because order of groups doesnt respect the pattern group order
@@ -1612,18 +1729,6 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
             var index = cpy.IndexOf(found);
             found = condition.Substring(index, found.Length);
-            //if (found.Count(x => x == '.') == 2)
-            //{
-            //    found = found.Substring(1);
-            //}
-            //else if (found.StartsWith('.'))
-            //{
-            //    found = found.Substring(1);
-            //}
-            //else if (found.EndsWith('.'))
-            //{
-            //    found = found.Substring(0, found.Length - 1);
-            //}
 
             var split = condition.Split(found, 2);
 
