@@ -1028,12 +1028,12 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "??.??.??.? 1,1";
+var smallest = ".???.????? 1,3"; // 1 can also go in group 2..
 //smallest = "??.? 1,1";
 
 var input = smallInput;
 input = fullInput;
-//input = smallest;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
 repeats = 0;
@@ -1486,7 +1486,7 @@ int ContainsCount(string condition, string groupString)
 
 IEnumerable<(string condition, List<short> groups)> MultiLevelQuestions(string condition, List<short> groups)
 {
-    if (condition.Contains("#"))
+    if (condition.Contains("#") || (groups.Sum(x => (int)x) + groups.Count()) < condition.Length / 2)
     {
         yield return (condition, groups);
         yield break;
@@ -1496,7 +1496,6 @@ IEnumerable<(string condition, List<short> groups)> MultiLevelQuestions(string c
     {
         var start = string.Join(".", split.Take(i));
         var lookahead = string.Join(".", split.Take(i + 1));
-        var lookahead2 = string.Join(".", split.Take(i + 2));
 
         if (start == "")
         {
@@ -1514,13 +1513,9 @@ IEnumerable<(string condition, List<short> groups)> MultiLevelQuestions(string c
                 var fitsNext2 = Solve3Cached(lookahead, groups.Take(i + 1).ToList()).Count > 0;
                 if (fitsNext2)
                 {
-                    var fitsNext3 = Solve3Cached(lookahead2, groups.Take(i + 1).ToList()).Count > 0;
-                    if (!fitsNext3)
-                    {
-                        yield return (start, groups.Take(i).ToList());
-                        yield return (ReplaceOnce(condition, start, ""), groups.Skip(i).ToList());
-                        yield break;
-                    }
+                    yield return (start, groups.Take(i).ToList());
+                    yield return (ReplaceOnce(condition, start, ""), groups.Skip(i).ToList());
+                    yield break;
                 }
             }
         }
