@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -1029,7 +1030,7 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-repeats = 0;
+//repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1445,6 +1446,19 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
                 }
                 yield break;
             }
+
+            if (partialStart.StartsWith('#'))
+            {
+                cpyGroup.RemoveAt(0);
+                var conditionCpy = condition[Math.Min(condition.Length, (firstGroup + 1))..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
+
+
 
         }
 
