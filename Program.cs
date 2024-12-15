@@ -1024,14 +1024,14 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "?#.?.##?? 1,3";
+var smallest = ".?#?#.?.##????#?? 4,1,5,1";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-//repeats = 0;
+repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1062,7 +1062,7 @@ var cacheSolve3 = new Dictionary<string, HashSet<string>>();
 //var xx = GetGroups("###..##.###").ToList();
 
 int j = 0;
-bool trim = true;
+bool useCache = true;
 
 bool printSolve = true;
 printSolve = false;
@@ -1082,18 +1082,21 @@ foreach (var (condition, groups) in lines)
     Console.WriteLine(j++);
     Console.WriteLine(Hash(condition, groups));
     Console.WriteLine(Hash(largeCondition, largeGroup));
-    trim = true;
+    useCache = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    //trim = false;
-    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    //result2 += algo2;
-    //if (algo1 != algo2)
-    //{
-    //    Console.WriteLine("broken!");
-    //    Debugger.Break();
-    //    Console.ReadLine();
-    //}
+    useCache = false;
+    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    result2 += algo2;
+    if (algo1 != algo2)
+    {
+
+        var algo3 = Solve3(largeCondition, largeGroup);
+
+        Console.WriteLine("broken!");
+        Debugger.Break();
+        Console.ReadLine();
+    }
 
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
@@ -1103,7 +1106,7 @@ string Hash(string condition, List<short> groups) => condition + " " + string.Jo
 
 long SolveCached(string condition, List<short> groups)
 {
-    if (!trim)
+    if (!useCache)
     {
         return Solve(condition, groups);
     }
@@ -1117,9 +1120,9 @@ long SolveCached(string condition, List<short> groups)
 long Solve(string condition, List<short> groups)
 {
     var count = 1l;
-    if (trim)
+    condition = condition.Trim('.');
+    if (useCache)
     {
-        condition = condition.Trim('.');
         var result = RemoveCertaintiesCached(condition, groups);
         if (result.Count == 1)
         {
@@ -1137,7 +1140,7 @@ long Solve(string condition, List<short> groups)
     if (groups.Count == 0) { return 1; }
 
 
-    if (trim)
+    if (useCache)
     {
         var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
         condition = newCondition;
@@ -1147,8 +1150,38 @@ long Solve(string condition, List<short> groups)
         groups = newGroups2;
 
         (condition, groups) = RemoveAllSames(condition, groups);
-        (condition, groups) = RemoveAllLargests(condition, groups);
-        (condition, groups) = RemoveAllLargests(condition, groups);
+        while (true)
+        {
+            var yieldResult = RemoveAllLargests(condition, groups).ToList();
+            if (yieldResult.Count == 1)
+            {
+                newCondition = yieldResult.Single().condition;
+                newGroups = yieldResult.Single().groups;
+            }
+            else
+            {
+                foreach (var item in yieldResult)
+                {
+                    count *= SolveCached(item.condition, item.groups);
+                }
+                return count;
+            }
+            var doBreak = groups.Count == newGroups.Count;
+            condition = newCondition;
+            groups = newGroups;
+            if (groups.Count == 0)
+            {
+                if (condition.Any(x => x == '#'))
+                {
+                    Debugger.Break();
+                }
+                return 1;
+            }
+            if (doBreak) { break; }
+        }
+
+        (condition, groups) = RemoveAllSames(condition, groups);
+
         if (groups.Count == 0)
         {
             if (condition.Any(x => x == '#'))
@@ -1201,61 +1234,85 @@ long? OnlyQuestionMarks(string condition, List<short> groups)
     var group = groups.First();
     var groupString = $"?{new string('#', group)}?";
     var count = ContainsCount(condition, groupString);
-    if (count != groups.Count)
+    //if (count != groups.Count)
+    //{
+    //    return (condition, groups);
+    //}
+    while (condition.Contains(groupString))
     {
-        return (condition, groups);
-    }
-    condition = condition.Replace(groupString, "?");
-    for (var i = 0; i < count; i++)
-    {
+        condition = ReplaceOnce(condition, groupString, ".");
         groups.RemoveAt(0);
     }
 
     return (condition, groups);
 }
 
-// ?#.?.##????#.?.##????#.?.##????#.?.##????#.?.##?? 1,3,1,3,1,3,1,3,1,3
-(string condition, List<short> groups) RemoveAllLargests(string condition, List<short> groups)
+string ReplaceOnce(string input, string search, string replace)
 {
-    var grpd = groups.GroupBy(x => x);
+    return new Regex(Regex.Escape(search)).Replace(input, replace, 1);
+}
+
+// ?#.?.##????#.?.##????#.?.##????#.?.##????#.?.##?? 1,3,1,3,1,3,1,3,1,3
+IEnumerable<(string condition, List<short> groups)> RemoveAllLargests(string condition, List<short> groups)
+{
+    var groupsCpy = groups.ToList();
+    var grpd = groupsCpy.GroupBy(x => x);
     var max = grpd.Max(x => x.Key);
-    var maxGroup = groups.Where(x => x == max);
-    var nextBiggestGroup = groups.Where(x => x != max).OrderBy(x => x).LastOrDefault();
+    var maxGroup = groupsCpy.Where(x => x == max);
+    var nextBiggestGroup = groupsCpy.Where(x => x != max).OrderBy(x => x).LastOrDefault();
 
     var conditionGroups = GetFixedGroups(condition);
     var notUsableByOtherGroups = conditionGroups.Where(x => nextBiggestGroup < x).ToList();
 
     if (notUsableByOtherGroups.Count != maxGroup.Count())
     {
-        return (condition, groups);
+        yield return (condition, groupsCpy);
+        yield break;
     }
 
-    foreach (var item in notUsableByOtherGroups)
+    var item = notUsableByOtherGroups.First();
+    var needle = "." + new string('#', item) + new string('?', max - item);
+    var index = condition.IndexOf(needle);
+    var match = "";
+    if (index != -1)
     {
-        var needle = "." + new string('#', item) + new string('?', max - item);
-        var index = condition.IndexOf(needle);
+        match = condition.Substring(index + 1, needle.Length);
+    }
+    else
+    {
+        needle = new string('?', max - item) + new string('#', item) + '.';
+        index = condition.IndexOf(needle);
         if (index != -1)
         {
-            condition = condition.Remove(index + 1, needle.Length);
-            groups.RemoveAt(groups.IndexOf(max));
+            match = condition.Substring(index - 1, needle.Length);
         }
         else
         {
-            needle = new string('#', item) + new string('?', max - item) + '.';
-            index = condition.IndexOf(needle);
-            if (index != -1)
-            {
-                condition = condition.Remove(index - 1, needle.Length);
-                groups.RemoveAt(groups.IndexOf(max));
-            }
-            else
-            {
-                Debugger.Break();
-            }
+            //Debugger.Break(); TODO!!!!
         }
     }
+    if (match != "")
+    {
+        var split = condition.Split(match, 2);
+        //groupsCpy.RemoveAt(groupsCpy.IndexOf(max));
 
-    return (condition, groups);
+        var leftGrps = groupsCpy.TakeWhile(x => x != max).ToList();
+        var leftCondition = split[0];
+
+        var rightGrps = groupsCpy.SkipWhile(x => x != max).Skip(1).ToList();
+        var rightCondition = split[1];
+
+        yield return (leftCondition, leftGrps);
+        yield return (rightCondition, rightGrps);
+        yield break;
+    }
+    else
+    {
+        Debugger.Break(); /*TODO!!!!*/
+
+    }
+
+    yield return (condition, groupsCpy);
 
 }
 
@@ -1361,6 +1418,10 @@ int Solve2(string condition, List<short> groups)
 }
 HashSet<string> Solve3Cached(string condition, List<short> groups)
 {
+    if (!useCache)
+    {
+        return Solve3(condition, groups);
+    }
     var key = Hash(condition, groups);
     if (!cacheSolve3.ContainsKey(key))
     {
@@ -1378,6 +1439,10 @@ HashSet<string> Solve3(string condition, List<short> groups)
 
 List<(string condition, List<short> groups)> RemoveCertaintiesCached(string condition, List<short> groups)
 {
+    if (!useCache)
+    {
+        return RemoveCertainties(condition, groups).ToList();
+    }
     var key = Hash(condition, groups);
     if (!cacheReduce.ContainsKey(key))
     {
@@ -1394,7 +1459,15 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         yield return (condition, groups);
         yield break;
     }
+
     condition = condition.Trim('.');
+
+    if (groups.Count == 1 && condition.All(x => x == '#' || x == '?') && condition.Length == groups.Single())
+    {
+        yield return ("", new List<short>());
+        yield break;
+    }
+
     var cpy = condition.ToString();//.Replace("?", "#");
     var cpyGroup = groups.ToList();
     var firstGroupLength = cpy.TakeWhile(x => x == '#').Count();
@@ -1429,7 +1502,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
 
 
-    if (trim)
+    if (useCache)
     {
 
         //middle pure match
@@ -1514,25 +1587,25 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         {
 
             // partial start search
-            var partialStart = condition.Substring(0, condition.Skip(1).TakeWhile(x => x != '?').Count() + 2);
+            var partialStart = condition.Substring(0, condition.TakeWhile(x => x != '?').Count() + 2);
             var firstGroup = cpyGroup.First();
-            if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart, cpyGroup.Take(2).ToList()).Count == 0)
-            {
-                if (partialStart == condition)
-                {
-                    yield break;
-                }
-                cpyGroup.RemoveAt(0);
+            //if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart, cpyGroup.Take(2).ToList()).Count == 0)
+            //{
+            //    if (partialStart == condition)
+            //    {
+            //        yield break;
+            //    }
+            //    cpyGroup.RemoveAt(0);
 
-                var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
-                var index = matchesX.Single().LastIndexOf('#');
-                var conditionCpy = condition[(index + 2)..];
-                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
-                {
-                    yield return (item.condition, item.groups);
-                }
-                yield break;
-            }
+            //    var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
+            //    var index = matchesX.Single().LastIndexOf('#');
+            //    var conditionCpy = condition[(index + 2)..];
+            //    foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+            //    {
+            //        yield return (item.condition, item.groups);
+            //    }
+            //    yield break;
+            //}
 
             if (partialStart.StartsWith('#'))
             {
@@ -1547,30 +1620,30 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
 
 
             // partial End search
-            var partialEnd = new string(new string(condition.Reverse().ToArray()).Substring(0, condition.Skip(1).TakeWhile(x => x != '?').Count() + 2).Reverse().ToArray());
+            var partialEnd = new string(condition.Reverse().TakeWhile(x => x != '?').ToArray().Reverse().ToArray());
             var lastGroup = cpyGroup.Last();
-            if (partialEnd.Contains('#') && Solve3Cached(partialEnd, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialEnd, cpyGroup.Take(2).ToList()).Count == 0)
-            {
-                if (partialEnd == condition)
-                {
-                    yield break;
-                }
-                cpyGroup.RemoveAt(0);
+            //if (partialEnd.Contains('#') && Solve3Cached(partialEnd, cpyGroup.TakeLast(1).ToList()).Count == 1 && Solve3Cached(partialEnd, cpyGroup.TakeLast(2).ToList()).Count == 0)
+            //{
+            //    if (partialEnd == condition)
+            //    {
+            //        yield break;
+            //    }
+            //    cpyGroup.RemoveAt(cpyGroup.Count - 1);
 
-                var matchesX = Solve3Cached(partialEnd, new List<short>() { lastGroup });
-                var index = matchesX.Single().LastIndexOf('#');
-                var conditionCpy = condition[(index + 2)..];
-                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
-                {
-                    yield return (item.condition, item.groups);
-                }
-                yield break;
-            }
+            //    var matchesX = Solve3Cached(partialEnd, new List<short>() { lastGroup });
+            //    var index = matchesX.Single().LastIndexOf('#');
+            //    var conditionCpy = condition[..(condition.Length - lastGroup - 1)];
+            //    foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+            //    {
+            //        yield return (item.condition, item.groups);
+            //    }
+            //    yield break;
+            //}
 
             if (partialEnd.EndsWith('#'))
             {
-                cpyGroup.RemoveAt(0);
-                var conditionCpy = condition[Math.Min(condition.Length, (lastGroup + 1))..];
+                cpyGroup.RemoveAt(cpyGroup.Count - 1);
+                var conditionCpy = condition[..(condition.Length - lastGroup - 1)];
                 foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
                 {
                     yield return (item.condition, item.groups);
@@ -1969,6 +2042,10 @@ string ExtendGroups(string input)
 
 List<short> GetAbsoluteGroupsCached(string input)
 {
+    if (!useCache)
+    {
+        return GetAbsoluteGroups(input);
+    }
     if (!cacheGroupCounts.ContainsKey(input))
     {
         cacheGroupCounts[input] = GetAbsoluteGroups(input);
@@ -1981,92 +2058,9 @@ List<short> GetAbsoluteGroups(string input)
     return input.Split('.', StringSplitOptions.RemoveEmptyEntries).Where(x => !x.Contains('?')).Select(x => (short)x.Count()).ToList();
 }
 
-List<short> GetGroupSurroundedByAnything(string input)
-{
-    return input.Replace('?', '.').Split('.', StringSplitOptions.RemoveEmptyEntries).Select(x => (short)x.Count()).ToList();
-}
-
-bool ValidCached(string mask, string attempt)
-{
-    var key = $"{mask}|{attempt}";
-    if (!cachePrecise.ContainsKey(key))
-    {
-        cachePrecise[key] = Valid(mask, attempt);
-    }
-    return cachePrecise[key];
-}
-
-bool Valid(string mask, string attempt)
-{
-    if (mask.Length != attempt.Length)
-    {
-        return false;
-        Debugger.Break();
-    }
-    if (attempt.Contains('?'))
-    {
-        Debugger.Break();
-    }
-
-
-    for (int i = 0; i < mask.Length; i++)
-    {
-        if (mask[i] == attempt[i] || mask[i] == '?')
-        {
-
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(result2);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
-
-
-
-//https://stackoverflow.com/questions/33134788/permutations-with-repetition
-IEnumerable<IEnumerable<T>> GetPermutations<T>(IEnumerable<T> input)
-{
-    var length = input.Count();
-    var indices = Enumerable.Range(0, length).ToList();
-    var permutationsOfIndices = GetNumericalPermutations(indices, length);
-
-    var permutationsOfInput = permutationsOfIndices.Select(x => x.Select(y => input.ElementAt(y)).ToArray())
-                                                   .Distinct();
-    return permutationsOfInput;
-}
-
-
-List<List<int>> GetNumericalPermutations(List<int> values, int maxLength)
-{
-    if (maxLength == 1)
-    {
-        return values.Select(x => new List<int> { x }).ToList();
-    }
-    else
-    {
-        var permutations = GetNumericalPermutations(values, maxLength - 1);
-
-        foreach (var index in values)
-        {
-            var newPermutations = permutations.Where(x => !x.Contains(index))
-                                              .Select(x => x.Concat(new List<int> { index }))
-                                              .Where(x => !permutations.Any(y => y.SequenceEqual(x)))
-                                              .Select(x => x.ToList())
-                                              .ToList();
-
-            permutations.AddRange(newPermutations);
-        }
-        return permutations;
-    }
-}
-
-
 
