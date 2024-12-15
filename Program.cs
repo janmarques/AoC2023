@@ -1022,7 +1022,7 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = "?.?.?????#. 1,1,5";
+var smallest = "?#?#?#?#?#?#?#? 1,3,1,6";
 
 var input = smallInput;
 input = fullInput;
@@ -1083,15 +1083,16 @@ foreach (var (condition, groups) in lines)
     trim = true;
     var algo1 = SolveCached(largeCondition, largeGroup.ToList());
     result += algo1;
-    trim = false;
-    var algo2 = SolveCached(largeCondition, largeGroup.ToList());
-    result2 += algo2;
-    if (algo1 != algo2)
-    {
-        Console.WriteLine("broken!");
-        Debugger.Break();
-        Console.ReadLine();
-    }
+    //trim = false;
+    //var algo2 = SolveCached(largeCondition, largeGroup.ToList());
+    //result2 += algo2;
+    //if (algo1 != algo2)
+    //{
+    //    Console.WriteLine("broken!");
+    //    Debugger.Break();
+    //    Console.ReadLine();
+    //}
+
     Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 
 }
@@ -1136,10 +1137,12 @@ long Solve(string condition, List<short> groups)
 
     if (trim)
     {
-        //var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
-        //(newCondition, newGroups) = MultiLevelShit(newCondition, newGroups, 1);
-        //condition = newCondition;
-        //groups = newGroups;
+        var (newCondition, newGroups) = MultiLevelShit(condition, groups, 0);
+        condition = newCondition;
+        groups = newGroups;
+        var (newCondition2, newGroups2) = MultiLevelShit(newCondition, newGroups, 1);
+        condition = newCondition2;
+        groups = newGroups2;
 
         (condition, groups) = RemoveAllSames(condition, groups);
         //SolutionCountAlt(condition, groups);
@@ -1237,11 +1240,20 @@ int ContainsCount(string condition, string groupString)
         }
         if (x.Count == 1)
         {
-            var xLookahead = Solve3Cached(lookaheadFurther, groups.Take(i + 1).ToList());
-            if (xLookahead.Count == 0)
+            var xLookahead1 = Solve3Cached(start, groups.Take(i + 1).ToList()).ToList();
+            if (xLookahead1.Count == 0)
             {
-                var groupsCpy = groups.Skip(i).ToList();
-                return (conditionCpy, groupsCpy);
+                var xLookahead2 = Solve3Cached(lookaheadFurther, groups.Take(i).ToList());
+                if (xLookahead2.Count == 0)
+                {
+                    var xLookahead3 = Solve3Cached(lookaheadFurther, groups.Take(i + 1).ToList());
+                    if (xLookahead3.Count == 0)
+                    {
+                        var groupsCpy = groups.Skip(i).ToList();
+                        return (conditionCpy, groupsCpy);
+                    }
+                }
+
             }
         }
         return default;
@@ -1410,6 +1422,31 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
                 //yield break;
             }
         }
+        else if (condition.Contains('#'))
+        {
+
+            // partial start search
+            var partialStart = condition.Substring(0, condition.Skip(1).TakeWhile(x => x != '?').Count() + 2);
+            var firstGroup = cpyGroup.First();
+            if (partialStart.Contains('#') && Solve3Cached(partialStart, cpyGroup.Take(1).ToList()).Count == 1 && Solve3Cached(partialStart, cpyGroup.Take(2).ToList()).Count == 0)
+            {
+                if (partialStart == condition)
+                {
+                    yield break;
+                }
+                cpyGroup.RemoveAt(0);
+
+                var matchesX = Solve3Cached(partialStart, new List<short>() { firstGroup });
+                var index = matchesX.Single().LastIndexOf('#');
+                var conditionCpy = condition[(index + 2)..];
+                foreach (var item in RemoveCertaintiesCached(conditionCpy, cpyGroup))
+                {
+                    yield return (item.condition, item.groups);
+                }
+                yield break;
+            }
+
+        }
 
         // WRONG because order of groups doesnt respect the pattern group order
         ////middle derived match
@@ -1488,11 +1525,11 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             var needles = new[] { $".{aaa}.", $"{aaa}.", $".{aaa}", $"{aaa}" };
 
             var found = "xxxxx";
-            foreach (var needle in needles)
+            foreach (var needle2 in needles)
             {
-                if (cpy.Contains(needle))
+                if (cpy.Contains(needle2))
                 {
-                    found = needle;
+                    found = needle2;
                     break;
                 }
             }
@@ -1550,11 +1587,11 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             var needles = new[] { $".{aaa}.", $"{aaa}.", $".{aaa}", $"{aaa}" };
 
             var found = "xxxxx";
-            foreach (var needle in needles)
+            foreach (var needle2 in needles)
             {
-                if (cpy.Contains(needle))
+                if (cpy.Contains(needle2))
                 {
-                    found = needle;
+                    found = needle2;
                     break;
                 }
             }
@@ -1592,63 +1629,66 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
             }
             yield break;
         }
+
+
+
+
+        ////middle derived match
+        //cpy = ExtendGroups(condition);
+        //stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
+        //match = groupsWithCount.OrderByDescending(x => x.Count()).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
+        //var needle = new string('#', match?.Key ?? 0);
+        //if (match != default && cpy.Split(needle).Count() == 2)
+        //{
+        //    var finalNeedle = $".{needle}.";
+        //    var index = cpy.IndexOf(finalNeedle);
+        //    if (index == -1)
+        //    {
+        //        var last = new string(cpy.TakeLast(match.Key + 1).ToArray());
+        //        finalNeedle = $".{needle}";
+        //        if (finalNeedle == last)
+        //        {
+        //            index = cpy.Length - match.Key - 1;
+        //        }
+        //    }
+        //    if (index == -1)
+        //    {
+        //        var start = new string(cpy.Take(match.Key + 1).ToArray());
+        //        finalNeedle = $"{needle}.";
+        //        if (finalNeedle == start)
+        //        {
+        //            index = 0;
+        //        }
+        //    }
+        //    if (index == -1)
+        //    {
+        //        if (cpy == needle)
+        //        {
+        //            yield break;
+        //        }
+        //        else
+        //        {
+        //            Debugger.Break();
+        //        }
+        //    }
+
+        //    var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
+        //    var leftCondition = condition[..(index)];
+
+        //    var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
+        //    var rightCondition = condition[(match.Key + index + 1)..];
+
+        //    foreach (var item in RemoveCertaintiesCached(rightCondition, right))
+        //    {
+        //        yield return (item.condition, item.groups);
+        //    }
+        //    foreach (var item in RemoveCertaintiesCached(leftCondition, left))
+        //    {
+        //        yield return (item.condition, item.groups);
+        //    }
+        //    yield break;
+        //}
     }
-
-    //middle derived match
-    //cpy = ExtendGroups(condition);
-    //stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
-    //match = groupsWithCount.OrderByDescending(x => x.Count()).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
-    //var needle = new string('#', match?.Key ?? 0);
-    //if (match != default && cpy.Split(needle).Count() == 2)
-    //{
-    //    var finalNeedle = $".{needle}.";
-    //    var index = cpy.IndexOf(finalNeedle);
-    //    if (index == -1)
-    //    {
-    //        var last = new string(cpy.TakeLast(match.Key + 1).ToArray());
-    //        finalNeedle = $".{needle}";
-    //        if (finalNeedle == last)
-    //        {
-    //            index = cpy.Length - match.Key - 1;
-    //        }
-    //    }
-    //    if (index == -1)
-    //    {
-    //        var start = new string(cpy.Take(match.Key + 1).ToArray());
-    //        finalNeedle = $"{needle}.";
-    //        if (finalNeedle == start)
-    //        {
-    //            index = 0;
-    //        }
-    //    }
-    //    if (index == -1)
-    //    {
-    //        if (cpy == needle)
-    //        {
-    //            yield break;
-    //        }
-    //        else
-    //        {
-    //            Debugger.Break();
-    //        }
-    //    }
-
-    //    var left = cpyGroup.TakeWhile(x => x != match.Key).ToList();
-    //    var leftCondition = condition[..(index)];
-
-    //    var right = cpyGroup.SkipWhile(x => x != match.Key).Skip(1).ToList();
-    //    var rightCondition = condition[(match.Key + index + 1)..];
-
-    //    foreach (var item in RemoveCertaintiesCached(rightCondition, right))
-    //    {
-    //        yield return (item.condition, item.groups);
-    //    }
-    //    foreach (var item in RemoveCertaintiesCached(leftCondition, left))
-    //    {
-    //        yield return (item.condition, item.groups);
-    //    }
-    //    yield break;
-    //}
 
     ////middle largest possible match
     //cpy = condition.ToString();
