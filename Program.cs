@@ -1028,8 +1028,7 @@ var smallInput =
 
 //var containsCount = ContainsCount("aa.a", ".aa");
 
-var smallest = ".???.????? 1,3"; // 1 can also go in group 2..
-//smallest = "??.? 1,1";
+var smallest = ".?#?.??.????.#??? 2,1,3,3";
 
 var input = smallInput;
 input = fullInput;
@@ -1092,7 +1091,7 @@ foreach (var (condition, groups) in lines)
     result += algo1;
 
     var debug = false;
-    debug = true;
+    //debug = true;
     if (debug)
     {
 
@@ -1232,9 +1231,46 @@ long Solve(string condition, List<short> groups)
         {
             return groupsDeterministic.Value;
         }
+
+
+        var yieldResult3 = WithGroupsAlreadyKnown(condition, groups).ToList();
+        if (yieldResult3.Count == 1)
+        {
+            newCondition = yieldResult3.Single().condition;
+            newGroups = yieldResult3.Single().groups;
+        }
+        else
+        {
+            foreach (var item in yieldResult3)
+            {
+                count *= SolveCached(item.condition, item.groups);
+            }
+            return count;
+        }
     }
 
     return Solve2(condition, groups);
+}
+
+
+// .?#?.??.???? 2,1,3 
+IEnumerable<(string condition, List<short> groups)> WithGroupsAlreadyKnown(string condition, List<short> groups)
+{
+    var split = condition.Split('.');
+    if (split.Length != groups.Count) { yield return (condition, groups); yield break; }
+    for (int i = 0; i < split.Length; i++)
+    {
+        if (split[i].Length - groups[i] > 1)
+        {
+            yield return (condition, groups);
+            yield break;
+        }
+    }
+
+    for (int i = 0; i < split.Length; i++)
+    {
+        yield return (split[i], groups.Skip(i).Take(1).ToList());
+    }
 }
 
 long? WithGroupsDeterministic(string condition, List<short> groups)
@@ -1843,7 +1879,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
         }
 
         // WRONG because order of groups doesnt respect the pattern group order
-        ////middle derived match
+        //////middle derived match
         //cpy = ExtendGroups(condition);
         //stringGroupsWithCount = GetAbsoluteGroupsCached(cpy).GroupBy(x => x).ToList();
         //match = groupsWithCount.OrderByDescending(x => x.Count()).FirstOrDefault(x => stringGroupsWithCount.Any(y => y.Key == x.Key && y.Count() == x.Count()));
@@ -2154,6 +2190,9 @@ IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nu
 
     if (printSolve) { Console.WriteLine(Hash(input, nums)); }
 
+    var cpy = nums.ToList();
+    cpy.Reverse();
+
     var bitboard = input.Select(x => x == '?' ? (bool?)null : x == '#').ToList();
     for (var i = (int)Math.Pow(2, input.Length) - 1; i > 0; i--)
     {
@@ -2164,7 +2203,7 @@ IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nu
         var ba = new bool[128];
         new BitArray(new[] { i }).CopyTo(ba, 0);
         ba = ba.Take(input.Length).Reverse().ToArray();
-        if (FitsMask(ba, bitboard, nums))
+        if (FitsMask(ba, bitboard, new Stack<short>(cpy)))
         {
             var result = string.Join("", ba.Select(x => x ? '#' : '.'));
             if (printSolve)
@@ -2176,12 +2215,9 @@ IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nu
     }
 }
 
-bool FitsMask(bool[] ba, List<bool?> bitboard, List<short> nums)
-{
-    var cpy = nums.ToList();
-    cpy.Reverse();
-    var stack = new Stack<short>(cpy);
 
+bool FitsMask(bool[] ba, List<bool?> bitboard, Stack<short> stack)
+{
     var encountered = 0;
 
     for (int i = 0; i < bitboard.Count; i++)
