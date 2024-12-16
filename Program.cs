@@ -1035,7 +1035,7 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var repeats = 5;
-repeats = 0;
+//repeats = 0;
 
 var result = 0l;
 var result2 = 0l;
@@ -1049,8 +1049,8 @@ while (input.Contains(".."))
 //var xqqqx = SolutionCountAlt("??#.???#?", new List<short> { 2, 1, 2 });
 
 var lines = input.Split(Environment.NewLine)
-    //.OrderByDescending(x => x.Length)
-    .OrderBy(x => x.Length)
+    .OrderByDescending(x => x.Length)
+    //.OrderBy(x => x.Length)
     .Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 var maxGroup = lines.SelectMany(x => x.groups).Max();
 
@@ -1259,9 +1259,41 @@ long Solve(string condition, List<short> groups)
             }
             return count;
         }
+
+
+        var (newCondition3, newGroups3) = TraverseFromStart(condition, groups);
+        if (newCondition3 == condition)
+        {
+            condition = newCondition3;
+            groups = newGroups3;
+        }
+        else
+        {
+            return SolveCached(newCondition3, newGroups3);
+        }
+
     }
 
     return Solve2(condition, groups);
+}
+
+// "??#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#????" 2,..  The 2 cant go in first 2 spots, because leading #
+// "?#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#?????#.?#?#???#?#?#?#????" 2,..  The 2 must go in first 2, because another ?# is coming
+(string condition, List<short> groups) TraverseFromStart(string condition, List<short> groups)
+{
+    var start = condition.Split('.')[0];
+    var index = start.IndexOf('#');
+    var grp = groups.First();
+    if (index == -1) { return (condition, groups); }
+    if (index == grp)
+    {
+        return (condition.Substring(1), groups);
+    }
+    if (index == grp - 1 && start.Substring(grp).StartsWith("?#"))
+    {
+        return (condition.Substring(2), groups.Skip(1).ToList());
+    }
+    return (condition, groups);
 }
 
 
@@ -1590,11 +1622,15 @@ IEnumerable<(string condition, List<short> groups)> MultiLevelQuestions(string c
     var conditionCpy = string.Join(".", split.Skip(level + 1));
     var lookaheadFurther = string.Join(".", split.Take(level + 2));
 
-    var evals = Enumerable.Range(1, groups.Count()).Select(i =>
+    var evals = Enumerable.Range(1, Math.Min(3, groups.Count())).Select(i =>
     {
         var xGroups = groups.Take(i).ToList();
         var expectedChars = xGroups.Sum(x => (int)x) + i - 1;
         if (expectedChars > start.Length)
+        {
+            return default;
+        }
+        if (start.Length > 20)
         {
             return default;
         }
@@ -1821,7 +1857,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
                 //yield break;
             }
         }
-        else if(condition.Contains('#'))
+        if (condition.Contains('#'))
         {
 
             // partial start search
