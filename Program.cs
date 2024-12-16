@@ -1049,6 +1049,7 @@ while (input.Contains(".."))
 //var xqqqx = SolutionCountAlt("??#.???#?", new List<short> { 2, 1, 2 });
 
 var lines = input.Split(Environment.NewLine)
+    //.OrderByDescending(x => x.Length)
     .OrderBy(x => x.Length)
     .Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 var maxGroup = lines.SelectMany(x => x.groups).Max();
@@ -1137,7 +1138,18 @@ long Solve(string condition, List<short> groups)
         var result = RemoveCertaintiesCached(condition, groups);
         if (result.Count == 1)
         {
-            (condition, groups) = result.Single();
+            //(condition, groups) = result.Single();
+
+            var (newCondition, newGroups) = result.Single();
+            if (condition == newCondition)
+            {
+                condition = newCondition;
+                groups = newGroups;
+            }
+            else
+            {
+                return SolveCached(newCondition, newGroups);
+            }
         }
         else
         {
@@ -1809,7 +1821,7 @@ IEnumerable<(string condition, List<short> groups)> RemoveCertainties(string con
                 //yield break;
             }
         }
-        else if (condition.Contains('#'))
+        else if(condition.Contains('#'))
         {
 
             // partial start search
@@ -2189,6 +2201,11 @@ IEnumerable<string> SolutionCountAltStringsInternal(string input, List<short> nu
     input = input.Replace("..", ".");
 
     if (printSolve) { Console.WriteLine(Hash(input, nums)); }
+    if (input.Length > 20)
+    {
+        Debugger.Break();
+        //throw new Exception();
+    }
 
     var cpy = nums.ToList();
     cpy.Reverse();
