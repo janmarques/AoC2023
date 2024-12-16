@@ -1,22 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Dynamic;
-using System.Globalization;
-using System.IO;
-using System.Net.Http.Headers;
-using System.Numerics;
-using System.Reflection.Emit;
-using System.Reflection.PortableExecutable;
-using System.Security.Cryptography;
-using System.Security.Principal;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-
-var fullInput =
+﻿var input =
 @"????.??.??. 1,1
 ????#???..?.?? 5,1,1
 ????????#????#?.# 1,2,3,2,1
@@ -1018,52 +1000,33 @@ var fullInput =
 ??????#??#? 1,1,5
 ?????.?#??.????.?. 3,4,1,1";
 
-var smallInput =
-@"???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1";
+string Hash(string condition, IEnumerable<short> groups) => condition + " " + string.Join(",", groups);
 
-var smallest = "?###???????? 3,2,1";
-
-var printDebug = true;
-printDebug = false;
-
-string Hash(string condition, List<short> groups) => condition + " " + string.Join(",", groups);
-
-var input = smallInput;
-input = fullInput;
-//input = smallest;
 
 var timer = System.Diagnostics.Stopwatch.StartNew();
-var repeats = 5;
-//repeats = 0;
 
-var result = 0l;
+var result = 0L;
 
 var cache = new Dictionary<string, long>();
 var lines = input.Split(Environment.NewLine)
+    .OrderBy(x => x.Length)
     //.OrderByDescending(x => x.Length)
-    //.OrderBy(x => x.Length)
     .Select(x => x.Split(" ")).Select(x => (condition: x[0], groups: x[1].Split(",").Select(short.Parse).ToList())).ToList();
 
 foreach (var (condition, groups) in lines)
 {
     var largeCondition = condition;
     var largeGroup = groups.ToList();
-    for (int i = 0; i < repeats - 1; i++)
+    for (int i = 0; i < 4; i++)
     {
         largeCondition += "?" + condition;
         largeGroup.AddRange(groups);
     }
-    var x = Evaluate(largeCondition, largeGroup);
-    result += x;
+    result += Evaluate(largeCondition, largeGroup);
 }
 
 
-long Evaluate(string condition, List<short> groups)
+long Evaluate(string condition, IEnumerable<short> groups)
 {
     var key = Hash(condition, groups);
     if (!cache.ContainsKey(key))
@@ -1075,9 +1038,9 @@ long Evaluate(string condition, List<short> groups)
 
 
 // https://www.reddit.com/r/adventofcode/comments/18hbbxe/2023_day_12python_stepbystep_tutorial_with_bonus/
-long EvaluateInternal(string condition, List<short> groups)
+long EvaluateInternal(string condition, IEnumerable<short> groups)
 {
-    if (groups.Count == 0) { return condition.Contains('#') ? 0 : 1; }
+    if (groups.Count() == 0) { return condition.Contains('#') ? 0 : 1; }
     if (condition == "") { return 0; }
 
     var character = condition[0];
@@ -1085,43 +1048,37 @@ long EvaluateInternal(string condition, List<short> groups)
 
     long Dot()
     {
-        return Evaluate(condition.Substring(1).ToString(), groups.ToList());
+        return Evaluate(condition[1..], groups);
     }
     long Pound()
     {
         if (condition.Length < group) { return 0; }
-        var groupString = condition.Substring(0, group).Replace('?', '#').ToString();
+        var groupString = condition[..group].Replace('?', '#');
         if (groupString.Count(x => x == '#') != group) { return 0; }
         if (condition.Length == group)
         {
-            return groups.Count == 1 ? 1 : 0;
+            return groups.Count() == 1 ? 1 : 0;
         }
         if (condition[group] == '?' || condition[group] == '.')
         {
-            return Evaluate(condition.Substring(group + 1).ToString(), groups.Skip(1).ToList());
+            return Evaluate(condition[(group + 1)..], groups.Skip(1));
         }
 
         return 0;
     }
-    var result = 0l;
     if (character == '.')
     {
-        result = Dot();
+        return Dot();
     }
     if (character == '#')
     {
-        result = Pound();
+        return Pound();
     }
     if (character == '?')
     {
-        result = Dot() + Pound();
+        return Dot() + Pound();
     }
-
-    if (printDebug)
-    {
-        Console.WriteLine("MINI: " + result + "  " + Hash(condition, groups));
-    }
-    return result;
+    throw new Exception();
 }
 
 timer.Stop();
