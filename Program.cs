@@ -24,7 +24,7 @@ smallest =
 Register B: 0
 Register C: 0
 
-Program:  0,1,5,4,3,0 ";
+Program: 0,3,5,4,3,0 ";
 
 var input = smallInput;
 input = fullInput;
@@ -35,44 +35,61 @@ var result = 0;
 
 var inputs = input.Replace(Environment.NewLine, "").Replace("Register A: ", "").Replace("Register B: ", ",").Replace("Register C: ", ",").Replace("Program: ", ",").Replace(" ", "").Split(',').Select(int.Parse).ToList();
 
-var registers = Enumerable.Range(0, 3).ToDictionary(x => (char)(x + 65), x => inputs[x]);
+
+var registersInit = Enumerable.Range(0, 3).ToDictionary(x => (char)(x + 65), x => inputs[x]);
 var program = inputs.Skip(3).ToList();
+var programHash = string.Join(",", program);
 
-var output = new List<int>();
-for (int pointer = 0; pointer < program.Count; pointer = pointer + 2)
+for (int j = 0; ; j++)
 {
-    int GetValue(int n)
+    if (j % 100_000 == 0)
     {
-        if (n < 4) { return n; }
-        if (n == 7) { return 9999; }
-        return registers[(char)(n + 61)];
+        Console.WriteLine(j);
     }
-    var opcode = program[pointer];
-    var literalOperant = program[pointer + 1];
-    var comboOperant = GetValue(literalOperant);
+    var registers = registersInit.ToDictionary(x => x.Key, x => x.Value);
+    registers['A'] = j;
 
-    switch (opcode)
+    var output = new List<int>();
+    for (int pointer = 0; pointer < program.Count; pointer = pointer + 2)
     {
-        case 0: registers['A'] /= (int)Math.Pow(2, comboOperant); break;
-        case 1: registers['B'] ^= literalOperant; break;
-        case 2: registers['B'] = comboOperant % 8; break;
-        case 3: if (registers['A'] != 0) { pointer = literalOperant - 2; }; break;
-        case 4: registers['B'] ^= registers['C']; break;
-        case 5: output.Add(comboOperant % 8); break;
-        case 6: registers['B'] = registers['A'] / (int)Math.Pow(2, comboOperant); break;
-        case 7: registers['C'] = registers['A'] / (int)Math.Pow(2, comboOperant); break;
+        int GetValue(int n)
+        {
+            if (n < 4) { return n; }
+            if (n == 7) { return 9999; }
+            return registers[(char)(n + 61)];
+        }
+        var opcode = program[pointer];
+        var literalOperant = program[pointer + 1];
+        var comboOperant = GetValue(literalOperant);
 
-        default:
-            break;
+        switch (opcode)
+        {
+            case 0: registers['A'] /= (int)Math.Pow(2, comboOperant); break;
+            case 1: registers['B'] ^= literalOperant; break;
+            case 2: registers['B'] = comboOperant % 8; break;
+            case 3: if (registers['A'] != 0) { pointer = literalOperant - 2; }; break;
+            case 4: registers['B'] ^= registers['C']; break;
+            case 5: output.Add(comboOperant % 8); break;
+            case 6: registers['B'] = registers['A'] / (int)Math.Pow(2, comboOperant); break;
+            case 7: registers['C'] = registers['A'] / (int)Math.Pow(2, comboOperant); break;
+
+            default:
+                break;
+        }
+
     }
-
+    var outputHash = string.Join(",", output);
+    if (outputHash == programHash)
+    {
+        result = j;
+        break;
+    }
 }
 
 
-Console.WriteLine(string.Join(",", output));
 
 timer.Stop();
-Console.WriteLine(result); // 6,3,7,4,2,6,3,3,4 WRONG!?
+Console.WriteLine(result); // until 553400000
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
