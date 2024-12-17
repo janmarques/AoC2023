@@ -1326,21 +1326,21 @@
 #...##..#";
 
 var smallInput =
-@"#.##..##.
-..#.##.#.
-##......#
-##......#
-..#.##.#.
-..##..##.
-#.#.##.#.
-
-#...##..#
-#....#..#
-..##..###
-#####.##.
-#####.##.
-..##..###
-#....#..#";
+@"#....##.###
+#.#.#.#.#..
+#.#.#.#.#..
+#....##.###
+#.#...#.#.#
+.#......##.
+.#..#.##...
+....#..#..#
+.###.##.##.
+.###.##.##.
+....#..#..#
+.#.##.##...
+.#......##.
+#.#...#.#.#
+#....##.###";
 
 var smallest = "";
 
@@ -1367,27 +1367,67 @@ foreach (var line in input.Split(Environment.NewLine))
 }
 var grids = blocks.Select(x => x.ToArray()).ToList();
 
-result = grids.Sum(Evaluate);
+foreach (var item in grids)
+{
+    var oldLine = Evaluate(item);
+    if (true && false)
+    {
+        result += oldLine;
+        continue;
+    }
 
-int Evaluate(char[][] arg)
+    var other = Other(item, oldLine);
+    result += other;
+    if (other == -1)
+    {
+        PrintGrid(item);
+        PrintGrid(Rotate(item));
+    }
+}
+
+int Other(char[][] item, int except)
+{
+    for (int i = 0; i < item.Length; i++)
+    {
+        for (int j = 0; j < item[i].Length; j++)
+        {
+            var cpy = item.Select(x => x.ToArray()).ToArray();
+            cpy[i][j] = cpy[i][j] == '#' ? '.' : '#';
+            var line = Evaluate(cpy, except);
+            if (line != 0 && line != except)
+            {
+                return line;
+            }
+        }
+    }
+    return -1;
+}
+
+int Evaluate(char[][] arg, int? except = null)
 {
     var eval = arg.Select(x => new string(x)).ToArray();
 
-    var line = MirrorLine(eval);
-    if (line != 0) { return line * 100; }
+    var line = MirrorLine(eval, 100, except);
+    if (except != line && line != 0) { return line; }
 
     var rotated = Rotate(arg).Select(x => new string(x)).ToArray();
-    line = MirrorLine(rotated);
-    return line;
+    line = MirrorLine(rotated, 1, except);
+    //return arg[0].Length - line;
+    if (except != line) { return line; }
+    return 0;
 }
 
-int MirrorLine(string[] eval)
+int MirrorLine(string[] eval, int factor, int? except = null)
 {
-    for (int i = 0; i < eval.Length -1; i++)
+    for (int i = 0; i < eval.Length - 1; i++)
     {
         if (MirrorsAlong(eval, i))
         {
-            return i+1;
+            var result = factor * (i + 1);
+            if (result != except)
+            {
+                return result;
+            }
         }
     }
     return 0;
@@ -1396,7 +1436,7 @@ int MirrorLine(string[] eval)
 bool MirrorsAlong(string[] eval, int n)
 {
     var i = 0;
-    while (!(i + n +1 == eval.Length || n - i < 0))
+    while (!(i + n + 1 == eval.Length || n - i < 0))
     {
         if (eval[n - i] != eval[n + 1 + i])
         {
@@ -1418,12 +1458,24 @@ char[][] Rotate(char[][] input)
     {
         for (var j = 0; j < width; j++)
         {
-            target[j].Add(input[i][j]);
+            target[j].Add(input[height - 1 - i][j]);
         }
     }
     return target.Select(x => x.ToArray()).ToArray();
 }
 
 
-Console.WriteLine(result);
+Console.WriteLine(result); // 36669 too high (wihout prev) 22028 too low
 Console.ReadLine();
+
+void PrintGrid<T>(T[][] grid)
+{
+    for (int i = 0; i < grid.Length; i++)
+    {
+        for (int j = 0; j < grid[i].Length; j++)
+        {
+            Console.Write(grid[i][j]);
+        }
+        Console.WriteLine();
+    }
+}
