@@ -9,6 +9,23 @@ namespace AoC2023;
 
 public static class Utils
 {
+    public record Direction(char icon, int x, int y);
+    public static Direction[] Directions = new[] {
+        new Direction('E', 1, 0),
+        new Direction('W', -1, 0),
+        new Direction('N', 0, -1),
+        new Direction('S', 0, 1),
+    };
+    public static char InverseDirection(char x)
+        => x switch
+        {
+            'E' => 'W',
+            'W' => 'E',
+            'S' => 'N',
+            'N' => 'S',
+            _ => throw new NotImplementedException()
+        };
+
     static public void PrintGrid<T>(T[][] grid, Func<T, string> print = null)
     {
         print ??= x => x.ToString();
@@ -62,7 +79,11 @@ public static class Utils
 
     static public (char[][] grid, int height, int width) Parse2DGrid(string input)
     {
-        var grid = input.Split(Environment.NewLine).Select(x => x.ToArray()).ToArray();
+        return Parse2DGrid(input, x => x);
+    }
+    static public (T[][] grid, int height, int width) Parse2DGrid<T>(string input, Func<char, T> parse)
+    {
+        var grid = input.Split(Environment.NewLine).Select(x => x.Select(y => parse(y)).ToArray()).ToArray();
         return (grid, grid.Length, grid[0].Length);
     }
 
