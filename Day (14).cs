@@ -119,7 +119,7 @@ var smallest = "";
 // puzzle ref 2024 day 15
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -127,16 +127,42 @@ var result = 0l;
 
 bool? ToBool(char c) => c == 'O' ? true : c == '#' ? false : null;
 char ToChar(bool? c) => !c.HasValue ? '.' : c.Value ? 'O' : '#';
-var grid = Utils.ParseCoordGrid<(int x, int y, bool? state)>(input, (p) => (p.x, p.y, ToBool(p.c))).ToList();
+var grid = Utils.ParseCoordGrid(input, (p) => new Node { x = p.x, y = p.y, state = ToBool(p.c) }).ToList();
 
-Utils.PrintGrid(grid, x => x.x, x => x.y, x => ToChar(x.state).ToString());
+void Print() => Utils.PrintGrid(grid, x => x.x, x => x.y, x => ToChar(x.state).ToString());
 
-foreach (var line in input.Split(Environment.NewLine)) ;
+var didSomething = false;
+var relevantItems = grid.Where(x => x.state ?? false).OrderBy(x => x.y).ToList();
+do
 {
+    //Print();
+    didSomething = false;
+    foreach (var item in relevantItems)
+    {
+        var north = grid.SingleOrDefault(x => !x.state.HasValue && x.y == item.y - 1 && x.x == item.x);
+        if (north == default) { continue; }
+        didSomething = true;
+        Swap(north, item);
 
+    }
+} while (didSomething);
+
+void Swap(Node one, Node two)
+{
+    (one.y, two.y) = (two.y, one.y);
 }
+
+var maxY = grid.Max(x => x.y);
+result = relevantItems.Sum(x => maxY +1 - x.y);
 
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+
+class Node
+{
+    public int x { get; set; }
+    public int y { get; set; }
+    public bool? state { get; set; }
+}

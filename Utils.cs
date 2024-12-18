@@ -36,6 +36,8 @@ public static class Utils
             }
             Console.WriteLine();
         }
+        Console.WriteLine();
+        Console.WriteLine();
     }
 
     static public char[][] Parse2DGrid(string input)
