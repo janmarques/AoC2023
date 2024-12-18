@@ -60,17 +60,15 @@ public static class Utils
         Console.WriteLine();
     }
 
-    static public char[][] Parse2DGrid(string input)
+    static public (char[][] grid, int height, int width) Parse2DGrid(string input)
     {
-        return input.Split(Environment.NewLine).Select(x => x.ToArray()).ToArray();
-
+        var grid = input.Split(Environment.NewLine).Select(x => x.ToArray()).ToArray();
+        return (grid, grid.Length, grid[0].Length);
     }
 
     static public IEnumerable<T> ParseCoordGrid<T>(string input, Func<(int x, int y, char c), T> init) where T : new()
     {
-        var grid = Parse2DGrid(input);
-        var height = grid.Count();
-        var width = grid[0].Count();
+        (char[][] grid, int height, int width) = Parse2DGrid(input);
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
