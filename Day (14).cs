@@ -1,6 +1,7 @@
 ﻿using AoC2023;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks.Dataflow;
 
 var fullInput =
@@ -132,7 +133,7 @@ O";
 // puzzle ref 2024 day 15
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -145,12 +146,13 @@ var grid = Utils.Parse2DGrid(input);
 var cache = new Dictionary<char[], char[]>();
 
 
-// Shift north to west
-Utils.PrintGrid(grid);
 
-grid = TransformSouth(grid);
+grid = TransformNorth(grid);
 
-Utils.PrintGrid(grid);
+result = grid.Select((x,i) => x.Count(y => y == 'O')*(grid.Length-i)).Sum();
+
+
+//Utils.PrintGrid(grid);
 
 //grid = Utils.RotateClockwise(grid);
 //Utils.PrintGrid(grid);
