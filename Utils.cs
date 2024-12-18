@@ -20,7 +20,27 @@ public static class Utils
             }
             Console.WriteLine();
         }
+        Console.WriteLine();
+        Console.WriteLine();
     }
+
+    static public char[][] RotateClockwise(char[][] input)
+    {
+        var height = input.Length;
+        var width = input[0].Length;
+
+        var target = Enumerable.Range(0, width).Select(x => new char[height]).ToArray();
+
+        for (var i = 0; i < height; i++)
+        {
+            for (var j = 0; j < width; j++)
+            {
+                target[j][i] = input[height - 1 - i][j];
+            }
+        }
+        return target;
+    }
+
 
     static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null)
     {
