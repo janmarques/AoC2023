@@ -114,7 +114,17 @@ O.#..O.#.#
 #....###..
 #OO..#....";
 
-var smallest = "";
+var smallest =
+@".
+O
+.
+O
+.
+.
+O
+#
+.
+O";
 
 // puzzle ref 2024 day 15
 
@@ -131,29 +141,51 @@ var grid = Utils.ParseCoordGrid(input, (p) => new Node { x = p.x, y = p.y, state
 
 void Print() => Utils.PrintGrid(grid, x => x.x, x => x.y, x => ToChar(x.state).ToString());
 
-var didSomething = false;
-var relevantItems = grid.Where(x => x.state ?? false).OrderBy(x => x.y).ToList();
-do
-{
-    //Print();
-    didSomething = false;
-    foreach (var item in relevantItems)
-    {
-        var north = grid.SingleOrDefault(x => !x.state.HasValue && x.y == item.y - 1 && x.x == item.x);
-        if (north == default) { continue; }
-        didSomething = true;
-        Swap(north, item);
+//Print();
 
+var north = (x: 0, y: -1);
+var relevantItems = grid.Where(x => x.state ?? false).OrderByDescending(x => x.y).ToHashSet();
+foreach (var item in relevantItems)
+{
+    relevantItems.Remove(item);
+
+    var untilWall = TakeUntilWall(item, north.x, north.y).ToList();
+    var emptyCount = untilWall.Count(x => !x.state.HasValue);
+    if (emptyCount > 0)
+    {
+        var minY = untilWall.Min(x => x.y);
+        int i = 0;
+        foreach (var item2 in untilWall.OrderByDescending(x => x.state ?? false))
+        {
+            item2.y = minY + i;
+            i++;
+            relevantItems.Remove(item2);
+        }
     }
-} while (didSomething);
+}
+
+//Print();
+
+IEnumerable<Node> TakeUntilWall(Node node, int x, int y)
+{
+    if (node == null) { yield break; }
+    if (node.state == false) { yield break; }
+    yield return node;
+    var next = grid.SingleOrDefault(n => n.x == node.x + x && n.y == node.y + y);
+    foreach (var item in TakeUntilWall(next, x, y))
+    {
+        yield return item;
+    }
+}
 
 void Swap(Node one, Node two)
 {
     (one.y, two.y) = (two.y, one.y);
+    (one.x, two.x) = (two.x, one.x);
 }
 
 var maxY = grid.Max(x => x.y);
-result = relevantItems.Sum(x => maxY +1 - x.y);
+result = grid.Where(x => x.state ?? false).Sum(x => maxY + 1 - x.y);
 
 timer.Stop();
 Console.WriteLine(result);
@@ -165,4 +197,8 @@ class Node
     public int x { get; set; }
     public int y { get; set; }
     public bool? state { get; set; }
+    public override string ToString()
+    {
+        return $"{x},{y} {(!state.HasValue ? '.' : state.Value ? 'O' : '#')}";
+    }
 }
