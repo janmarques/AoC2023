@@ -119,21 +119,12 @@ O.#..O.#.#
 #OO..#....";
 
 var smallest =
-@".
-O
-.
-O
-.
-.
-O
-#
-.
-O";
+@".OO.O..O#.O";
 
 // puzzle ref 2024 day 15
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -145,6 +136,9 @@ var cycles = 1_000_000_000;
 var grid = Utils.Parse2DGrid(input);
 var cache = new Dictionary<char[], char[]>();
 
+//grid = TransformNorth(grid);
+//Utils.PrintGrid(grid);
+//Console.WriteLine(GetLoad());
 
 
 long GetLoad()
@@ -164,7 +158,7 @@ var seen = new Dictionary<string, int>() { { initialState, 0 } };
 int? target = null;
 for (int i = 0; i < cycles; i++)
 {
-    if (i % 10 == 0)
+    if (i % 1000 == 0)
     {
         Console.WriteLine(i);
     }
@@ -182,7 +176,7 @@ for (int i = 0; i < cycles; i++)
             var startSettleTime = pos + 1;
 
             var offset = (((cycles % repeats - startSettleTime) + repeats) % repeats);
-            target = i + offset;
+            target = i + offset + repeats;
         }
 
         if (target == i)
@@ -195,102 +189,125 @@ for (int i = 0; i < cycles; i++)
     seen[fullState] = i;
 }
 
-Utils.PrintGrid(grid);
+//Utils.PrintGrid(grid);
 
-result = grid.Select((x, i) => x.Count(y => y == 'O') * (grid.Length - i)).Sum();
+//result = grid.Select((x, i) => x.Count(y => y == 'O') * (grid.Length - i)).Sum();
 
 
 char[][] TransformEast(char[][] lines)
 {
-    var didSomething = false;
-    do
+    for (int j = 0; j < lines.Length; j++)
     {
-        didSomething = false;
-        for (int j = 0; j < lines.Length; j++)
+        var line = lines[j];
+        var block = 0;
+        for (int i = 0; i < line.Length - 1; i++)
         {
-            var line = lines[j];
-            for (int i = line.Length - 1; i > 0; i--)
+            if (line[i] == 'O')
             {
+                block++;
+            }
+            else
+            {
+                block = 0;
+            }
 
-                if (line[i] == '.' && line[i - 1] == 'O')
-                {
-                    line[i] = 'O';
-                    line[i - 1] = '.';
-                    didSomething = true;
-                }
+            if (line[i] == 'O' && line[i + 1] == '.')
+            {
+                line[i + 1] = 'O';
+                line[i - block + 1] = '.';
+                block--;
             }
         }
-    } while (didSomething);
+    }
     return lines;
 }
 
 char[][] TransformWest(char[][] lines)
 {
-    var didSomething = false;
-    do
+    for (int j = 0; j < lines.Length; j++)
     {
-        didSomething = false;
-        for (int j = 0; j < lines.Length; j++)
+        var line = lines[j];
+        var block = 0;
+        for (int i = 0; i < line.Length - 1; i++)
         {
-            var line = lines[j];
-            for (int i = 1; i < line.Length; i++)
+            if (line[i] == '.')
             {
-                if (line[i] == 'O' && line[i - 1] == '.')
-                {
-                    line[i] = '.';
-                    line[i - 1] = 'O';
-                    didSomething = true;
-                }
+                block++;
+            }
+            else
+            {
+                block = 0;
+            }
+
+            if (line[i] == '.' && line[i + 1] == 'O')
+            {
+                line[i + 1] = '.';
+                line[i - block + 1] = 'O';
+                block--;
             }
         }
-    } while (didSomething);
+    }
     return lines;
 }
 
-
-char[][] TransformNorth(char[][] lines)
-{
-    var didSomething = false;
-    do
-    {
-        didSomething = false;
-        for (int j = 1; j < lines.Length; j++)
-        {
-            for (int i = 0; i < lines[0].Length; i++)
-            {
-                if (lines[j][i] == 'O' && lines[j - 1][i] == '.')
-                {
-                    lines[j][i] = '.';
-                    lines[j - 1][i] = 'O';
-                    didSomething = true;
-                }
-            }
-        }
-    } while (didSomething);
-    return lines;
-}
 
 char[][] TransformSouth(char[][] lines)
 {
-    var didSomething = false;
-    do
+    for (int i = 0; i < lines[0].Length; i++)
     {
-        didSomething = false;
-        for (int j = lines.Length - 1; j > 0; j--)
+        var block = 0;
+        for (int j = 0; j < lines.Length - 1; j++)
         {
-            for (int i = 0; i < lines[0].Length; i++)
+            if (lines[j][i] == 'O')
             {
-                if (lines[j][i] == '.' && lines[j - 1][i] == 'O')
-                {
-                    lines[j][i] = 'O';
-                    lines[j - 1][i] = '.';
-                    didSomething = true;
-                }
+                block++;
+            }
+            else
+            {
+                block = 0;
+            }
+
+            if (lines[j][i] == 'O' && lines[j + 1][i] == '.')
+            {
+                lines[j + 1][i] = 'O';
+                lines[j - block + 1][i] = '.';
+                block--;
             }
         }
-    } while (didSomething);
+    }
     return lines;
 }
+
+char[][] TransformNorth(char[][] lines)
+{
+    for (int i = 0; i < lines[0].Length; i++)
+    {
+        var block = 0;
+        for (int j = 0; j < lines.Length - 1; j++)
+        {
+            if (lines[j][i] == '.')
+            {
+                block++;
+            }
+            else
+            {
+                block = 0;
+            }
+
+            if (lines[j][i] == '.' && lines[j + 1][i] == 'O')
+            {
+                lines[j + 1][i] = '.';
+                lines[j - block + 1][i] = 'O';
+                block--;
+            }
+        }
+    }
+    return lines;
+}
+
+
+
+
 
 timer.Stop();
 Console.WriteLine(result);
