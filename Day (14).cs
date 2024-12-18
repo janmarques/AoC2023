@@ -133,89 +133,72 @@ O";
 // puzzle ref 2024 day 15
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
 
 var cycles = 1_000_000_000;
-cycles = 1_000_000;
+//cycles = 1_000_000;
 
 var grid = Utils.Parse2DGrid(input);
 var cache = new Dictionary<char[], char[]>();
 
 
 
-grid = TransformNorth(grid);
-
-result = grid.Select((x,i) => x.Count(y => y == 'O')*(grid.Length-i)).Sum();
-
-
-//Utils.PrintGrid(grid);
-
-//grid = Utils.RotateClockwise(grid);
-//Utils.PrintGrid(grid);
-//Shift();
-//Utils.PrintGrid(grid);
-//grid = Utils.RotateClockwise(grid);
-//grid = Utils.RotateClockwise(grid);
-//grid = Utils.RotateClockwise(grid);
-//Utils.PrintGrid(grid);
-
-//Utils.PrintGrid(grid);
-
-//void Shift()
-//{
-
-//    for (int i = 0; i < grid.Count(); i++)
-//    {
-//        grid[i] = Transform(grid[i]);
-//    }
-//}
-
-//for (int j = 0; j < cycles; j++)
-//{
-
-//    for (int i = 0; i < grid.Count(); i++)
-//    {
-//        grid[i] = Transform(grid[i]);
-//    }
-//    //Utils.PrintGrid(grid);
-//    grid = Utils.RotateClockwise(grid);
-//}
-
-
-
-//char[] Transform(char[] line)
-//{
-//    if (!cache.ContainsKey(line))
-//    {
-//        cache[line] = TransformInt(line);
-//    }
-//    return cache[line];
-//}
-char[][] TransformInt(char[][] line, int xBase, int yBase, int xOffset, int yOffset, int times)
+long GetLoad()
 {
-    var didSomething = false;
-    do
-    {
-        didSomething = false;
-        for (int k = times; k > 0; k--)
-        {
-            var last = line[xBase + k * xOffset][yBase + k * yOffset];
-            var before = line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset];
-
-            if (line[xBase + k * xOffset][yBase + k * yOffset] == '.' && line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset] == 'O')
-            {
-                line[xBase + k * xOffset][yBase + k * yOffset] = 'O';
-                line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset] = '.';
-                didSomething = true;
-            }
-        }
-    } while (didSomething);
-    return line;
+    return grid.Select((x, i) => x.Count(y => y == 'O') * (grid.Length - i)).Sum();
 }
+string GetFullState()
+{
+    return string.Join("|", grid.Select(x => new string(x)));
+}
+
+
+var initialState = GetFullState();
+var seen = new Dictionary<string, int>() { { initialState, 0 } };
+
+
+int? target = null;
+for (int i = 0; i < cycles; i++)
+{
+    if (i % 10 == 0)
+    {
+        Console.WriteLine(i);
+    }
+    TransformNorth(grid);
+    TransformWest(grid);
+    TransformSouth(grid);
+    TransformEast(grid);
+
+    var fullState = GetFullState();
+    if (seen.TryGetValue(fullState, out var pos))
+    {
+        if (!target.HasValue)
+        {
+            var repeats = i - pos;
+            var startSettleTime = pos + 1;
+
+            var offset = (((cycles % repeats - startSettleTime) + repeats) % repeats);
+            target = i + offset;
+        }
+
+        if (target == i)
+        {
+            result = GetLoad();
+            break;
+        }
+
+    }
+    seen[fullState] = i;
+}
+
+Utils.PrintGrid(grid);
+
+result = grid.Select((x, i) => x.Count(y => y == 'O') * (grid.Length - i)).Sum();
+
 
 char[][] TransformEast(char[][] lines)
 {
@@ -275,7 +258,7 @@ char[][] TransformNorth(char[][] lines)
         {
             for (int i = 0; i < lines[0].Length; i++)
             {
-                if (lines[j][i] == 'O' && lines[j-1][i] == '.')
+                if (lines[j][i] == 'O' && lines[j - 1][i] == '.')
                 {
                     lines[j][i] = '.';
                     lines[j - 1][i] = 'O';
