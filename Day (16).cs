@@ -132,38 +132,57 @@ var input = smallInput;
 input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
-
-(char[][] grid, int height, int width) = Utils.Parse2DGrid(input);
-var energized = grid.Select(x => x.Select(y => false).ToArray()).ToArray();
+(_, int height, int width) = Utils.Parse2DGrid(input);
 
 var result = 0l;
 
-var todo = new List<(int, int, char)>()
- {
-     (0,0,'E')
- };
+var top = Enumerable.Range(0, width).Select(x => (x, 0)).ToArray();
+var bottom = Enumerable.Range(0, width).Select(x => (x, height - 1)).ToArray();
+var left = Enumerable.Range(0, height).Select(x => (0, x)).ToArray();
+var right = Enumerable.Range(0, height).Select(x => (width - 1, x)).ToArray();
+var sides = top.Union(bottom).Union(left).Union(right);
 
-int k = 0;
-while (todo.Any())
+foreach (var dir in new[] { 'N', 'E', 'S', 'W' })
 {
-    var newTodo = new List<(int, int, char)>();
-    foreach (var i in todo)
+    foreach (var side in sides)
     {
-        newTodo.AddRange(Traverse(i.Item1, i.Item2, i.Item3).ToList());
-    }
-    todo = newTodo;
-    k++;
-    if (k % 100 == 0)
-    {
-        result = energized.Sum(x => x.Count(y => y));
-        Console.WriteLine($"{k} {result}");
+        result = Math.Max(result, CheckEntry(side.Item1, side.Item2, dir));
     }
 }
-result = energized.Sum(x => x.Count(y => y));
 
 
 
-IEnumerable<(int, int, char)> Traverse(int x, int y, char dir)
+timer.Stop();
+Console.WriteLine(result);
+Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.ReadLine();
+
+long CheckEntry(int x, int y, char dir)
+{
+
+    (char[][] grid, int height, int width) = Utils.Parse2DGrid(input);
+    var energized = grid.Select(x => x.Select(y => false).ToArray()).ToArray();
+    long result;
+    var todo = new List<(int, int, char)>() { (x, y, dir) };
+
+    var evaluated = new HashSet<(int, int, char)>();
+
+    while (todo.Any())
+    {
+        var newTodo = new List<(int, int, char)>();
+        foreach (var i in todo)
+        {
+            evaluated.Add(i);
+            var next = Traverse(i.Item1, i.Item2, i.Item3, width, height, grid, energized).Where(x => !evaluated.Contains(x)).ToList();
+            newTodo.AddRange(next);
+        }
+        todo = newTodo;
+    }
+    result = energized.Sum(x => x.Count(y => y));
+    return result;
+}
+
+IEnumerable<(int, int, char)> Traverse(int x, int y, char dir, int width, int height, char[][] grid, bool[][] energized)
 {
     if (x < 0 || y < 0 || x >= width || y >= height) { yield break; }
     energized[y][x] = true;
@@ -228,8 +247,3 @@ IEnumerable<(int, int, char)> Traverse(int x, int y, char dir)
     //Console.Clear();
     //Utils.PrintGrid(cpy);
 }
-
-timer.Stop();
-Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
-Console.ReadLine();
