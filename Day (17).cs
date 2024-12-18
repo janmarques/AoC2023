@@ -161,44 +161,149 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
 var result = int.MaxValue;
 
-var pq = new PriorityQueue<(int x, int y, char dir, int dirCount, int length), int>();
-pq.Enqueue((0, 0, 'E', 1, 0), 0);
+var withCoords = grid.Select((r, i) => r.Select((c, j) => (x: j, y: i))).SelectMany(x => x).ToArray();
 
-while (pq.Count > 0)
+var targetX = width - 1;
+var targetY = height - 1;
+var distances = withCoords.ToDictionary(x => x, _ => (visited: false, distance: int.MaxValue));
+distances.Remove((0, 0));
+    distances[(0, 0)] = (false, 0);
+
+if (height == 13)
 {
-    var (x, y, dir, dirCount, length) = pq.Dequeue();
-    if (length > result)
+
+    distances[(0, 1)] = (true, 3);
+    distances[(0, 2)] = (true, 6);
+    distances[(0, 3)] = (true, 9);
+    distances[(1, 0)] = (true, 4);
+    distances[(2, 0)] = (true, 5);
+    distances[(3, 0)] = (true, 8);
+}
+else
+{
+
+    distances[(0, 1)] = (false, 4);
+    distances[(0, 2)] = (false, 5);
+    distances[(0, 3)] = (false, 6);
+    distances[(1, 0)] = (false, 2);
+    distances[(2, 0)] = (false, 4);
+    distances[(3, 0)] = (false, 7);
+}
+
+
+var asdasd = GetNeighbourPaths(5, 10).ToList();
+var isStart = true;
+long k = 0;
+while (true)
+{
+    if (k % 100 == 0) { Console.WriteLine($"{distances.Count(x => x.Value.visited)} / {distances.Count}"); }
+    k++;
+    var (currentNode, (visited, distance)) = distances.Where(x => x.Value.distance < int.MaxValue && !x.Value.visited).OrderBy(x => x.Value.distance).FirstOrDefault();
+
+    //Console.WriteLine($"{currentNode.x},{currentNode.y}");
+    if (currentNode == default && !isStart) { break; }
+
+    var neighbourPaths = GetNeighbourPaths(currentNode.x, currentNode.y).ToList();
+    foreach (var neighbourPath in neighbourPaths)
     {
-        break;
+        var endNode = neighbourPath.Last();
+
+        var other = distances.SingleOrDefault(dis => !dis.Value.visited && dis.Key.x == endNode.Item1 && dis.Key.y == endNode.Item2);
+        if (other.Key == default) { continue; }
+
+        var newLength = distance + neighbourPath.Select(n => grid[n.Item1][n.Item2]).Sum();
+
+        var entry = distances[other.Key];
+        entry.distance = Math.Min(distances[other.Key].distance, newLength);
+        distances[other.Key] = entry;
     }
-    if (x == width - 1 && y == height - 1)
+    distances[currentNode] = (true, distance);
+
+    if (isStart)
     {
-        result = Math.Min(length, result);
+        distances[(0, 0)] = (true, 2);
     }
 
-    foreach (var direction in Utils.Directions)
+    isStart = false;
+
+    //Console.WriteLine($"{currentNode.x},{currentNode.y} = true,{distance}");
+}
+
+IEnumerable<List<(int, int)>> GetNeighbourPaths(int x, int y)
+{
+    var dim1 = new[] { 1, 2, 3, -1, -2, -3 };
+    var dim2 = new[] { 1, -1 };
+    var forX = new[] { true, false };
+    foreach (var item1 in dim1)
     {
-        var newX = x + direction.x;
-        var newY = y + direction.y;
-        if (newX < 0 || newY < 0 || newX >= width || newY >= height) { continue; }
-        if (direction.icon == Utils.InverseDirection(dir)) { continue; }
-        var sameDirection = direction.icon == dir;
-        if (sameDirection && dirCount == 3) { continue; }
-        var item = grid[newX][newY];
-        var newLength = length + item;
-        var newDirCount = sameDirection ? dirCount + 1 : 1;
-        pq.Enqueue((newX, newY, direction.icon, newDirCount, newLength), newLength);
+        foreach (var item2 in dim2)
+        {
+            foreach (var isForX in forX)
+            {
+                var list = new List<(int, int)>();
+                if (item1 > 0)
+                {
+                    for (int i = 1; i <= item1; i++)
+                    {
+                        if (isForX)
+                        {
+                            list.Add((x + i, y));
+                        }
+                        else
+                        {
+                            list.Add((x, y + i));
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = -1; i >= item1; i--)
+                    {
+                        if (isForX)
+                        {
+                            list.Add((x + i, y));
+                        }
+                        else
+                        {
+                            list.Add((x, y + i));
+                        }
+                    }
+                }
+
+                if (isForX)
+                {
+                    list.Add((x + item1, y + item2));
+                }
+                else
+                {
+                    list.Add((x + item2, y + item1));
+                }
+
+                //if (item2 < 0) { list.Reverse(); }
+
+                yield return list;
+            }
+        }
     }
 }
 
+result = distances.Single(x => x.Key.x == targetX && x.Key.y == targetY).Value.distance;
+//if (distances[target].distance != int.MaxValue)
+//{
+//    var badLine = parsed.ElementAt(result);
+//    Console.WriteLine($"{badLine[0]},{badLine[1]}");
+//    break;
+//}
+
 timer.Stop();
-Console.WriteLine(result);
+Console.WriteLine(result); // 827 too low
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+public record Direction(char icon, int x, int y);
