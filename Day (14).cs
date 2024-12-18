@@ -1,4 +1,5 @@
 ﻿using AoC2023;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks.Dataflow;
 
@@ -143,68 +144,167 @@ cycles = 1_000_000;
 var grid = Utils.Parse2DGrid(input);
 var cache = new Dictionary<char[], char[]>();
 
+
 // Shift north to west
 Utils.PrintGrid(grid);
 
-grid = Utils.RotateClockwise(grid);
-Utils.PrintGrid(grid);
-Shift();
-Utils.PrintGrid(grid);
-grid = Utils.RotateClockwise(grid);
-grid = Utils.RotateClockwise(grid);
-grid = Utils.RotateClockwise(grid);
-Utils.PrintGrid(grid);
+grid = TransformSouth(grid);
 
 Utils.PrintGrid(grid);
 
-void Shift()
-{
+//grid = Utils.RotateClockwise(grid);
+//Utils.PrintGrid(grid);
+//Shift();
+//Utils.PrintGrid(grid);
+//grid = Utils.RotateClockwise(grid);
+//grid = Utils.RotateClockwise(grid);
+//grid = Utils.RotateClockwise(grid);
+//Utils.PrintGrid(grid);
 
-    for (int i = 0; i < grid.Count(); i++)
-    {
-        grid[i] = Transform(grid[i]);
-    }
-}
+//Utils.PrintGrid(grid);
 
-for (int j = 0; j < cycles; j++)
-{
+//void Shift()
+//{
 
-    for (int i = 0; i < grid.Count(); i++)
-    {
-        grid[i] = Transform(grid[i]);
-    }
-    //Utils.PrintGrid(grid);
-    grid = Utils.RotateClockwise(grid);
-}
+//    for (int i = 0; i < grid.Count(); i++)
+//    {
+//        grid[i] = Transform(grid[i]);
+//    }
+//}
+
+//for (int j = 0; j < cycles; j++)
+//{
+
+//    for (int i = 0; i < grid.Count(); i++)
+//    {
+//        grid[i] = Transform(grid[i]);
+//    }
+//    //Utils.PrintGrid(grid);
+//    grid = Utils.RotateClockwise(grid);
+//}
 
 
 
-char[] Transform(char[] line)
-{
-    if (!cache.ContainsKey(line))
-    {
-        cache[line] = TransformInt(line);
-    }
-    return cache[line];
-}
-char[] TransformInt(char[] line)
+//char[] Transform(char[] line)
+//{
+//    if (!cache.ContainsKey(line))
+//    {
+//        cache[line] = TransformInt(line);
+//    }
+//    return cache[line];
+//}
+char[][] TransformInt(char[][] line, int xBase, int yBase, int xOffset, int yOffset, int times)
 {
     var didSomething = false;
     do
     {
         didSomething = false;
-        for (int i = line.Length - 1; i > 0; i--)
+        for (int k = times; k > 0; k--)
         {
+            var last = line[xBase + k * xOffset][yBase + k * yOffset];
+            var before = line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset];
 
-            if (line[i] == '.' && line[i - 1] == 'O')
+            if (line[xBase + k * xOffset][yBase + k * yOffset] == '.' && line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset] == 'O')
             {
-                line[i] = 'O';
-                line[i - 1] = '.';
+                line[xBase + k * xOffset][yBase + k * yOffset] = 'O';
+                line[xBase + (k - 1) * xOffset][yBase + (k - 1) * yOffset] = '.';
                 didSomething = true;
             }
         }
     } while (didSomething);
     return line;
+}
+
+char[][] TransformEast(char[][] lines)
+{
+    var didSomething = false;
+    do
+    {
+        didSomething = false;
+        for (int j = 0; j < lines.Length; j++)
+        {
+            var line = lines[j];
+            for (int i = line.Length - 1; i > 0; i--)
+            {
+
+                if (line[i] == '.' && line[i - 1] == 'O')
+                {
+                    line[i] = 'O';
+                    line[i - 1] = '.';
+                    didSomething = true;
+                }
+            }
+        }
+    } while (didSomething);
+    return lines;
+}
+
+char[][] TransformWest(char[][] lines)
+{
+    var didSomething = false;
+    do
+    {
+        didSomething = false;
+        for (int j = 0; j < lines.Length; j++)
+        {
+            var line = lines[j];
+            for (int i = 1; i < line.Length; i++)
+            {
+                if (line[i] == 'O' && line[i - 1] == '.')
+                {
+                    line[i] = '.';
+                    line[i - 1] = 'O';
+                    didSomething = true;
+                }
+            }
+        }
+    } while (didSomething);
+    return lines;
+}
+
+
+char[][] TransformNorth(char[][] lines)
+{
+    var didSomething = false;
+    do
+    {
+        didSomething = false;
+        for (int j = 1; j < lines.Length; j++)
+        {
+            for (int i = 0; i < lines[0].Length; i++)
+            {
+                if (lines[j][i] == 'O' && lines[j-1][i] == '.')
+                {
+                    lines[j][i] = '.';
+                    lines[j - 1][i] = 'O';
+                    didSomething = true;
+                }
+            }
+        }
+    } while (didSomething);
+    return lines;
+}
+
+char[][] TransformSouth(char[][] lines)
+{
+    var didSomething = false;
+    do
+    {
+        didSomething = false;
+        for (int j = lines.Length - 1; j > 0; j--)
+        {
+            for (int i = 0; i < lines[0].Length; i++)
+            {
+                if (lines[j][i] == '.' && lines[j - 1][i] == 'O')
+                {
+                    lines[j][i] = 'O';
+                    lines[j - 1][i] = '.';
+                    didSomething = true;
+                }
+            }
+        }
+    } while (didSomething);
+    return lines;
 }
 
 timer.Stop();
