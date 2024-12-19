@@ -161,7 +161,7 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -173,29 +173,29 @@ var withCoords = grid.Select((r, i) => r.Select((c, j) => (x: j, y: i))).SelectM
 var targetX = width - 1;
 var targetY = height - 1;
 var distances = withCoords.ToDictionary(x => x, _ => (visited: false, distance: int.MaxValue));
-distances.Remove((0, 0));
-    distances[(0, 0)] = (false, 0);
+//distances.Remove((0, 0));
+distances[(0, 0)] = (false, 0);
 
-if (height == 13)
-{
+//if (height == 13)
+//{
 
-    distances[(0, 1)] = (true, 3);
-    distances[(0, 2)] = (true, 6);
-    distances[(0, 3)] = (true, 9);
-    distances[(1, 0)] = (true, 4);
-    distances[(2, 0)] = (true, 5);
-    distances[(3, 0)] = (true, 8);
-}
-else
-{
+//    distances[(0, 1)] = (true, 3);
+//    distances[(0, 2)] = (true, 6);
+//    distances[(0, 3)] = (true, 9);
+//    distances[(1, 0)] = (true, 4);
+//    distances[(2, 0)] = (true, 5);
+//    distances[(3, 0)] = (true, 8);
+//}
+//else
+//{
 
-    distances[(0, 1)] = (false, 4);
-    distances[(0, 2)] = (false, 5);
-    distances[(0, 3)] = (false, 6);
-    distances[(1, 0)] = (false, 2);
-    distances[(2, 0)] = (false, 4);
-    distances[(3, 0)] = (false, 7);
-}
+//    distances[(0, 1)] = (true, 4);
+//    distances[(0, 2)] = (true, 5);
+//    distances[(0, 3)] = (true, 6);
+//    distances[(1, 0)] = (true, 2);
+//    distances[(2, 0)] = (true, 4);
+//    distances[(3, 0)] = (true, 7);
+//}
 
 
 var asdasd = GetNeighbourPaths(5, 10).ToList();
@@ -236,7 +236,19 @@ while (true)
     //Console.WriteLine($"{currentNode.x},{currentNode.y} = true,{distance}");
 }
 
-IEnumerable<List<(int, int)>> GetNeighbourPaths(int x, int y)
+var target = (x: targetX, y: targetY);
+var path = new List<(int x, int y)>() { target };
+while (true)
+{
+    var closestNeighbour = GetNeighbourPaths(target.x, target.x).Select(x => x.Last()).Distinct().Select(x => distances.SingleOrDefault(y => y.Key.x == x.Item1 && y.Key.y == x.Item2)).Where(x => x.Value.visited).Where(x => x.Value.distance < ).OrderBy(x => x.Value.distance).First();
+    target = closestNeighbour.Key;
+    path.Add(target);
+    if (target == (0, 0)) { break; }
+}
+
+Utils.PrintGrid(path, x => x.x, x => x.y, x => x != default ? "X" : ".");
+
+IEnumerable <List<(int, int)>> GetNeighbourPaths(int x, int y)
 {
     var dim1 = new[] { 1, 2, 3, -1, -2, -3 };
     var dim2 = new[] { 1, -1 };
@@ -293,6 +305,7 @@ IEnumerable<List<(int, int)>> GetNeighbourPaths(int x, int y)
         }
     }
 }
+
 
 result = distances.Single(x => x.Key.x == targetX && x.Key.y == targetY).Value.distance;
 //if (distances[target].distance != int.MaxValue)
