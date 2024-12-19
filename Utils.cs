@@ -68,7 +68,7 @@ public static class Utils
         {
             for (int j = 0; j <= height; j++)
             {
-                var item = grid.SingleOrDefault(o => X(o) == j && Y(o) == i);
+                var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
                 Console.Write(item is null ? "?" : print(item));
             }
             Console.WriteLine();
