@@ -187,11 +187,12 @@ while (pq.Count > 0)
     }
 
     var neighbourPaths = GetNeighbourPaths(x, y).ToList();
+    var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
     foreach (var neighbourPath in neighbourPaths)
     {
         var endNode = neighbourPath.Item1.Last();
         if (endNode.x < 0 || endNode.y < 0 || endNode.x >= width || endNode.y >= height) { continue; }
-        if (endNode.x < x && endNode.y < y) { continue; }
+        if (pathSoFar.Any(x => neighbourPath.Item1.Contains(x))) { continue; }
 
         if (xAxis)
         {
@@ -210,14 +211,14 @@ while (pq.Count > 0)
         var entry = (endNode.x, endNode.y, !neighbourPath.Item2.isForX, !neighbourPath.Item2.isForX ? neighbourPath.Item2.x : neighbourPath.Item2.y, newLength);
         if (pq.Enqueue(entry, newLength))
         {
-            paths[entry] = paths[(x, y, xAxis, dirCount, length)].Concat(neighbourPath.Item1).ToList();
+            paths[entry] = pathSoFar.Concat(neighbourPath.Item1).ToList();
         }
     }
 }
 
 var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
 
-Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y);
+Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : ".");
 
 timer.Stop();
 Console.WriteLine(result);
