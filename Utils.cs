@@ -61,6 +61,12 @@ public static class Utils
 
     static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null)
     {
+        Console.WriteLine(WriteGrid(grid, X, Y, print, width, height));
+    }
+
+    static public string WriteGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null)
+    {
+        var sb = new StringBuilder();
         print ??= x => x.ToString();
         width ??= grid.Max(X);
         height ??= grid.Max(Y);
@@ -69,12 +75,13 @@ public static class Utils
             for (int i = 0; i <= width; i++)
             {
                 var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
-                Console.Write(item is null ? "?" : print(item));
+                sb.Append(item is null ? "?" : print(item));
             }
-            Console.WriteLine();
+            sb.AppendLine();
         }
-        Console.WriteLine();
-        Console.WriteLine();
+        sb.AppendLine();
+        sb.AppendLine();
+        return sb.ToString();
     }
 
     static public (char[][] grid, int height, int width) Parse2DGrid(string input)
