@@ -524,27 +524,57 @@
 //for (int j = 0; j < 10; j++)
 //{
 
-//var lines = input.Split(Environment.NewLine).ToList();
-//for (int i = 0; i < lines.Count; i++)
-//{
-//    var line = lines[i];
-//    var key = line.Split("{")[0];
-//    if (line.Count(x => x == ',') == 1)
+//    var lines = input.Split(Environment.NewLine).ToList();
+//    for (int i = 0; i < lines.Count; i++)
 //    {
-//        if (line.Contains("A,A"))
+//        var line = lines[i];
+//        var key = line.Split("{")[0];
+//        if (line.Count(x => x == ',') == 1)
 //        {
-//            input = input.Replace($":{key},", $":A,").Replace($",{key}}}", $",A}}");
-//            input = input.Replace(line, "");
-//        }
-//        if (line.Contains("R,R"))
-//        {
-//            input = input.Replace($":{key},", $":R,").Replace($",{key}}}", $",R}}");
-//            input = input.Replace(line, "");
+//            if (line.Contains("A,A"))
+//            {
+//                input = input.Replace($":{key},", $":A,").Replace($",{key}}}", $",A}}");
+//                input = input.Replace(line, "");
+//            }
+//            if (line.Contains("R,R"))
+//            {
+//                input = input.Replace($":{key},", $":R,").Replace($",{key}}}", $",R}}");
+//                input = input.Replace(line, "");
+//            }
 //        }
 //    }
 //}
+
+//for (int j = 0; j < 10; j++)
+//{
+
+//    var lines = input.Split(Environment.NewLine).ToList();
+//    for (int i = 0; i < lines.Count; i++)
+//    {
+//        var line = lines[i];
+//        if (line == "") { continue; }
+//        var key = line.Split("{")[0];
+//        var condition = line.Split("{")[1].Split(":")[0];
+//        if (line.Count(x => x == ',') == 1)
+//        {
+//            if (line.Contains("R,A"))
+//            {
+//                input = input/*.Replace($":{key},", $":A,{condition}:R,")*/.Replace($",{key}}}", $",{condition}:R,A}}");
+//                //input = input.Replace(line, "");
+//            }
+//            //if (line.Contains("A,R"))
+//            //{
+//            //    input = input.Replace($":{key},", $":R,").Replace($",{key}}}", $",R}}");
+//            //    input = input.Replace(line, "");
+//            //}
+//        }
+//    }
 //}
 
+//input = input.Replace(Environment.NewLine + Environment.NewLine + Environment.NewLine, Environment.NewLine);
+//input = input.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine);
+
+////input = string.Join(Environment.NewLine, input.Split(Environment.NewLine).OrderBy(x => x.Length));
 
 //var result = 0l;
 

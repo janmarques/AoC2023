@@ -20,7 +20,7 @@ cvn{m>1940:tb,s<421:tmg,s>560:nnq,A}
 fh{x<264:tf,hvg}
 kl{x>382:R,s>1772:R,s>1604:R,R}
 sdm{x<725:hpj,bd}
-xm{s<1235:vbs,s>1363:A,mh}
+xm{s<1235:vbs,s>1363:A,m>1320:R,A}
 xb{m<1640:jn,x<3607:A,pnq}
 zlj{a>3273:A,x<1274:A,R}
 bd{x<755:vc,cz}
@@ -34,7 +34,7 @@ hhp{a<3101:A,x>557:R,s>152:A,A}
 rkj{a>1490:R,a<1422:A,R}
 tbp{a<718:R,s<506:A,R}
 ph{x>674:R,m>1561:A,m>837:A,R}
-vf{a>919:R,a>599:kv,a<251:sh,npj}
+vf{a>919:R,a>599:kv,a<251:sh,x<769:R,A}
 tmz{x<129:R,x>158:R,R}
 hzx{x>1485:R,A}
 xzr{m<2651:R,a<691:A,A}
@@ -45,7 +45,7 @@ ffd{a<642:R,a<845:hfj,R}
 jgb{m<3251:R,s<224:R,m>3513:R,A}
 lc{x<2011:R,x<2110:R,R}
 fhq{a>1557:A,s<3161:rkj,s>3607:djm,ggh}
-glk{m>2388:rt,gcb}
+glk{m>2388:rt,s<3266:R,A}
 kb{m>2412:jnq,x<266:A,vq}
 tff{s<279:R,A}
 nz{s<335:fvn,a<358:mpp,s>587:xd,jqc}
@@ -61,7 +61,7 @@ zqq{m<1496:A,x<112:A,R}
 vbs{m<1219:R,s>1032:R,s>919:R,A}
 dlv{s<707:A,a<446:A,s>741:kc,R}
 lt{x<3238:R,x<3353:A,A}
-glh{a<1492:pgv,hd}
+glh{a<1492:pgv,s>3328:R,A}
 ds{s<610:A,R}
 bvz{a<3024:nzm,a<3669:shb,m<1829:jxg,A}
 tl{s>3142:R,s<2376:bq,x<1364:A,qt}
@@ -252,7 +252,7 @@ dcr{s<1303:R,A}
 qg{s<2489:R,A}
 dsh{a>3633:R,a>3507:A,A}
 hjb{x>854:R,m>1887:R,s<3244:A,A}
-fgb{s<768:glp,s>1396:ppx,xz}
+fgb{s<768:glp,s>1396:ppx,s>1071:R,A}
 qm{a<505:R,s<2904:A,a>547:R,R}
 zhl{x>2825:A,m<510:R,a>2370:A,R}
 zxr{m>2980:A,m<2494:gfc,R}
@@ -261,7 +261,7 @@ ss{a<1217:A,R}
 zfm{m<1550:R,a>576:R,R}
 mg{m<3058:A,R}
 zr{a<1925:sv,vtm}
-rjc{a>2606:R,s>584:gt,m<1044:A,lz}
+rjc{a>2606:R,s>584:gt,m<1044:A,a<952:R,A}
 vk{m<3006:sn,srl}
 tt{s>3218:zts,R}
 lnf{m>2546:R,a>1530:R,x<3726:A,grm}
@@ -329,7 +329,7 @@ cn{m<3187:R,A}
 xn{x<2498:nfs,x>2510:tdn,a>1755:bhl,ctk}
 jq{m>1864:A,R}
 fln{x>2453:R,A}
-bls{a<903:vhs,a>1163:R,s>1324:qjb,vzd}
+bls{a<903:R,m<1903:A,a>1163:R,s>1324:qjb,vzd}
 xg{s>428:R,A}
 zlc{x>424:A,s>2117:R,R}
 fk{x>717:qkz,A}
@@ -363,7 +363,7 @@ mvc{s<554:A,R}
 vpx{s<3376:R,m>1797:gvj,A}
 pxd{a>1203:jdb,x<3509:fgb,kt}
 xv{s>1206:R,a>273:A,a<178:A,A}
-vtm{m>740:hc,tff}
+vtm{m>740:hc,s<279:R,A}
 glp{x>3319:tbp,a>404:jss,A}
 ct{a<3801:A,vcd}
 kz{x>2544:R,x>2412:A,R}
@@ -423,11 +423,11 @@ gcb{s<3266:R,A}
 zgh{a>1712:ltc,x>460:rfj,xh}
 rfj{a>1129:dgr,s<1540:fx,cpn}
 gt{s<664:R,x<345:A,R}
-db{a>805:R,a>320:R,zb}
+db{a>805:R,a>320:R,s<2772:R,A}
 pnq{m>3118:A,x>3840:A,R}
 nk{s<2788:R,s>3293:A,s>3099:A,A}
 sp{x<3298:A,x<3443:fc,hkg}
-in{x<2169:lv,jtq}
+in{x<2169:lv,a>2199:nr,qd}
 vzd{a>1040:A,m<2381:R,R}
 rfr{s<1334:A,R}
 jz{s<553:R,s>856:A,R}
@@ -454,7 +454,7 @@ ggh{m<3295:A,m<3732:A,a>1469:A,R}
 qrd{x>685:A,a<3241:A,R}
 bh{s>1744:mv,s>958:R,m>2522:R,R}
 htj{a<1667:A,a>2011:R,A}
-nc{s>792:A,s>359:mvc,pvd}
+nc{s>792:A,s>359:mvc,x>2669:R,A}
 hl{x<1415:A,R}
 lpq{m>3378:R,A}
 rqj{x<3502:A,x<3795:R,A}
@@ -777,52 +777,52 @@ var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Se
     } while (didSomething);
 }
 
-//{
+{
 
-//    var didSomething = false;
+    var didSomething = false;
 
-//    do
-//    {
-//        didSomething = false;
+    do
+    {
+        didSomething = false;
 
-//        foreach (var item in workflows)
-//        {
-//            workflows[item.Key] = OptimizeSingle(item.Value);
-//        }
+        foreach (var item in workflows)
+        {
+            workflows[item.Key] = OptimizeSingle(item.Value);
+        }
 
 
-//        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R")/* && x.Value.Count == 2*/).Take(82).ToList();
-//        //if (singulars.Count == 1) { break; }
-//        foreach (var singular in singulars)
-//        {
-//            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == "A" || x.Value.Last().next == "R").Where(x => x.Value.TakeLast(2).First().next == singular.Key))
-//            {
-//                var list = item.Value;
-//                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
-//                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
-//                var after = list.Skip(before.Count+1).ToList();
-//                if (!before.Any()) { continue; }
-//                if (!after.Any()) { continue; }
-//                var x = list.Single(x => x.next == singular.Key);
-//                before.Add(new Operation(x.param, x.greaterThan, x.value, singular.Value.Last().next));
+        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R")/* && x.Value.Count == 2*/).Take(82).ToList();
+        //if (singulars.Count == 1) { break; }
+        foreach (var singular in singulars)
+        {
+            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == "A" || x.Value.Last().next == "R").Where(x => x.Value.TakeLast(2).First().next == singular.Key))
+            {
+                var list = item.Value;
+                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
+                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
+                var after = list.Skip(before.Count + 1).ToList();
+                if (!before.Any()) { continue; }
+                if (!after.Any()) { continue; }
+                var x = list.Single(x => x.next == singular.Key);
+                before.Add(new Operation(x.param, x.greaterThan, x.value, singular.Value.Last().next));
 
-//                var newList = before.Concat(singular.Value.SkipLast(1).ToList()).Concat(after).ToList();
-//                workflows[item.Key] = newList;
-//                didSomething = true;
-//            }
-//        }
-//        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
-//        {
-//            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
-//            {
-//                workflows.Remove(singulars[i].Key);
-//                didSomething = true;
-//            }
-//        }
-//        didSomething = false;
+                var newList = before.Concat(singular.Value.SkipLast(1).ToList()).Concat(after).ToList();
+                workflows[item.Key] = newList;
+                didSomething = true;
+            }
+        }
+        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
+        {
+            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
+            {
+                workflows.Remove(singulars[i].Key);
+                didSomething = true;
+            }
+        }
+        didSomething = false;
 
-//    } while (didSomething);
-//}
+    } while (didSomething);
+}
 
 
 
