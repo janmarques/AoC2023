@@ -1,4 +1,6 @@
 ﻿using AoC2023;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 var fullInput =
 @"R 7 (#43c232)
@@ -809,79 +811,76 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
-var result = 0l;
-var digplan = input.Split(Environment.NewLine).Select(x => x.Split(new[] { " ", "(", ")" }, StringSplitOptions.RemoveEmptyEntries)).Select(x => (dir: x[0][0], distance: int.Parse(x[1]))).ToList();
+var result = BigInteger.Zero;
+var digplan = input.Split(Environment.NewLine).Select(x => x.Split(new[] { " ", "(", ")", "#" }, StringSplitOptions.RemoveEmptyEntries)).Select(x => Parse(x[2])).ToList();
+//var digplan = input.Split(Environment.NewLine).Select(x => x.Split(new[] { " ", "(", ")" }, StringSplitOptions.RemoveEmptyEntries)).Select(x => (dir: x[0][0], distance: int.Parse(x[1]))).ToList();
 
-var trenches = new HashSet<(int x, int y)>();
+(char dir, int distance) Parse(string v)
+{
+    var distance = Convert.ToInt32(v.Substring(0, v.Length - 1), fromBase: 16);
+    var dNum = v.Last();
+    var dir = default(char);
+    if (dNum == '0') { dir = 'R'; }
+    if (dNum == '1') { dir = 'D'; }
+    if (dNum == '2') { dir = 'L'; }
+    if (dNum == '3') { dir = 'U'; }
+
+    return (dir, distance);
+}
+
+//var vectors = new List<((int x, int y) from, (int x, int y) to)>();
+var vectors2 = new List<(int x, int y)>();
 var x = 0;
 var y = 0;
+
+int k = 0;
+
 foreach (var (dir, distance) in digplan)
 {
-    for (int i = 0; i < distance; i++)
+
+    var from = (x, y);
+    if (dir == 'R') { x += distance; }
+    if (dir == 'L') { x -= distance; }
+    if (dir == 'D') { y += distance; }
+    if (dir == 'U') { y -= distance; }
+    var to = (x, y);
+    //vectors.Add((from, to));
+    //if (k % 2 == 1)
     {
-        if (dir == 'R')
-        {
-            x++;
-        }
-        if (dir == 'L')
-        {
-            x--;
-        }
-        if (dir == 'D')
-        {
-            y++;
-        }
-        if (dir == 'U')
-        {
-            y--;
-        }
-        trenches.Add((x, y));
+        vectors2.Add((x, y));
     }
+
+    //Console.WriteLine($"{dir} {distance}");
 }
 
-var floodStart = digplan.Count < 20 ? (1, 1) : (230, 1);
-
-var xMin = trenches.Min(x => x.x);
-var yMin = trenches.Min(x => x.y);
-
-var xMax = trenches.Max(x => x.x);
-var yMax = trenches.Max(x => x.y);
-
-
-var queue = new Queue<(int x, int y)>();
-queue.Enqueue(floodStart);
-var visited = new HashSet<(int x, int y)>();
-while (queue.Count > 0)
+var a = BigInteger.Zero;
+var b = BigInteger.Zero;
+for (int i = 0; i < vectors2.Count; i++)
 {
-    var item = queue.Dequeue();
-    visited.Add(item);
-
-    if (!trenches.Add(item))
-    {
-        continue;
-    }
-
-    var neigbours = new[] { (item.x + 1, item.y), (item.x - 1, item.y), (item.x, item.y + 1), (item.x, item.y - 1) };
-    foreach (var neigbour in neigbours)
-    {
-        if (neigbour.Item1 < xMin || neigbour.Item2 < yMin || neigbour.Item1 > xMax || neigbour.Item2 > yMax)
-        {
-            continue;
-        }
-        if (visited.Contains(neigbour)) { continue; }
-        queue.Enqueue(neigbour);
-    }
+    var t = vectors2[i].x;
+    var u = vectors2[i].y;
+    var v = vectors2[(i + 1) % vectors2.Count].y;
+    var w = vectors2[(i + 1) % vectors2.Count].x;
+    //Console.WriteLine($"{vectors2[i]}\t{vectors2[(i + 1) % vectors2.Count]}");
+    //Console.WriteLine($"{t} > {v}  | {u} > {w}");
+    a = BigInteger.Add(a, BigInteger.Multiply(new BigInteger(t), new BigInteger(v)));
+    b = BigInteger.Add(b, BigInteger.Multiply(new BigInteger(u), new BigInteger(w)));
 }
 
+var boundary = digplan.Sum(x => x.distance);
+Console.WriteLine(boundary);
+result = BigInteger.Divide(BigInteger.Abs(BigInteger.Subtract(b, a)), 2) + boundary / 2 + 1;
 
 
-//var sss = Utils.WriteGrid(trenches.Values, x => x.X, x => x.Y, x => x != null ? "#" : ".");
+// 952408144115
+// 952408144115
+// 952408144114
+// 952411346745
 
-//File.WriteAllText(@"C:\Users\Jan\Desktop\kerstboom.txt", sss);
+// 952404941483+3202632
+// 952404941483
+// 952415300927
 
-
-
-result = trenches.Count;
 
 timer.Stop();
 Console.WriteLine(result); // 67188 too low 76881 too low
