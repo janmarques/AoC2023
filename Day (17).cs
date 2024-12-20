@@ -172,30 +172,30 @@ var withCoords = grid.Select((r, i) => r.Select((c, j) => (x: j, y: i))).SelectM
 
 var targetX = width - 1;
 var targetY = height - 1;
-var distances = withCoords.ToDictionary(x => x, _ => (visited: false, distance: int.MaxValue));
+var distances = withCoords.ToDictionary(x => x, _ => (visited: false, distance: int.MaxValue, discoveredBy: (x: int.MinValue, y: int.MinValue)));
 //distances.Remove((0, 0));
-distances[(0, 0)] = (false, 0);
+distances[(0, 0)] = (true, 0, (0, 0));
 
-//if (height == 13)
-//{
+if (height == 13)
+{
 
-//    distances[(0, 1)] = (true, 3);
-//    distances[(0, 2)] = (true, 6);
-//    distances[(0, 3)] = (true, 9);
-//    distances[(1, 0)] = (true, 4);
-//    distances[(2, 0)] = (true, 5);
-//    distances[(3, 0)] = (true, 8);
-//}
-//else
-//{
+    distances[(0, 1)] = (false, 3, (0, 0));
+    distances[(0, 2)] = (false, 6, (0, 0));
+    distances[(0, 3)] = (false, 9, (0, 0));
+    distances[(1, 0)] = (false, 4, (0, 0));
+    distances[(2, 0)] = (false, 5, (0, 0));
+    distances[(3, 0)] = (false, 8, (0, 0));
+}
+else
+{
 
-//    distances[(0, 1)] = (true, 4);
-//    distances[(0, 2)] = (true, 5);
-//    distances[(0, 3)] = (true, 6);
-//    distances[(1, 0)] = (true, 2);
-//    distances[(2, 0)] = (true, 4);
-//    distances[(3, 0)] = (true, 7);
-//}
+    distances[(0, 1)] = (true, 4, (0, 0));
+    distances[(0, 2)] = (true, 5, (0, 0));
+    distances[(0, 3)] = (true, 6, (0, 0));
+    distances[(1, 0)] = (true, 2, (0, 0));
+    distances[(2, 0)] = (true, 4, (0, 0));
+    distances[(3, 0)] = (true, 7, (0, 0));
+}
 
 var asdasdxx = GetNeighbourPaths(9, 11).Select(x => x.Last()).Distinct().ToList();
 
@@ -216,7 +216,7 @@ while (true)
 {
     if (k % 100 == 0) { Console.WriteLine($"{distances.Count(x => x.Value.visited)} / {distances.Count}"); }
     k++;
-    var (currentNode, (visited, distance)) = distances.Where(x => x.Value.distance < int.MaxValue && !x.Value.visited).OrderBy(x => x.Value.distance).FirstOrDefault();
+    var (currentNode, (visited, distance, discoveredBy)) = distances.Where(x => x.Value.distance < int.MaxValue && !x.Value.visited).OrderBy(x => x.Value.distance).FirstOrDefault();
 
     //Console.WriteLine($"{currentNode.x},{currentNode.y}");
     if (currentNode == default && !isStart) { break; }
@@ -233,13 +233,17 @@ while (true)
 
         var entry = distances[other.Key];
         entry.distance = Math.Min(distances[other.Key].distance, newLength);
+        if (entry.discoveredBy.Item1 == int.MinValue)
+        {
+            entry.discoveredBy = currentNode;
+        }
         distances[other.Key] = entry;
     }
-    distances[currentNode] = (true, distance);
+    distances[currentNode] = (true, distance, discoveredBy);
 
     if (isStart)
     {
-        distances[(0, 0)] = (true, 2);
+        distances[(0, 0)] = (true, 2, discoveredBy);
     }
 
     isStart = false;
@@ -250,26 +254,28 @@ while (true)
 //var target = (x: 0, y: 0);
 var target = (x: targetX, y: targetY);
 var minDistance = 100000;
-var path = new List<(int x, int y)>() { target };
+var path = new List<(int x, int y)>() { };
 while (true)
 {
-    Console.WriteLine(target);
-    var closestNeighbourList1 = GetNeighbourPaths(target.x, target.y).Select(x => x.Select(y => (nb: y, d: distances.SingleOrDefault(z => z.Key.x == y.Item1 && z.Key.y == y.Item2))).ToList()).Where(x => x.Any(y => y.d.Key != default)).ToList();
-    var closestNeighbourList = closestNeighbourList1.ToList();
-
-    var closestNeighbour = closestNeighbourList.Select(x => x.Last()).Where(x => x.d.Value.distance < minDistance).OrderBy(x => x.d.Value.distance).First();
-    minDistance = closestNeighbour.d.Value.distance;
-    target = closestNeighbour.d.Key;
     path.Add(target);
+    target = distances.Single(x => x.Key.x == target.x && x.Key.y == target.y).Value.discoveredBy;
     if (target == (0, 0)) { break; }
-
-    Console.WriteLine(target);
-    Utils.PrintGrid(closestNeighbourList.Where(x => x.Contains(closestNeighbour)).Single(), x => x.d.Key.x, x => x.d.Key.y, x => x.d.Key != default ? "X" : ".");
-
-    //if (target == (targetX, targetY)) { break; }
 }
 
-Utils.PrintGrid(path, x => x.x, x => x.y, x => x != default ? "X" : ".");
+var extra = new List<(int x, int y)>() { };
+for (int i = 0; i < path.Count - 1; i++)
+{
+    var now = path[i];
+    var next = path[i + 1];
+
+    var lst = GetNeighbourPaths(now.x, now.y).Where(x => x.Last() == next).Single();
+    extra.AddRange(lst);
+}
+
+path.AddRange(extra);
+path = path.Distinct().ToList();
+
+Utils.PrintGrid(path, x => x.x, x => x.y, x => x != default ? "X" : ".", width, height);
 
 IEnumerable<List<(int, int)>> GetNeighbourPaths(int x, int y)
 {

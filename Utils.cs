@@ -59,14 +59,14 @@ public static class Utils
     }
 
 
-    static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null)
+    static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null )
     {
         print ??= x => x.ToString();
-        var width = grid.Max(X);
-        var height = grid.Max(Y);
-        for (int i = 0; i <= width; i++)
+        width ??= grid.Max(X);
+        height ??= grid.Max(Y);
+        for (int i = 0; i < width; i++)
         {
-            for (int j = 0; j <= height; j++)
+            for (int j = 0; j < height; j++)
             {
                 var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
                 Console.Write(item is null ? "?" : print(item));
