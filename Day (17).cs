@@ -158,7 +158,8 @@ var smallInput =
 2546548887735
 4322674655533";
 
-var smallest = @"1199999999
+var smallest = 
+@"1199999999
 9111111999
 9999991999
 9911191999
@@ -170,11 +171,11 @@ var smallest = @"1199999999
 9999999911";
 smallest =
 @"111111111
-111111111";
+9995999999";
 
 var input = smallInput;
-input = fullInput;
-//input = smallest;
+//input = fullInput;
+input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
@@ -205,7 +206,7 @@ while (pq.Count > 0)
         result = Math.Min(length, result);
     }
 
-    //var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
+    var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
 
     void TryQueue(int newX, int newY, bool newIsXAxis, int newDirCount)
     {
@@ -216,9 +217,7 @@ while (pq.Count > 0)
         var newLength = length + weight;
         var entry = (newX, newY, newIsXAxis, newDirCount, newLength);
         pq.Enqueue(entry, newLength);
-        //var qww = pathSoFar.ToList();
-        //qww.Add((newX, newY));
-        //paths[entry] = qww;
+        paths[entry] = pathSoFar.Union(new[] { (newX, newY) }).ToList();
 
     }
 
@@ -255,11 +254,14 @@ while (pq.Count > 0)
             TryQueue(x, y - 1, true, 1);
         }
     }
+
+    paths.Remove((x, y, xAxis, dirCount, length));
 }
 
-//var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
+var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
 
-//Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : ".");
+Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : ".");
+Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? grid[x.y][x.x].ToString() : ".");
 
 timer.Stop();
 Console.WriteLine(result); // 883 too high. 840 too low 841
