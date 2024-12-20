@@ -158,7 +158,7 @@ var smallInput =
 2546548887735
 4322674655533";
 
-var smallest = 
+var smallest =
 @"1199999999
 9111111999
 9999991999
@@ -169,21 +169,22 @@ var smallest =
 9999911119
 9999999919
 9999999911";
-smallest =
+var smallest2 =
 @"111111111
 9995999999";
 
 var input = smallInput;
-//input = fullInput;
-input = smallest;
+input = fullInput;
+//input = smallest;
+//input = smallest2;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
 var result = int.MaxValue;
 
-var paths = new Dictionary<(int x, int y, bool xAxis, int dirCount, int length), List<(int x, int y)>>();
-var pq = new PrioritySet<(int x, int y, bool xAxis, int dirCount, int length), int>();
-var start = (0, 0, true, 1, 0);
+var paths = new Dictionary<(int x, int y, char dir, int dirCount, int length), List<(int x, int y)>>();
+var pq = new PrioritySet<(int x, int y, char dir, int dirCount, int length), int>();
+var start = (0, 0, 'E', 0, 0);
 pq.Enqueue(start, 0);
 paths.Add(start, new List<(int x, int y)>() { (0, 0) });
 
@@ -191,7 +192,7 @@ long k = 0;
 
 while (pq.Count > 0)
 {
-    var (x, y, xAxis, dirCount, length) = pq.Dequeue();
+    var (x, y, dir, dirCount, length) = pq.Dequeue();
     if (k % 100_000 == 0)
     {
         Console.WriteLine($"k {k} pq {pq.Count} length {length}");
@@ -206,57 +207,55 @@ while (pq.Count > 0)
         result = Math.Min(length, result);
     }
 
-    var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
+    //var pathSoFar = paths[(x, y, dir, dirCount, length)];
 
-    void TryQueue(int newX, int newY, bool newIsXAxis, int newDirCount)
+    void TryQueue(int newX, int newY, char newDir, int newDirCount)
     {
         if (newX < 0 || newY < 0 || newX >= width || newY >= height) { return; }
         //if (newX < x && newY < x) { return; }
         //if (pathSoFar.Contains((newX, newY))) { return; }
         var weight = grid[newY][newX];
         var newLength = length + weight;
-        var entry = (newX, newY, newIsXAxis, newDirCount, newLength);
+        var entry = (newX, newY, newDir, newDirCount, newLength);
         pq.Enqueue(entry, newLength);
-        paths[entry] = pathSoFar.Union(new[] { (newX, newY) }).ToList();
+        //paths[entry] = pathSoFar.Union(new[] { (newX, newY) }).ToList();
 
     }
 
-    if (dirCount > 4)
+    if (dir == 'S' || dir == 'N')
     {
-    }
-    if (dirCount == 3)
-    {
-        if (xAxis)
-        {
-            TryQueue(x + 1, y, false, 1);
-            TryQueue(x - 1, y, false, 1);
-        }
-        else
-        {
-            TryQueue(x, y + 1, true, 1);
-            TryQueue(x, y - 1, true, 1);
-        }
+        TryQueue(x + 1, y, 'E', 1);
+        TryQueue(x - 1, y, 'W', 1);
     }
     else
     {
-        if (xAxis)
+        TryQueue(x, y + 1, 'S', 1);
+        TryQueue(x, y - 1, 'N', 1);
+    }
+    if (dirCount < 3)
+    {
+        if (dir == 'S')
         {
-            TryQueue(x, y + 1, true, dirCount + 1);
-            TryQueue(x, y - 1, true, dirCount + 1);
-            TryQueue(x + 1, y, false, 1);
-            TryQueue(x - 1, y, false, 1);
+            TryQueue(x, y + 1, 'S', dirCount + 1);
         }
-        else
+        else if (dir == 'N')
         {
-            TryQueue(x + 1, y, false, dirCount + 1);
-            TryQueue(x - 1, y, false, dirCount + 1);
-            TryQueue(x, y + 1, true, 1);
-            TryQueue(x, y - 1, true, 1);
+            TryQueue(x, y - 1, 'N', dirCount + 1);
+        }
+        else if (dir == 'E')
+        {
+            TryQueue(x + 1, y, 'E', dirCount + 1);
+        }
+        else if (dir == 'W')
+        {
+            TryQueue(x - 1, y, 'W', dirCount + 1);
         }
     }
 
-    paths.Remove((x, y, xAxis, dirCount, length));
+    //paths.Remove((x, y, dir, dirCount, length));
 }
+
+Console.WriteLine(result); // 883 too high. 840 too low 841
 
 var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
 
@@ -264,7 +263,6 @@ Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : 
 Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? grid[x.y][x.x].ToString() : ".");
 
 timer.Stop();
-Console.WriteLine(result); // 883 too high. 840 too low 841
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
