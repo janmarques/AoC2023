@@ -735,6 +735,7 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.name, x => x.operations);
 var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Select(ParsePart).ToList();
 
+
 var result = machineParts.Where(IsAccepted).Sum(x => x.Values.Sum());
 
 bool IsAccepted(Dictionary<char, int> part)
@@ -770,13 +771,15 @@ Console.ReadLine();
 {
     var split = str.Replace("}", "").Split("{");
     var name = split[0];
-    var operations = split[1].Split(",").Select(ParseOperation).ToList();
+    var commaSplit = split[1].Split(",");
+    var operations = commaSplit.SkipLast(1).Select(ParseOperation).ToList();
+    var last = operations.Last();
+    operations.Add(new Operation(last.param, !last.greaterThan, last.value, commaSplit.Last()));
     return (name, operations);
 }
 
 Operation ParseOperation(string str)
 {
-    if (!str.Contains(":")) { return new Operation(default, default, default, str); }
     var split = str.Split('<', '>', ':');
     return new Operation(split[0][0], str.Contains(">"), int.Parse(split[1]), split[2]);
 }
