@@ -1,4 +1,7 @@
-﻿var fullInput =
+﻿using System.Linq;
+using System.Runtime.Intrinsics.Arm;
+
+var fullInput =
 @"kbr{x>2309:A,R}
 rp{a>2160:mcm,m<3139:bz,fs}
 hqr{a>3048:R,x>1298:R,R}
@@ -735,6 +738,52 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.name, x => x.operations);
 var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Select(ParsePart).ToList();
 
+var didSomething = false;
+
+do
+{
+    didSomething = false;
+    foreach (var item in workflows)
+    {
+        workflows[item.Key] = OptimizeSingle(item.Value);
+    }
+
+    var singulars = workflows.Where(x => x.Value.Count == 1 /*&& x.Value.Single().next != "A" && x.Value.Single().next != "R"*/)/*.Take(2)*/.ToList();
+    foreach (var singular in singulars)
+    {
+        var single = singular.Value.Single();
+        var newSingle = new Operation(default, default, default, single.next);
+        foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+        {
+            var list = item.Value;
+            Console.WriteLine($"{item.Key}: adding {newSingle} instead of {singular.Key}");
+            var qqq = list.Single(x => x.next == singular.Key);
+            list.Insert(list.FindIndex(x => x.next == singular.Key), new Operation(qqq.param, qqq.greaterThan, qqq.value, single.next));
+            if (list.RemoveAll(x => x.next == singular.Key) != 1)
+            {
+                throw new Exception();
+            }
+            workflows[item.Key] = list;
+            didSomething = true;
+
+        }
+    }
+    for (int i = 0; i < singulars.Count; i++)
+    {
+        workflows.Remove(singulars[i].Key);
+        didSomething = true;
+    }
+} while (didSomething);
+
+
+List<Operation> OptimizeSingle(List<Operation> value)
+{
+    if (value.GroupBy(x => x.next).Count() == 1)
+    {
+        return value.TakeLast(1).ToList();
+    }
+    return value;
+}
 
 var result = machineParts.Where(IsAccepted).Sum(x => x.Values.Sum());
 
@@ -771,15 +820,13 @@ Console.ReadLine();
 {
     var split = str.Replace("}", "").Split("{");
     var name = split[0];
-    var commaSplit = split[1].Split(",");
-    var operations = commaSplit.SkipLast(1).Select(ParseOperation).ToList();
-    var last = operations.Last();
-    operations.Add(new Operation(last.param, !last.greaterThan, last.value, commaSplit.Last()));
+    var operations = split[1].Split(",").Select(ParseOperation).ToList();
     return (name, operations);
 }
 
 Operation ParseOperation(string str)
 {
+    if (!str.Contains(":")) { return new Operation(default, default, default, str); }
     var split = str.Split('<', '>', ':');
     return new Operation(split[0][0], str.Contains(">"), int.Parse(split[1]), split[2]);
 }
