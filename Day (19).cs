@@ -834,11 +834,11 @@ var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Se
         }
 
 
-        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R") && x.Value.Count == 2).Take(6).ToList();
+        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R") && x.Value.Count == 2)./*Take(6).*/ToList();
         //if (singulars.Count == 1) { break; }
         foreach (var singular in singulars)
         {
-            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == "A" || x.Value.Last().next == "R").Where(x => x.Value.TakeLast(2).First().next == singular.Key))
             {
                 var list = item.Value;
                 if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
@@ -853,15 +853,15 @@ var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Se
                 didSomething = true;
             }
         }
-        //for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
-        //{
-        //    if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
-        //    {
-        //        workflows.Remove(singulars[i].Key);
-        //        didSomething = true;
-        //    }
-        //}
-        didSomething = false;
+        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
+        {
+            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
+            {
+                workflows.Remove(singulars[i].Key);
+                didSomething = true;
+            }
+        }
+        //didSomething = false;
 
     } while (didSomething);
 }
