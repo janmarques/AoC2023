@@ -168,15 +168,15 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
 var result = int.MaxValue;
 
-var paths = new Dictionary<(int x, int y, bool xAxis, int dirCount, int length), List<(int x, int y)>>();
-var pq = new PrioritySet<(int x, int y, bool xAxis, int dirCount, int length), int>();
+var paths = new Dictionary<(int x, int y, bool cameFromXAxis, int length), List<(int x, int y)>>();
+var pq = new PrioritySet<(int x, int y, bool xAxis, int length), int>();
 var start = (0, 0, true, 1, 0);
 pq.Enqueue(start, 0);
 paths.Add(start, new List<(int x, int y)>() { (0, 0) });
 
 while (pq.Count > 0)
 {
-    var (x, y, xAxis, dirCount, length) = pq.Dequeue();
+    var (x, y, xAxis, length) = pq.Dequeue();
     if (length > result)
     {
         break;
@@ -186,8 +186,8 @@ while (pq.Count > 0)
         result = Math.Min(length, result);
     }
 
+    var pathSoFar = paths[(x, y, xAxis, length)];
     var neighbourPaths = GetNeighbourPaths(x, y).ToList();
-    var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
     foreach (var neighbourPath in neighbourPaths)
     {
         var endNode = neighbourPath.Item1.Last();
