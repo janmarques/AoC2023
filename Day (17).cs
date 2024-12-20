@@ -170,13 +170,16 @@ var smallest =
 9999999919
 9999999911";
 var smallest2 =
-@"111111111
-9995999999";
+@"111111111111
+999999999991
+999999999991
+999999999991
+999999999991";
 
 var input = smallInput;
 input = fullInput;
 //input = smallest;
-//input = smallest2;
+input = smallest2;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
@@ -190,6 +193,8 @@ paths.Add(start, new List<(int x, int y)>() { (0, 0) });
 
 long k = 0;
 
+var doPaths = true;
+//doPaths = false;
 while (pq.Count > 0)
 {
     var (x, y, dir, dirCount, length) = pq.Dequeue();
@@ -207,6 +212,7 @@ while (pq.Count > 0)
         result = Math.Min(length, result);
     }
 
+
     //var pathSoFar = paths[(x, y, dir, dirCount, length)];
 
     void TryQueue(int newX, int newY, char newDir, int newDirCount)
@@ -222,17 +228,20 @@ while (pq.Count > 0)
 
     }
 
-    if (dir == 'S' || dir == 'N')
+    if (dirCount >= 4)
     {
-        TryQueue(x + 1, y, 'E', 1);
-        TryQueue(x - 1, y, 'W', 1);
+        if (dir == 'S' || dir == 'N')
+        {
+            TryQueue(x + 1, y, 'E', 1);
+            TryQueue(x - 1, y, 'W', 1);
+        }
+        else
+        {
+            TryQueue(x, y + 1, 'S', 1);
+            TryQueue(x, y - 1, 'N', 1);
+        }
     }
-    else
-    {
-        TryQueue(x, y + 1, 'S', 1);
-        TryQueue(x, y - 1, 'N', 1);
-    }
-    if (dirCount < 3)
+    if (dirCount < 10)
     {
         if (dir == 'S')
         {
