@@ -810,12 +810,12 @@ input = fullInput;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
-var digplan = input.Split(Environment.NewLine).Select(x => x.Split(new[] { " ", "(", ")" }, StringSplitOptions.RemoveEmptyEntries)).Select(x => (dir: x[0][0], distance: int.Parse(x[1]), color: x[2])).ToList();
+var digplan = input.Split(Environment.NewLine).Select(x => x.Split(new[] { " ", "(", ")" }, StringSplitOptions.RemoveEmptyEntries)).Select(x => (dir: x[0][0], distance: int.Parse(x[1]))).ToList();
 
-var trenches = new Dictionary<(int x, int y), Node>();
+var trenches = new HashSet<(int x, int y)>();
 var x = 0;
 var y = 0;
-foreach (var (dir, distance, color) in digplan)
+foreach (var (dir, distance) in digplan)
 {
     for (int i = 0; i < distance; i++)
     {
@@ -835,17 +835,17 @@ foreach (var (dir, distance, color) in digplan)
         {
             y--;
         }
-        trenches[(x, y)] = new Node { Color = color, X = x, Y = y };
+        trenches.Add((x, y));
     }
 }
 
 var floodStart = digplan.Count < 20 ? (1, 1) : (230, 1);
 
-var xMin = trenches.Min(x => x.Key.x);
-var yMin = trenches.Min(x => x.Key.y);
+var xMin = trenches.Min(x => x.x);
+var yMin = trenches.Min(x => x.y);
 
-var xMax = trenches.Max(x => x.Key.x);
-var yMax = trenches.Max(x => x.Key.y);
+var xMax = trenches.Max(x => x.x);
+var yMax = trenches.Max(x => x.y);
 
 
 var queue = new Queue<(int x, int y)>();
@@ -856,13 +856,9 @@ while (queue.Count > 0)
     var item = queue.Dequeue();
     visited.Add(item);
 
-    if (trenches.ContainsKey(item))
+    if (!trenches.Add(item))
     {
         continue;
-    }
-    else
-    {
-        trenches[item] = new Node { Color = null, X = item.x, Y = item.y };
     }
 
     var neigbours = new[] { (item.x + 1, item.y), (item.x - 1, item.y), (item.x, item.y + 1), (item.x, item.y - 1) };
@@ -896,5 +892,4 @@ class Node
 {
     public int X { get; set; }
     public int Y { get; set; }
-    public string Color { get; set; }
 }
