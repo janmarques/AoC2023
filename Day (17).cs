@@ -158,25 +158,44 @@ var smallInput =
 2546548887735
 4322674655533";
 
-var smallest = "";
+var smallest = @"1199999999
+9111111999
+9999991999
+9911191999
+9919111999
+9919999999
+9911119999
+9999911119
+9999999919
+9999999911";
+smallest =
+@"111111111
+111111111";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 (int[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => int.Parse(x.ToString()));
 var result = int.MaxValue;
 
-var paths = new Dictionary<(int x, int y, bool cameFromXAxis, int length), List<(int x, int y)>>();
-var pq = new PrioritySet<(int x, int y, bool xAxis, int length), int>();
+var paths = new Dictionary<(int x, int y, bool xAxis, int dirCount, int length), List<(int x, int y)>>();
+var pq = new PrioritySet<(int x, int y, bool xAxis, int dirCount, int length), int>();
 var start = (0, 0, true, 1, 0);
 pq.Enqueue(start, 0);
 paths.Add(start, new List<(int x, int y)>() { (0, 0) });
 
+long k = 0;
+
 while (pq.Count > 0)
 {
-    var (x, y, xAxis, length) = pq.Dequeue();
+    var (x, y, xAxis, dirCount, length) = pq.Dequeue();
+    if (k % 100_000 == 0)
+    {
+        Console.WriteLine($"k {k} pq {pq.Count} length {length}");
+    }
+    k++;
     if (length > result)
     {
         break;
@@ -186,42 +205,64 @@ while (pq.Count > 0)
         result = Math.Min(length, result);
     }
 
-    var pathSoFar = paths[(x, y, xAxis, length)];
-    var neighbourPaths = GetNeighbourPaths(x, y).ToList();
-    foreach (var neighbourPath in neighbourPaths)
-    {
-        var endNode = neighbourPath.Item1.Last();
-        if (endNode.x < 0 || endNode.y < 0 || endNode.x >= width || endNode.y >= height) { continue; }
-        if (pathSoFar.Any(x => neighbourPath.Item1.Contains(x))) { continue; }
+    //var pathSoFar = paths[(x, y, xAxis, dirCount, length)];
 
+    void TryQueue(int newX, int newY, bool newIsXAxis, int newDirCount)
+    {
+        if (newX < 0 || newY < 0 || newX >= width || newY >= height) { return; }
+        //if (newX < x && newY < x) { return; }
+        //if (pathSoFar.Contains((newX, newY))) { return; }
+        var weight = grid[newY][newX];
+        var newLength = length + weight;
+        var entry = (newX, newY, newIsXAxis, newDirCount, newLength);
+        pq.Enqueue(entry, newLength);
+        //var qww = pathSoFar.ToList();
+        //qww.Add((newX, newY));
+        //paths[entry] = qww;
+
+    }
+
+    if (dirCount > 4)
+    {
+    }
+    if (dirCount == 3)
+    {
         if (xAxis)
         {
-            var xes = neighbourPath.Item1.GroupBy(x => x.x).Max(x => x.Count());
-            if (xes + dirCount > 4) { continue; }
+            TryQueue(x + 1, y, false, 1);
+            TryQueue(x - 1, y, false, 1);
         }
         else
         {
-            var ys = neighbourPath.Item1.GroupBy(x => x.y).Max(x => x.Count());
-            if (ys + dirCount > 4) { continue; }
+            TryQueue(x, y + 1, true, 1);
+            TryQueue(x, y - 1, true, 1);
         }
-
-        var subpathCount = neighbourPath.Item1.Sum(p => grid[p.y][p.x]);
-        var newLength = length + subpathCount;
-
-        var entry = (endNode.x, endNode.y, !neighbourPath.Item2.isForX, !neighbourPath.Item2.isForX ? neighbourPath.Item2.x : neighbourPath.Item2.y, newLength);
-        if (pq.Enqueue(entry, newLength))
+    }
+    else
+    {
+        if (xAxis)
         {
-            paths[entry] = pathSoFar.Concat(neighbourPath.Item1).ToList();
+            TryQueue(x, y + 1, true, dirCount + 1);
+            TryQueue(x, y - 1, true, dirCount + 1);
+            TryQueue(x + 1, y, false, 1);
+            TryQueue(x - 1, y, false, 1);
+        }
+        else
+        {
+            TryQueue(x + 1, y, false, dirCount + 1);
+            TryQueue(x - 1, y, false, dirCount + 1);
+            TryQueue(x, y + 1, true, 1);
+            TryQueue(x, y - 1, true, 1);
         }
     }
 }
 
-var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
+//var targetPath = paths.Where(x => x.Key.x == width - 1 && x.Key.y == height - 1).OrderBy(x => x.Key.length).First();
 
-Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : ".");
+//Utils.PrintGrid(targetPath.Value, x => x.x, x => x.y, x => x != default ? "X" : ".");
 
 timer.Stop();
-Console.WriteLine(result);
+Console.WriteLine(result); // 883 too high. 840 too low 841
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 

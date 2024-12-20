@@ -64,9 +64,9 @@ public static class Utils
         print ??= x => x.ToString();
         width ??= grid.Max(X);
         height ??= grid.Max(Y);
-        for (int i = 0; i < width; i++)
+        for (int i = 0; i <= width; i++)
         {
-            for (int j = 0; j < height; j++)
+            for (int j = 0; j <= height; j++)
             {
                 var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
                 Console.Write(item is null ? "?" : print(item));
