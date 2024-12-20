@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection.Metadata;
 using System.Runtime.Intrinsics.Arm;
 
 var fullInput =
@@ -738,42 +739,84 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.name, x => x.operations);
 var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Select(ParsePart).ToList();
 
-var didSomething = false;
-
-do
 {
-    didSomething = false;
-    foreach (var item in workflows)
-    {
-        workflows[item.Key] = OptimizeSingle(item.Value);
-    }
 
-    var singulars = workflows.Where(x => x.Value.Count == 1 /*&& x.Value.Single().next != "A" && x.Value.Single().next != "R"*/)/*.Take(2)*/.ToList();
-    foreach (var singular in singulars)
+    var didSomething = false;
+
+    do
     {
-        var single = singular.Value.Single();
-        var newSingle = new Operation(default, default, default, single.next);
-        foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+        didSomething = false;
+        foreach (var item in workflows)
         {
-            var list = item.Value;
-            Console.WriteLine($"{item.Key}: adding {newSingle} instead of {singular.Key}");
-            var qqq = list.Single(x => x.next == singular.Key);
-            list.Insert(list.FindIndex(x => x.next == singular.Key), new Operation(qqq.param, qqq.greaterThan, qqq.value, single.next));
-            if (list.RemoveAll(x => x.next == singular.Key) != 1)
-            {
-                throw new Exception();
-            }
-            workflows[item.Key] = list;
-            didSomething = true;
-
+            workflows[item.Key] = OptimizeSingle(item.Value);
         }
-    }
-    for (int i = 0; i < singulars.Count; i++)
+
+        var singulars = workflows.Where(x => x.Value.Count == 1 /*&& x.Value.Single().next != "A" && x.Value.Single().next != "R"*/)/*.Take(2)*/.ToList();
+        foreach (var singular in singulars)
+        {
+            var single = singular.Value.Single();
+            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+            {
+                var list = item.Value;
+                var qqq = list.Single(x => x.next == singular.Key);
+                list.Insert(list.FindIndex(x => x.next == singular.Key), new Operation(qqq.param, qqq.greaterThan, qqq.value, single.next));
+                if (list.RemoveAll(x => x.next == singular.Key) != 1)
+                {
+                    throw new Exception();
+                }
+                workflows[item.Key] = list;
+                didSomething = true;
+
+            }
+        }
+        for (int i = 0; i < singulars.Count; i++)
+        {
+            workflows.Remove(singulars[i].Key);
+            didSomething = true;
+        }
+    } while (didSomething);
+}
+
+{
+
+    var didSomething = false;
+
+    do
     {
-        workflows.Remove(singulars[i].Key);
-        didSomething = true;
-    }
-} while (didSomething);
+        didSomething = false;
+
+        foreach (var item in workflows)
+        {
+            workflows[item.Key] = OptimizeSingle(item.Value);
+        }
+
+
+        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R") && x.Value.Count == 2)/*.Take(3)*/.ToList();
+        if (singulars.Count == 1) { break; }
+        foreach (var singular in singulars)
+        {
+            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next== singular.Key))
+            {
+                var list = item.Value;
+                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
+                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
+                var after = list.Skip(before.Count + 1).ToList();
+
+                var newList = before.Concat(singular.Value).Concat(after).ToList();
+                workflows[item.Key] = newList;
+                didSomething = true;
+            }
+        }
+        //for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
+        //{
+        //    workflows.Remove(singulars[i].Key);
+        //    didSomething = true;
+        //}
+        //didSomething = false;
+
+    } while (didSomething);
+}
+
 
 
 List<Operation> OptimizeSingle(List<Operation> value)
