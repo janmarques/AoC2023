@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -61,12 +63,6 @@ public static class Utils
 
     static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null)
     {
-        Console.WriteLine(WriteGrid(grid, X, Y, print, width, height));
-    }
-
-    static public string WriteGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null)
-    {
-        var sb = new StringBuilder();
         print ??= x => x.ToString();
         width ??= grid.Max(X);
         height ??= grid.Max(Y);
@@ -75,13 +71,12 @@ public static class Utils
             for (int i = 0; i <= width; i++)
             {
                 var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
-                sb.Append(item is null ? "?" : print(item));
+                Console.Write(item is null ? "?" : print(item));
             }
-            sb.AppendLine();
+            Console.WriteLine();
         }
-        sb.AppendLine();
-        sb.AppendLine();
-        return sb.ToString();
+        Console.WriteLine();
+        Console.WriteLine();
     }
 
     static public (char[][] grid, int height, int width) Parse2DGrid(string input)
@@ -93,6 +88,8 @@ public static class Utils
         var grid = input.Split(Environment.NewLine).Select(x => x.Select(y => parse(y)).ToArray()).ToArray();
         return (grid, grid.Length, grid[0].Length);
     }
+
+    static public IEnumerable<(int x, int y, char c)> ParseCoordGrid(string input) => ParseCoordGrid(input, x => (x.x, x.y, x.c));
 
     static public IEnumerable<T> ParseCoordGrid<T>(string input, Func<(int x, int y, char c), T> init) where T : new()
     {
@@ -106,4 +103,42 @@ public static class Utils
         }
 
     }
+
+    static public int Manhatten((int x, int y) from, (int x, int y) to) => Math.Abs(from.x - to.x) + Math.Abs(from.y - to.y);
+
+    static Dictionary<string, int> Counters = new Dictionary<string, int>();
+    static Dictionary<string, Stopwatch> Timers = new Dictionary<string, Stopwatch>();
+    static public void Counter(string name, int threshold = 10000, long expectedTotal = 0, bool timer = false, string extraText = "")
+    {
+        if (timer && !Timers.ContainsKey(name))
+        {
+            Timers[name] = new Stopwatch();
+            Timers[name].Start();
+        }
+        if (!Counters.ContainsKey(name))
+        {
+            Counters[name] = 0;
+        }
+        Counters[name]++;
+        var value = Counters[name];
+        if (value % threshold == 0)
+        {
+            var timerStr = "";
+            if (timer)
+            {
+                var elapsedSeconds = Timers[name].ElapsedMilliseconds / 1000;
+                timerStr = $" {TimeSpan.FromSeconds(elapsedSeconds)}";
+                if (expectedTotal != 0)
+                {
+                    var prognosis = TimeSpan.FromSeconds(expectedTotal * elapsedSeconds / value);
+                    timerStr += $" expected {prognosis}";
+
+                }
+            }
+            var totalStr = expectedTotal == 0 ? "" : $"/{expectedTotal} {(double)value * 100 / expectedTotal}%";
+            Console.WriteLine($"{name} {value} {totalStr} {timerStr} {extraText}");
+        }
+    }
+
+    public static string ReplaceFirst(string input, string search, string replacement) => new Regex(Regex.Escape(search)).Replace(input, replacement, 1);
 }

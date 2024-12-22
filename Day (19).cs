@@ -1,189 +1,176 @@
-﻿using System.Linq;
+﻿using AoC2023;
+using System.Linq;
+using System.Numerics;
 using System.Reflection.Metadata;
 using System.Runtime.Intrinsics.Arm;
 
 var fullInput =
 @"kbr{x>2309:A,R}
 rp{a>2160:R,m<3139:bz,fs}
-hqr{a>3048:R,x>1298:R,R}
-ht{s<1042:A,a<3744:A,a>3879:lb,zsj}
-bvk{s<464:R,x>1190:R,a<3443:A,A}
-vr{x>1596:xt,nk}
-hc{m<999:A,x<224:R,R}
+ht{s<1042:A,a<3744:A,a>3879:A,zsj}
+bvk{s<464:R,x>1190:R,A}
+vr{x>1596:xt,s<2788:R,A}
+hc{m<999:A,R}
 bp{a>1785:msj,sk}
-fs{a<1989:A,x>561:kdv,x>192:A,R}
-nls{x>3679:R,s<1583:A,s<1669:A,A}
-phd{a<187:R,a>307:A,s>2783:A,A}
+fs{a<1989:A,x>561:R,x>192:A,R}
+nls{x>3679:R,A}
+phd{a<187:R,A}
 nb{s<238:A,R}
 rs{x<2853:cd,a<1366:pxm,m>2215:cfp,bpt}
 cvn{m>1940:tb,s<421:tmg,s>560:nnq,A}
 fh{x<264:tf,hvg}
-kl{x>382:R,s>1772:R,s>1604:R,R}
 sdm{x<725:hpj,bd}
 xm{s<1235:vbs,s>1363:A,m>1320:R,A}
 xb{m<1640:jn,x<3607:A,pnq}
 zlj{a>3273:A,x<1274:A,R}
-bd{x<755:vc,cz}
+bd{x<755:R,cz}
 qdv{x<350:cgv,s<2917:zrb,kks}
-qsc{s>301:R,a<1732:R,m<3313:A,A}
-rt{x<160:A,s>2931:R,R}
-dzm{m<1790:R,m<1939:A,s>2295:A,A}
+qsc{s>301:R,a<1732:R,A}
+rt{x<160:A,R}
+dzm{m<1790:R,A}
 zsx{a>2296:xfj,jbd}
 lk{s<2027:A,s<2291:R,x<1237:lm,A}
-hhp{a<3101:A,x>557:R,s>152:A,A}
+hhp{a<3101:A,x>557:R,A}
 rkj{a>1490:R,a<1422:A,R}
 tbp{a<718:R,s<506:A,R}
 ph{x>674:R,m>1561:A,m>837:A,R}
 vf{a>919:R,a>599:kv,a<251:sh,x<769:R,A}
-tmz{x<129:R,x>158:R,R}
 hzx{x>1485:R,A}
-xzr{m<2651:R,a<691:A,A}
+xzr{m<2651:R,A}
 tz{s<2170:cdv,x>619:skb,a<2380:krh,qz}
 nfs{a<1850:R,x>2485:A,R}
 tbx{x<2370:tgp,a<1359:nsd,x>2467:bhj,lxg}
 ffd{a<642:R,a<845:hfj,R}
 jgb{m<3251:R,s<224:R,m>3513:R,A}
-lc{x<2011:R,x<2110:R,R}
 fhq{a>1557:A,s<3161:rkj,s>3607:djm,ggh}
 glk{m>2388:rt,s<3266:R,A}
-kb{m>2412:jnq,x<266:A,vq}
+kb{m>2412:jnq,x<266:A,m<2056:R,A}
 tff{s<279:R,A}
 nz{s<335:fvn,a<358:mpp,s>587:xd,jqc}
-vc{x>735:R,a<2284:R,s<3520:R,R}
-scf{s>2746:R,x<82:R,s<2408:R,R}
 sv{m<773:st,ln}
 dq{m<881:xrl,m<1325:psz,hht}
-krd{x<412:R,s<163:A,x<656:A,A}
-hcv{s<444:A,m>2682:R,x>647:R,R}
+krd{x<412:R,A}
+hcv{s<444:A,R}
 jnq{x>246:R,m>3033:A,s<2629:A,R}
 jmr{x>522:R,x>316:A,s>787:A,R}
 zqq{m<1496:A,x<112:A,R}
 vbs{m<1219:R,s>1032:R,s>919:R,A}
 dlv{s<707:A,a<446:A,s>741:kc,R}
-lt{x<3238:R,x<3353:A,A}
+lt{x<3238:R,A}
 glh{a<1492:pgv,s>3328:R,A}
 ds{s<610:A,R}
 bvz{a<3024:nzm,a<3669:shb,m<1829:jxg,A}
-tl{s>3142:R,s<2376:bq,x<1364:A,qt}
+tl{s>3142:R,s<2376:bq,x<1364:A,R}
 zn{m>2958:R,bs}
 pvd{x>2669:R,A}
 tp{a<2819:bh,gvz}
 zv{s<619:km,R}
 xgs{a<1906:A,x<2055:A,R}
-vcd{x>3711:A,x>3578:A,A}
 djq{s<1657:R,m>2805:A,zkl}
 kt{m<2476:xkv,a<672:htv,s<809:qx,rq}
-xph{s<719:A,m>2904:R,R}
+xph{s<719:A,R}
 ntq{a>3393:R,s<606:cfc,hk}
-xq{m>1452:R,a>1510:A,A}
+xq{m>1452:R,A}
 zb{s<2772:R,A}
 kv{s<2620:A,s<2650:A,R}
 ksd{x>2528:R,rxz}
-tf{a<1047:stx,m<2657:R,pcb}
+tf{a<1047:stx,R}
 dcf{x>397:A,x<367:A,R}
-nv{m<2534:R,x>1297:A,m<3435:dc,dsh}
+nv{m<2534:R,x>1297:A,m<3435:dc,a>3633:R,A}
 dhz{x<579:A,m<3496:R,a>1496:R,A}
-rpk{a<3529:R,x>2673:R,m<3343:A,A}
+rpk{a<3529:R,x>2673:R,A}
 vrk{s<746:xph,s<771:nhf,jmr}
 jtb{x>2319:R,a<856:R,kbr}
 cfc{m>2900:R,A}
-hvg{x<356:A,a>1092:fj,s<451:A,A}
-xfj{x>659:jnv,s<2767:kj,s<2843:A,R}
-xj{s>3265:R,x<1251:R,a>3192:A,A}
-kzf{m<2460:R,s<1082:tqp,a>2659:dcr,A}
-bnm{m<3230:gz,a>843:dhz,vbz}
+hvg{x<356:A,a>1092:fj,A}
+xfj{x>659:A,s<2767:kj,s<2843:A,R}
+xj{s>3265:R,x<1251:R,A}
+kzf{m<2460:R,s<1082:A,a>2659:dcr,A}
+bnm{m<3230:gz,a>843:dhz,A}
 jn{s>2515:R,A}
 hb{m>2503:R,a>3916:A,qj}
 rq{s<1167:xfg,s<1386:R,x<3821:nls,R}
-rv{x<2349:zpb,a<1231:zfm,R}
+rv{x<2349:zpb,R}
 djm{x<3262:R,A}
-xl{m<1184:R,x<3556:A,A}
-zgq{s<282:gsh,cr}
+xl{m<1184:R,A}
+zgq{s<282:gsh,m>3260:R,A}
 sl{m>2629:A,s<474:A,R}
-ng{s>3324:A,s<3091:R,s<3190:R,R}
+ng{s>3324:A,R}
 vcg{x<3570:A,m>2628:R,m<2092:dzm,R}
 kfk{m>2016:A,xlq}
 pbc{a<2609:rp,kcl}
 srl{x<57:R,x<100:A,m<3346:A,R}
-srv{s<406:A,x>212:R,s>607:A,A}
+srv{s<406:A,x>212:R,A}
 hpj{a>2644:qrd,A}
 lzx{x>2233:R,A}
-dxc{m>616:hkn,s>2680:cld,x>566:vf,jfh}
+dxc{m>616:R,s>2680:cld,x>566:vf,jfh}
 zrt{s>2756:A,R}
-cr{m>3260:R,gkr}
+cr{m>3260:R,A}
 sd{a<2207:jq,a<3385:kzf,x>1721:ht,nv}
-qpr{m>3272:R,fkm}
+qpr{m>3272:R,x<568:R,A}
 shb{m<2618:R,m<3334:R,A}
-rlc{x<305:R,x>321:R,m>3127:A,A}
+rlc{x<305:R,x>321:R,A}
 qj{x>2660:A,x>2348:R,m<884:A,R}
-djd{x<2495:gfs,htj}
+djd{x<2495:A,htj}
 hht{a>3137:A,x<649:R,A}
 tsf{m<1703:A,a<1358:R,A}
 lz{a<952:R,A}
-gv{a>3238:R,x>453:A,s<2711:R,R}
-pfr{s>2525:A,a>1108:A,A}
+gv{a>3238:R,x>453:A,R}
 kmq{x>392:zn,jb}
-hn{s<1515:xm,kl}
-np{a>2419:A,m>553:A,A}
+hn{s<1515:xm,R}
 nr{a>3070:xgb,ngg}
-qvh{a>2488:R,a>918:A,A}
+qvh{a>2488:R,A}
 stx{s>289:A,x>91:R,s<156:A,R}
-hqd{a<632:A,x>2009:A,A}
 nm{s<1745:R,A}
 pzh{m<2360:md,m>2979:rqr,s>2988:br,krv}
 zrb{s<2528:tz,m>1549:zsx,a<1491:dxc,dq}
 llb{m<1107:djz,s>300:R,A}
 cgv{a>1941:glk,x>147:zs,m<1869:gqf,vk}
-xrl{s>2706:A,m<561:hnr,m>748:A,A}
-xfg{x>3831:R,a<978:A,A}
+xrl{s>2706:A,m<561:hnr,A}
+xfg{x>3831:R,A}
 vdf{s>3024:A,a>840:A,R}
 tmg{m<1656:R,a<1767:A,x>696:R,A}
 tjs{a>431:R,A}
-nl{s>3402:A,s<3260:R,R}
+nl{s>3402:A,R}
 jtq{a>2199:nr,qd}
-jjq{s>2520:xj,m<713:rm,m<1281:R,hqr}
+jjq{s>2520:xj,m<713:rm,R}
 mv{s>2678:A,x>2760:A,R}
 ngg{a<2529:gmf,x>3082:cvp,tp}
 bkr{m<3088:rfh,R}
 tgp{x<2296:A,x<2337:jtb,rv}
 ncf{x>196:R,s<2752:R,A}
-fx{s>1162:cl,df}
+fx{s>1162:cl,R}
 hr{m>954:hn,spf}
 nnq{a<1542:A,R}
 tdn{x<2514:R,s<646:R,A}
-gqf{a<707:hh,m>956:ldg,nxv}
+gqf{a<707:hh,m>956:ldg,R}
 mkt{s>727:sd,a>2466:rmg,a<988:rl,bp}
-nzb{x<2686:R,a<1081:A,x<2792:A,A}
-lm{x>1189:R,x>1176:A,A}
-vz{x<3651:R,x>3854:R,R}
+nzb{x<2686:R,A}
+lm{x>1189:R,A}
 bqq{x>1279:R,s>3370:R,x>1202:A,R}
 snv{x<194:A,x<252:A,a>235:A,R}
-msv{a<592:A,a<707:A,A}
 stg{s>1846:R,x<683:R,m>2553:R,A}
 rl{m>1908:hns,s<321:R,ffd}
 zpb{s>591:A,R}
-jnv{m>2507:A,s<2765:A,x>797:A,A}
 llz{a<835:R,x>406:A,x<377:R,A}
-pcb{x>174:R,m<2756:R,R}
-br{m<2580:flb,qvh}
+br{m<2580:flb,a>2488:R,A}
 qjd{m>2397:A,R}
 qp{x<1157:pzh,m>1748:vg,x<1398:khk,kh}
 rnl{x>1385:R,zlj}
 bq{x<1438:A,m<3141:A,R}
 zts{a<1415:A,s<3560:R,A}
-qgk{s>3620:A,m<2494:A,m>2665:A,A}
 zqp{s>252:A,s<96:cm,s<186:hhp,R}
-nt{a>419:msv,phd}
+nt{a>419:A,a<187:R,A}
 ltc{s<1274:zxr,djq}
 psc{x<2433:ds,s>848:R,s>450:fln,nb}
 nx{m>3177:R,lqj}
-hk{m>2677:R,m<2443:A,a>3006:R,R}
+hk{m>2677:R,m<2443:A,R}
 rmg{x>1381:nq,m>2136:rh,bvk}
 pgv{x<834:ng,s>3456:R,hjb}
 zqh{s<615:A,x<2462:A,R}
 skb{x<758:ph,R}
 kx{s>2301:R,m<2849:R,x<1374:A,R}
-rqr{a<1696:pfr,s>2777:tjr,A}
+rqr{a<1696:A,s>2777:tjr,A}
 lcb{m<2118:jlx,a<1059:bsn,qsc}
 nsd{s<1091:pb,a>537:bls,tjx}
 pm{s>2902:R,x>1045:A,m>1491:R,A}
@@ -192,25 +179,22 @@ rm{a>2840:R,a<2326:A,R}
 gxt{x>1879:rb,rc}
 jr{x>741:vj,a>953:tqv,pf}
 ff{x>2969:tkk,s<1319:jrk,A}
-qln{m>1728:R,a<1590:R,R}
 lqj{x<3660:A,x>3863:A,m>2633:A,R}
-fkm{x<568:R,x>719:A,A}
-xx{m>2490:A,x<698:A,s>2025:A,A}
-pf{m>2515:hcv,s>402:R,R}
+fkm{x<568:R,A}
+pf{m>2515:hcv,R}
 jl{s<3095:A,m>869:A,s>3684:A,bqq}
-qn{s<2335:mdr,x<3486:tmt,ct}
+qn{s<2335:mdr,x<3486:tmt,A}
 jhq{a<2243:R,A}
 pkz{a<433:R,a>626:xzr,qm}
 mh{m>1320:R,A}
-mdb{s>542:R,m<3263:A,s<470:A,A}
+mdb{s>542:R,A}
 kjt{s<535:A,snv}
 ghz{x>1739:xq,tsf}
-hkg{s<304:R,m<1547:R,a>1657:R,R}
-pxm{a>814:zz,nt}
+pxm{a>814:R,nt}
 prj{a>701:A,x>1692:R,A}
-qx{a>892:A,tpq}
-rfh{x<454:A,a<312:R,m<2607:R,R}
-tjr{a<2795:R,m<3541:A,s<3569:A,A}
+qx{a>892:A,m<3404:R,A}
+rfh{x<454:A,R}
+tjr{a<2795:R,A}
 vh{s<1511:mkt,x<1652:qp,gxt}
 bl{m<2507:R,m>2724:R,m>2641:R,A}
 mth{x<434:R,A}
@@ -218,20 +202,19 @@ zs{a<784:pkz,m<1476:jnf,kb}
 xh{x>252:rhs,hs}
 jdb{s>725:pll,x<3603:sp,kfk}
 nq{a<3114:R,x<1891:vv,sl}
-jtn{a<3768:R,m>1211:A,s<1261:R,R}
+jtn{a<3768:R,m>1211:A,R}
 ll{s<1434:R,A}
 zc{m<2298:gk,a>1836:pbc,a<679:nz,mrs}
 nrx{x>512:cvn,pht}
 jp{m>3379:A,s<2764:kx,mhk}
-dtm{a<2310:jhq,x>3498:R,R}
+dtm{a<2310:jhq,R}
 jtd{x<683:R,a>1267:R,x>716:R,A}
 cfp{a>1662:bjn,m>2877:fhq,x<3511:hkz,lnf}
-fj{s>498:A,x>470:R,s<310:A,A}
-jqc{x>351:sls,x>175:vgf,x<78:xg,dr}
-znr{x<3162:A,xl}
+fj{s>498:A,x>470:R,A}
+jqc{x>351:sls,x>175:vgf,x<78:xg,R}
+znr{x<3162:A,m<1184:R,A}
 md{a>2120:pm,vdf}
 hns{x<1323:A,a<459:R,prj}
-vmt{a<2111:R,a>2159:R,x>3599:R,R}
 tkk{m>1462:A,R}
 jss{a>683:A,m<2406:A,s>498:R,A}
 fb{a<3289:R,s>2460:R,s<1496:rpk,R}
@@ -241,24 +224,22 @@ cz{a<2649:A,x<764:A,R}
 vtb{s>444:A,s<391:R,A}
 jb{a>1498:R,a>1420:A,m<3224:R,A}
 hh{a>280:A,a>108:R,A}
-vq{m<2056:R,a<1210:A,A}
+vq{m<2056:R,A}
 tmt{a>3804:R,m>2629:R,s>3327:bjd,A}
 fvn{s>186:bkr,qpr}
-krv{s>2385:A,a<2578:R,R}
-tj{m>2598:A,a>1193:R,R}
+krv{s>2385:A,R}
+tj{m>2598:A,R}
 rg{m>554:R,m>240:R,A}
-gkr{a<1028:A,x>437:A,A}
 dcr{s<1303:R,A}
 qg{s<2489:R,A}
-dsh{a>3633:R,a>3507:A,A}
-hjb{x>854:R,m>1887:R,s<3244:A,A}
-fgb{s<768:glp,s>1396:ppx,s>1071:R,A}
-qm{a<505:R,s<2904:A,a>547:R,R}
+dsh{a>3633:R,A}
+hjb{x>854:R,m>1887:R,A}
+fgb{s<768:glp,s>1396:A,s>1071:R,A}
+qm{a<505:R,s<2904:A,R}
 zhl{x>2825:A,m<510:R,a>2370:A,R}
 zxr{m>2980:A,m<2494:gfc,R}
 jbj{a>1917:A,R}
 ss{a<1217:A,R}
-zfm{m<1550:R,a>576:R,R}
 mg{m<3058:A,R}
 zr{a<1925:sv,vtm}
 rjc{a>2606:R,s>584:gt,m<1044:A,a<952:R,A}
@@ -266,134 +247,119 @@ vk{m<3006:sn,srl}
 tt{s>3218:zts,R}
 lnf{m>2546:R,a>1530:R,x<3726:A,grm}
 tcv{x>2714:R,m<1245:R,m>1589:A,R}
-tv{s>2968:A,s>2227:nzb,s>1962:R,R}
+tv{s>2968:A,s>2227:nzb,R}
 bhj{m>1827:djd,xn}
-ctk{x<2502:R,m>644:A,A}
+ctk{x<2502:R,A}
 fdj{x>82:R,a>2339:A,a<1175:R,rfr}
 pll{s<1161:ls,R}
-rh{a>3077:qbp,lh}
+rh{a>3077:qbp,a>2770:R,A}
 sz{x<3112:R,A}
 tqv{x<639:R,a<1128:bl,a>1226:jtd,tj}
 jrk{s>960:A,m>1411:A,m<810:R,A}
-lr{x<385:R,s>1208:R,a<1017:R,R}
-hkn{s>2693:R,s<2603:R,R}
 lxg{a<1912:psc,mb}
 kh{x>1524:vr,x>1443:hzx,hl}
 cd{x>2531:tv,x<2337:lzx,m<2086:tt,db}
 vg{a<2179:tl,m>2508:jp,rnl}
-qt{a<1132:R,m>2638:R,x<1495:R,R}
 kcl{s<439:zqp,x<443:pmn,m<3350:ntq,zv}
 xgb{a<3664:jv,x>3124:qn,lqg}
 bpt{s>2526:pl,m<1293:ntn,kvv}
-tqp{a<2756:A,m<3315:A,A}
 pht{m>1841:bt,srv}
 qs{m>1561:A,R}
 kc{s<756:R,s>761:R,a>855:R,A}
 kks{x<663:dg,x<775:sdm,glh}
-bjn{a>1941:vmt,m<3140:A,A}
+bjn{a>1941:R,A}
 vgf{a<571:R,s>464:mg,x>262:rlc,tbz}
 krh{a<1475:R,s>2407:qs,R}
 dc{a>3658:R,A}
-ks{m<1544:A,s<3037:A,A}
-cdv{s<2079:xx,a<1586:A,x>541:A,zlc}
+cdv{s<2079:A,a<1586:A,x>541:A,zlc}
 sls{m<3378:A,m>3587:vtb,m>3468:A,R}
 gl{m>1579:cn,m>824:R,x<2504:A,zhl}
 gvj{s>3622:A,R}
 xkv{m<830:A,rtp}
-rft{x>2825:nqj,s>873:A,R}
-gh{x<1450:R,x<1708:A,a>1309:A,A}
+rft{x>2825:A,s>873:A,R}
+gh{x<1450:R,A}
 npj{x<769:R,A}
-lb{a<3931:A,m>2440:A,A}
 dnm{x<2845:A,a>1857:A,ff}
 djz{s<165:R,a>1810:R,m<838:R,A}
-rhs{s>1290:R,s<1113:A,lr}
+rhs{s>1290:R,s<1113:A,R}
 jnf{x>260:vm,m>896:A,ncf}
-kvv{s>2083:kcp,a>1714:dtp,R}
+kvv{s>2083:A,a>1714:dtp,R}
 qlf{m>691:llb,fk}
 jnl{s<625:lcb,a<1260:nlg,dnm}
-cld{x>616:gc,x<481:llz,s>2797:A,zrt}
+cld{x>616:R,x<481:llz,s>2797:A,zrt}
 vt{a>3526:R,m<3679:R,A}
-df{m<2933:R,m>3533:R,R}
-gc{m>240:R,s<2813:R,s<2876:R,R}
 rb{m<1705:gf,xqx}
 fn{s<1540:R,s<1638:R,a>720:R,A}
-kj{m<2405:R,a>3278:A,m>3079:A,A}
+kj{m<2405:R,A}
 zkl{a>2556:A,R}
-km{x<723:R,x<811:A,s>533:R,R}
-jv{m<2128:znr,x<3038:fb,x>3452:nx,lt}
-pb{m<2371:vrv,a<849:zqh,a<1050:jz,ss}
-dr{a>539:R,tmz}
+km{x<723:R,x<811:A,R}
+jv{m<2128:znr,x<3038:fb,x>3452:nx,x<3238:R,A}
+pb{m<2371:A,a<849:zqh,a<1050:jz,ss}
 qd{s>1717:rs,x>3039:pxd,x>2517:jnl,tbx}
-kcp{m<1832:A,x>3478:A,a>1875:A,A}
 cn{m<3187:R,A}
-xn{x<2498:nfs,x>2510:tdn,a>1755:bhl,ctk}
+xn{x<2498:nfs,x>2510:tdn,a>1755:bhl,x<2502:R,A}
 jq{m>1864:A,R}
 fln{x>2453:R,A}
-bls{a<903:R,m<1903:A,a>1163:R,s>1324:qjb,vzd}
+bls{a<903:vhs,a>1163:R,s>1324:qjb,vzd}
 xg{s>428:R,A}
-zlc{x>424:A,s>2117:R,R}
+zlc{x>424:A,R}
 fk{x>717:qkz,A}
-hkz{s<2594:sz,a<1529:A,s>3242:qgk,A}
-zz{m>2457:R,m<1062:R,R}
+hkz{s<2594:sz,A}
 jxg{a<3858:R,m>1156:R,a<3945:R,A}
 sj{a<2577:R,x<214:A,m>658:A,R}
-nqj{x>2968:A,x>2918:A,s<879:A,A}
 zjm{a>1201:A,a>673:R,m>2117:A,R}
 vd{x>2421:A,R}
-pl{a>1664:smh,a<1487:A,m>1282:qln,A}
+pl{a>1664:smh,a<1487:A,m>1282:R,A}
 flb{m<2504:R,A}
-njz{x>2495:R,s>2145:A,A}
-lh{a>2770:R,x>1154:A,A}
-nhf{a>526:R,s>758:A,m<2708:R,R}
+njz{x>2495:R,A}
+lh{a>2770:R,A}
+nhf{a>526:R,s>758:A,R}
 nlg{s>1325:fn,s>969:sjv,s>764:rft,dlv}
 mhk{s<3388:A,s<3786:A,R}
 zxc{s>2700:A,a<929:A,m>2896:A,R}
-tjq{m>467:A,a>884:A,A}
-jf{m>3042:R,x>742:A,x>674:R,R}
-hfj{m>883:R,x<1624:A,s>544:R,R}
-st{x<218:A,a>1185:R,m>424:A,A}
+jf{m>3042:R,x>742:A,R}
+hfj{m>883:R,x<1624:A,R}
+st{x<218:A,a>1185:R,A}
 dgr{x>689:A,R}
-vrv{m>1132:A,m<471:A,x<2426:A,A}
-tjx{s>1411:R,xv}
+tjx{s>1411:R,s>1206:R,A}
 dtd{s<1726:rqj,R}
-tb{m<2099:A,s>391:A,a<1891:R,R}
+tb{m<2099:A,s>391:A,R}
 jfh{s>2621:mth,x>463:A,R}
-tpq{m<3404:R,s<338:A,A}
+tpq{m<3404:R,A}
 mvc{s<554:A,R}
 vpx{s<3376:R,m>1797:gvj,A}
 pxd{a>1203:jdb,x<3509:fgb,kt}
-xv{s>1206:R,a>273:A,a<178:A,A}
+xv{s>1206:R,A}
 vtm{m>740:hc,s<279:R,A}
 glp{x>3319:tbp,a>404:jss,A}
-ct{a<3801:A,vcd}
 kz{x>2544:R,x>2412:A,R}
-rcv{x>322:rg,a<1629:tjq,m<481:ll,sj}
+rcv{x>322:rg,a<1629:A,m<481:ll,sj}
 hx{m<841:A,rjc}
 sn{x>74:R,m<2277:zjm,R}
 qbp{s<334:A,R}
 gk{m>1426:nrx,s>462:hx,x<410:zr,qlf}
 ls{s>887:A,m>1764:A,a<1743:R,A}
-qz{a<3051:qjd,a<3419:R,x>525:R,R}
+qz{a<3051:qjd,R}
 td{a<930:R,A}
-tbz{x>225:A,s>420:R,a<636:A,A}
+tbz{x>225:A,s>420:R,A}
 sg{m<764:A,R}
 nzm{m<2663:R,a>2601:A,x<1713:R,A}
-bt{s<428:A,s<619:R,R}
-mdr{m>1924:vz,a>3834:A,jtn}
+bt{s<428:A,R}
+mdr{m>1924:R,a>3834:A,jtn}
 qjb{a<1039:A,x<2438:A,R}
 gmf{x<3151:gl,m>1546:vcg,dtm}
 jbd{x>622:jf,x<470:dcf,x>563:zxc,A}
 mzx{a>569:A,x<2860:R,m>3636:R,A}
 jlx{a>1059:A,s>391:tcv,m>1270:R,sg}
 xt{x>1629:R,x<1615:A,R}
-bf{x>2021:A,m<2308:R,x>1936:R,R}
+bf{x>2021:A,R}
 xhj{m<2273:A,R}
 gsh{a<934:krd,m<3494:R,s<173:A,R}
-ldg{x<59:ks,zqq}
+ldg{x<59:A,zqq}
 qkz{a>2128:R,A}
-gf{s<2815:xgs,a>1355:lc,hqd}
+gf{s<2815:xgs,a>1355:R,A}
 rtp{m<1763:A,R}
-sk{m>2350:R,s<472:gh,m<1250:A,A}
+sk{m>2350:R,s<472:gh,A}
 bs{m>2556:A,R}
 sjv{a>608:R,a>295:R,A}
 mpp{x>306:mdb,m<2999:R,kjt}
@@ -403,43 +369,39 @@ msj{a>2017:R,jbj}
 vj{m>2493:A,R}
 khk{a>2015:jjq,s>2578:jl,lk}
 gfc{x>329:R,x>180:A,R}
-nxv{a<1256:R,scf}
 tvr{m<1620:hr,zgh}
-spf{x>431:np,x>159:rcv,fdj}
-vv{s>470:A,x>1559:R,R}
+spf{x>431:A,x>159:rcv,fdj}
+vv{s>470:A,R}
 bhl{m>1174:R,A}
 cvp{a<2732:dtd,xb}
-vm{x<307:R,m<674:A,A}
+vm{x<307:R,A}
 rxz{a<3704:A,R}
 vhs{m>1903:A,R}
 dg{a>1981:vpx,m<2484:td,x>492:bnm,A}
 grm{m<2343:A,m<2453:A,m>2515:A,R}
 lqg{a>3849:hb,a>3763:njz,s<1979:nc,ksd}
 lv{x>873:vh,s>1928:qdv,s<801:zc,tvr}
-bjd{m>1439:R,x>3274:A,x<3190:A,A}
+bjd{m>1439:R,A}
 htv{s>632:lpq,x>3727:R,jgb}
-gz{m<2910:A,m<3037:R,m>3112:R,R}
+gz{m<2910:A,R}
 gcb{s<3266:R,A}
 zgh{a>1712:ltc,x>460:rfj,xh}
 rfj{a>1129:dgr,s<1540:fx,cpn}
 gt{s<664:R,x<345:A,R}
 db{a>805:R,a>320:R,s<2772:R,A}
 pnq{m>3118:A,x>3840:A,R}
-nk{s<2788:R,s>3293:A,s>3099:A,A}
-sp{x<3298:A,x<3443:fc,hkg}
-in{x<2169:lv,a>2199:nr,qd}
-vzd{a>1040:A,m<2381:R,R}
+nk{s<2788:R,A}
+sp{x<3298:A,x<3443:fc,R}
+in{x<2169:lv,jtq}
+vzd{a>1040:A,R}
 rfr{s<1334:A,R}
 jz{s<553:R,s>856:A,R}
 rc{x>1788:qg,a>2368:bvz,ghz}
-ntn{a>1757:mm,x>3454:A,x>3057:R,R}
-gfs{m>2699:A,x<2480:A,A}
-ppx{s<1560:A,m<2567:A,A}
+ntn{a>1757:A,x>3454:A,R}
 hd{s>3328:R,A}
-vbz{a<393:A,x<579:A,A}
 xlq{x>3739:A,a<1661:A,a>1986:R,A}
 mb{s>1140:R,s>456:vd,A}
-ln{m>1006:A,a<751:A,x>233:R,R}
+ln{m>1006:A,a<751:A,R}
 xqx{m>2806:R,s>3013:nl,a>2566:bf,xhj}
 hs{a<590:A,x>168:tm,R}
 dtp{x>3326:A,R}
@@ -447,26 +409,25 @@ xz{s>1071:R,A}
 mrs{a>1325:kmq,m>2878:zgq,x>535:jr,fh}
 hnr{m<258:R,A}
 bsn{m<3351:R,s>367:mzx,R}
-kdv{m<3518:R,s<345:R,R}
 cl{m<2974:R,m>3549:R,A}
-bz{x<326:A,m<2795:R,R}
+bz{x<326:A,R}
 ggh{m<3295:A,m<3732:A,a>1469:A,R}
 qrd{x>685:A,a<3241:A,R}
-bh{s>1744:mv,s>958:R,m>2522:R,R}
+bh{s>1744:mv,R}
 htj{a<1667:A,a>2011:R,A}
 nc{s>792:A,s>359:mvc,x>2669:R,A}
 hl{x<1415:A,R}
 lpq{m>3378:R,A}
 rqj{x<3502:A,x<3795:R,A}
 xd{s<704:R,m>3238:A,vrk}
-zsj{m<2483:R,a<3821:R,a<3848:A,A}
+zsj{m<2483:R,a<3821:R,A}
 cpn{s<1781:tjs,stg}
-mm{a<2038:A,m<728:A,s>2014:A,A}
 smh{x>3274:R,m>1059:A,m<388:A,R}
 psz{a<2572:A,x<639:gv,x>758:R,A}
-fc{x>3351:R,A}
+fc{x>3351:R,A}";
 
-{x=1297,m=847,a=1986,s=23}
+var bigXmas =
+    @"{x=1297,m=847,a=1986,s=23}
 {x=2427,m=1330,a=870,s=806}
 {x=2340,m=191,a=2050,s=2684}
 {x=17,m=1571,a=66,s=1289}
@@ -694,152 +655,211 @@ input = fullInput;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.name, x => x.operations);
-var machineParts = input.Split(Environment.NewLine).Skip(workflows.Count + 1).Select(ParsePart).ToList();
+var machineParts = bigXmas.Split(Environment.NewLine).Select(ParsePart).ToList();
 
+//var distincts = machineParts.First().Keys.Select(x => x).ToDictionary(x => x, x => machineParts.Select(y => y[x]).Distinct().ToList());
+//var distinctsAboveBelow = machineParts.First().Keys.Select(x => x).ToDictionary(x => x, x => machineParts.Select(y => y[x]).Select(y => new[] { y + 1, y - 1 }).SelectMany(y => y).Distinct().ToList());
+
+var distincts = new[] { 'x', 'm', 'a', 's' }.ToDictionary(x => x, x => workflows.Values.SelectMany(y => y).Where(y => y.param == x).Select(x => new[] { x.value, /*x.greaterThan ?*/ x.value + 1, x.value - 1 }).SelectMany(x => x).Distinct().OrderBy(x => x).ToList());
+//var distinctsAboveBelow = new[] { 'x', 'm', 'a', 's' }.ToDictionary(x => x, x => workflows.Values.SelectMany(y => y).Where(y => y.param == x).Select(x => x.value).Select(y => new[] { y + 1, y, y - 1 }).SelectMany(y => y).OrderBy(y => y).Distinct().ToList());
+
+var product = 1l;
+foreach (var item in distincts)
 {
+    item.Value.Add(4000);
+    product *= item.Value.Count;
+}
 
-    var didSomething = false;
+/// 73628370816
+/// 171850656250
 
-    do
+var result = BigInteger.Zero;// machineParts.Where(IsAccepted).Sum(x => x.Values.Sum());
+
+BigInteger k = 0;
+var prevX = 0;
+foreach (var x in distincts['x'])
+{
+    var prevM = 0;
+    foreach (var m in distincts['m'])
     {
-        didSomething = false;
-        foreach (var item in workflows)
+        var prevA = 0;
+        foreach (var a in distincts['a'])
         {
-            workflows[item.Key] = OptimizeSingle(item.Value);
-        }
-
-        var singulars = workflows.Where(x => x.Value.Count == 1 /*&& x.Value.Single().next != "A" && x.Value.Single().next != "R"*/)/*.Take(2)*/.ToList();
-        foreach (var singular in singulars)
-        {
-            var single = singular.Value.Single();
-            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+            var prevS = 0;
+            foreach (var s in distincts['s'])
             {
-                var list = item.Value;
-                var qqq = list.Single(x => x.next == singular.Key);
-                list.Insert(list.FindIndex(x => x.next == singular.Key), new Operation(qqq.param, qqq.greaterThan, qqq.value, single.next));
-                if (list.RemoveAll(x => x.next == singular.Key) != 1)
+                if (k % 1_000_000 == 0)
                 {
-                    throw new Exception();
+                    Console.WriteLine($"{k} {product}, {(double)k * 100 / product}");
                 }
-                workflows[item.Key] = list;
-                didSomething = true;
-
+                k++;
+                Utils.Counter("k", 1_000_000, product, true, $" result = {result}");
+                if (IsAccepted(x, m, a, s))
+                {
+                    result += new BigInteger(x - prevX) * new BigInteger(m - prevM) * new BigInteger(a - prevA) * new BigInteger(s - prevS);
+                }
+                prevS = s;
             }
+            prevA = a;
         }
-        for (int i = 0; i < singulars.Count; i++)
-        {
-            workflows.Remove(singulars[i].Key);
-            didSomething = true;
-        }
-    } while (didSomething);
-}
-
-{
-
-    var didSomething = false;
-
-    do
-    {
-        didSomething = false;
-
-        foreach (var item in workflows)
-        {
-            workflows[item.Key] = OptimizeSingle(item.Value);
-        }
-
-
-        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R")/* && x.Value.Count == 2*/)/*.Take(3)*/.ToList();
-        if (singulars.Count == 1) { break; }
-        foreach (var singular in singulars)
-        {
-            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == singular.Key))
-            {
-                var list = item.Value;
-                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
-                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
-                var after = list.Skip(before.Count + 1).ToList();
-
-                var newList = before.Concat(singular.Value).Concat(after).ToList();
-                workflows[item.Key] = newList;
-                didSomething = true;
-            }
-        }
-        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
-        {
-            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
-            {
-                workflows.Remove(singulars[i].Key);
-                didSomething = true;
-            }
-        }
-        didSomething = false;
-
-    } while (didSomething);
-}
-
-{
-
-    var didSomething = false;
-
-    do
-    {
-        didSomething = false;
-
-        foreach (var item in workflows)
-        {
-            workflows[item.Key] = OptimizeSingle(item.Value);
-        }
-
-
-        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R")/* && x.Value.Count == 2*/).Take(82).ToList();
-        //if (singulars.Count == 1) { break; }
-        foreach (var singular in singulars)
-        {
-            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == "A" || x.Value.Last().next == "R").Where(x => x.Value.TakeLast(2).First().next == singular.Key))
-            {
-                var list = item.Value;
-                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
-                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
-                var after = list.Skip(before.Count + 1).ToList();
-                if (!before.Any()) { continue; }
-                if (!after.Any()) { continue; }
-                var x = list.Single(x => x.next == singular.Key);
-                before.Add(new Operation(x.param, x.greaterThan, x.value, singular.Value.Last().next));
-
-                var newList = before.Concat(singular.Value.SkipLast(1).ToList()).Concat(after).ToList();
-                workflows[item.Key] = newList;
-                didSomething = true;
-            }
-        }
-        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
-        {
-            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
-            {
-                workflows.Remove(singulars[i].Key);
-                didSomething = true;
-            }
-        }
-        didSomething = false;
-
-    } while (didSomething);
-}
-
-
-
-
-List<Operation> OptimizeSingle(List<Operation> value)
-{
-    if (value.GroupBy(x => x.next).Count() == 1)
-    {
-        return value.TakeLast(1).ToList();
+        prevM = m;
     }
-    return value;
+    prevX = x;
 }
 
-var result = machineParts.Where(IsAccepted).Sum(x => x.Values.Sum());
+/*
+19290536609432
+21905123809584
+167409079868000
+167239663832898
+167409079868000
+*/
 
-bool IsAccepted(Dictionary<char, int> part)
+
+//{
+
+//    var didSomething = false;
+
+//    do
+//    {
+//        didSomething = false;
+//        foreach (var item in workflows)
+//        {
+//            workflows[item.Key] = OptimizeSingle(item.Value);
+//        }
+
+//        var singulars = workflows.Where(x => x.Value.Count == 1 /*&& x.Value.Single().next != "A" && x.Value.Single().next != "R"*/)/*.Take(2)*/.ToList();
+//        foreach (var singular in singulars)
+//        {
+//            var single = singular.Value.Single();
+//            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+//            {
+//                var list = item.Value;
+//                var qqq = list.Single(x => x.next == singular.Key);
+//                list.Insert(list.FindIndex(x => x.next == singular.Key), new Operation(qqq.param, qqq.greaterThan, qqq.value, single.next));
+//                if (list.RemoveAll(x => x.next == singular.Key) != 1)
+//                {
+//                    throw new Exception();
+//                }
+//                workflows[item.Key] = list;
+//                didSomething = true;
+
+//            }
+//        }
+//        for (int i = 0; i < singulars.Count; i++)
+//        {
+//            workflows.Remove(singulars[i].Key);
+//            didSomething = true;
+//        }
+//    } while (didSomething);
+//}
+
+//{
+
+//    var didSomething = false;
+
+//    do
+//    {
+//        didSomething = false;
+
+//        foreach (var item in workflows)
+//        {
+//            workflows[item.Key] = OptimizeSingle(item.Value);
+//        }
+
+
+//        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R")/* && x.Value.Count == 2*/)/*.Take(3)*/.ToList();
+//        if (singulars.Count == 1) { break; }
+//        foreach (var singular in singulars)
+//        {
+//            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Last().next == singular.Key))
+//            {
+//                var list = item.Value;
+//                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
+//                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
+//                var after = list.Skip(before.Count + 1).ToList();
+
+//                var newList = before.Concat(singular.Value).Concat(after).ToList();
+//                workflows[item.Key] = newList;
+//                didSomething = true;
+//            }
+//        }
+//        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
+//        {
+//            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
+//            {
+//                workflows.Remove(singulars[i].Key);
+//                didSomething = true;
+//            }
+//        }
+//        didSomething = false;
+
+//    } while (didSomething);
+//}
+
+//{
+
+//    var didSomething = false;
+
+//    do
+//    {
+//        didSomething = false;
+
+//        foreach (var item in workflows)
+//        {
+//            workflows[item.Key] = OptimizeSingle(item.Value);
+//        }
+
+
+//        var singulars = workflows.Where(x => x.Value.All(x => x.next == "A" || x.next == "R") && x.Value.Count == 2).Take(6).ToList();
+//        //if (singulars.Count == 1) { break; }
+//        foreach (var singular in singulars)
+//        {
+//            foreach (var item in workflows.Except(singulars).Where(x => x.Value.Any(y => y.next == singular.Key)))
+//            {
+//                var list = item.Value;
+//                if (list.Count(x => x.next == singular.Key) > 1) { throw new Exception(); }
+//                var before = list.TakeWhile(x => x.next != singular.Key).ToList();
+//                var after = list.Skip(before.Count + 1).ToList();
+//                if (!before.Any()) { continue; }
+//                if (!after.Any()) { continue; }
+//                var x = list.Single(x => x.next == singular.Key);
+//                before.Add(new Operation(x.param, x.greaterThan, x.value, singular.Value.Last().next));
+
+//                var newList = before.Concat(singular.Value.SkipLast(1).ToList()).Concat(after).ToList();
+//                workflows[item.Key] = newList;
+//                didSomething = true;
+//            }
+//        }
+//        for (int i = 0; i < singulars.Count; i++) // only replaced at the end, so still used in the middle
+//        {
+//            if (!workflows.Any(x => x.Value.Any(y => y.next == singulars[i].Key)))
+//            {
+//                workflows.Remove(singulars[i].Key);
+//                didSomething = true;
+//            }
+//        }
+//        didSomething = false;
+
+//    } while (didSomething);
+//}
+
+
+
+
+//List<Operation> OptimizeSingle(List<Operation> value)
+//{
+//    if (value.GroupBy(x => x.next).Count() == 1)
+//    {
+//        return value.TakeLast(1).ToList();
+//    }
+//    return value;
+//}
+
+
+bool IsAccepted(int x, int m, int a, int s)
 {
+    int Param(char c) => c switch { 'x' => x, 'm' => m, 'a' => a, 's' => s, _ => throw new Exception() };
     var operation = "in";
     while (true)
     {
@@ -852,7 +872,7 @@ bool IsAccepted(Dictionary<char, int> part)
                 operation = item.next;
                 break;
             }
-            var eval = item.greaterThan ? (part[item.param] > item.value) : (part[item.param] < item.value);
+            var eval = item.greaterThan ? (Param(item.param) > item.value) : (Param(item.param) < item.value);
             if (eval)
             {
                 operation = item.next;
@@ -864,7 +884,7 @@ bool IsAccepted(Dictionary<char, int> part)
 
 timer.Stop();
 Console.WriteLine(result);
-Console.WriteLine(timer.ElapsedMilliseconds + "ms");
+Console.WriteLine(timer.ElapsedMilliseconds + "ms"); // 124147505282199 too low
 Console.ReadLine();
 
 (string name, List<Operation> operations) ParseWorkflow(string str)
