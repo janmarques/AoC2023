@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using AoC2023;
+using System.Collections.Generic;
 using System.Numerics;
+using System.Text;
 
+// &mj -> hz, bt, lr, sq, qh, vq
 var fullInput =
 @"%qm -> mj, xn
 &mj -> hz, bt, lr, sq, qh, vq
@@ -98,6 +101,10 @@ var i = BigInteger.One;
 var j = 0;
 
 var interesting = new[] { "mj", "qs", "rd", "cs" };
+if (modules.Count < 10)
+{
+    interesting = new[] { "inv", "con" };
+}
 var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y =>
 {
     (modules, pendings) = Initialize(input, broadcaster);
@@ -105,17 +112,33 @@ var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictio
 }));
 
 (modules, pendings) = Initialize(input, broadcaster);
+i = BigInteger.One;
+while (true)
+{
+    foreach (var item in intervalDetection)
+    {
+        if (item.Value.All(x => i % (x.Value.on + x.Value.off) >= x.Value.off))
+        {
+            goto end;
+        }
+    }
+    i++;
+}
+end:;
 
-lala("mj", "xn", 1000);
+//lala("mj", "js", 5000);
 //FindCycle("mj", "xn");
 
 void lala(string module, string prev, int i)
 {
+    var sb = new StringBuilder();
     while (--i > 0)
     {
         Execute(pendings);
-        Console.WriteLine(modules[module].Previous[prev]);
+        //Console.WriteLine(modules[module].Previous[prev]);
+        sb.AppendLine(modules[module].Previous[prev].ToString());
     }
+    var xx = sb.ToString();
 }
 
 (int off, int on, int delay) FindCycle(string module, string prev)
@@ -123,7 +146,7 @@ void lala(string module, string prev, int i)
     var delay = int.MaxValue;
     var off = int.MaxValue;
     var on = int.MaxValue;
-    var count = 0;
+    var count = 1;
     var was = false;
     while (true)
     {
@@ -147,14 +170,13 @@ void lala(string module, string prev, int i)
             else if (off == int.MaxValue)
             {
                 off = count;
-                return (delay, off, on);
+                return (off, on, delay);
             }
             was = xx;
             count = 1;
         }
     }
 }
-
 
 void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 {
