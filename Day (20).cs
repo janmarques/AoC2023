@@ -82,148 +82,70 @@ var input = smallInput;
 input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
-var result = 0l;
+var result = BigInteger.Zero;
 
 
 var broadcaster = "broadcaster";
 
 
+var modules = input.Split(Environment.NewLine).Select(Parse).ToDictionary(x => x.Name, x => x);
+Module Parse(string line)
+{
+    var split = line.Split(" -> ");
+    var name = split[0];
+    var type = default(char);
+    if (name != broadcaster)
+    {
+        type = name[0];
+        name = name.Substring(1);
+    }
+    return new Module { Name = name, Type = type, Nodes = split[1].Split(", ").ToList() };
+}
 
-var lows = 0;
-var highs = 0;
+modules.Add("output", new Module { Name = "output", Type = 'x', Nodes = new List<string>() });
+modules.Add("rx", new Module { Name = "rx", Type = 'x', Nodes = new List<string>() });
+
+foreach (var item in modules.Values.Where(x => x.Type == '&'))
+{
+    item.Previous = modules.Where(x => x.Value.Nodes.Contains(item.Name)).Select(x => x.Key).Distinct().ToDictionary(x => x, x => false);
+}
+
+var pendings = new List<(Module module, bool highPulse, Module sender)>();
+pendings.Add((modules[broadcaster], false, null));
 
 
 var printDebug = true;
 printDebug = false;
 
-var i = BigInteger.One;
-var j = 0;
+var interesting = new[] { "bt", "dl", "rv", "fr" };
+var vals = interesting.ToDictionary(x => x, x => 0);
 
-var (modules, pendings) = Initialize(input, broadcaster);
-for (int k = 0; k < 1000; k++)
+var i = 1;
+while (!Execute(pendings))
 {
-    Execute(pendings);
-}
-if (lows * highs != 834323022) { throw new Exception(); }
-
-var interesting = new[] { "mj", "qs", "rd", "cs" };
-interesting = new[] { "bt", "dl", "rv", "fr" };
-//if (modules.Count < 10)
-//{
-//    interesting = new[] { "inv", "con" };
-//}
-
-(modules, pendings) = Initialize(input, broadcaster);
-
-//var interesting = modules.Where(x => x.Value.Type == '&').Select(x => x.Key).Distinct().ToArray();
-FindCycles(interesting, )
-var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y =>
-{
-    (modules, pendings) = Initialize(input, broadcaster);
-    return FindCycle(x.Key, y.Key);
-}));
-
-var biggy = BigInteger.One;
-foreach (var item in intervalDetection)
-{
-    var qw = item.Value.Select(x => x.Value.Distinct()).SelectMany(x => x).Select(x => new BigInteger(x)).ToArray();
-    var lcm = Utils.LeastCommonMultiple(qw);
-    Console.WriteLine(item.Value);
-    Console.WriteLine(string.Join(",", qw));
-    Console.WriteLine(lcm);
-    biggy = Utils.LeastCommonMultiple(biggy, lcm);
-}
-Console.WriteLine(biggy);
-
-var aaa = intervalDetection.SelectMany(item => item.Value.Select(x => x.Value.Distinct()).SelectMany(x => x).Select(x => new BigInteger(x))).ToArray();
-var biggy2 = Utils.LeastCommonMultiple(aaa);
-
-Console.WriteLine(biggy2);
-
-
-(modules, pendings) = Initialize(input, broadcaster);
-i = BigInteger.One;
-//while (true)
-//{
-//    if (intervalDetection.Any(item => item.Value.All(x => i % (x.Value.on + x.Value.off) >= x.Value.off)))
-//    {
-//        goto end;
-//    }
-//    i++;
-//}
-
-
-end:;
-
-(modules, pendings) = Initialize(input, broadcaster);
-
-i = 0;
-while (true)
-{
-    if (i == 7657470)
-    {
-    }
-    Execute(pendings);
     i++;
 }
 
+result = Utils.LeastCommonMultiple(vals.Values.Select(x => new BigInteger(x)).ToArray());
 
-
-//lala("mj", "js", 5000);
-//FindCycle("mj", "xn");
-
-void lala(string module, string prev, int i)
+bool Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 {
-    var sb = new StringBuilder();
-    while (--i > 0)
-    {
-        Execute(pendings);
-        //Console.WriteLine(modules[module].Previous[prev]);
-        sb.AppendLine(modules[module].Previous[prev].ToString());
-    }
-    var xx = sb.ToString();
-}
-
-Dictionary<string, List<int>> FindCycles(string[] moduleWatch, string prev)
-{
-    var dctWas = moduleWatch.ToDictionary(x => x, x => false);
-    var dctCount = moduleWatch.ToDictionary(x => x, x => 1);
-    var dctResult = moduleWatch.ToDictionary(x => x, x => new List<int>());
-    for (int i = 0; i < 1_000_000; i++)
-    {
-        Execute(pendings);
-
-        foreach (var module in moduleWatch)
-        {
-            var xx = modules[module].Previous[prev];
-            if (xx == dctWas[module])
-            {
-                dctCount[module]++;
-            }
-            else
-            {
-                dctResult[module].Add(dctCount[module]);
-                dctWas[module] = xx;
-                dctCount[module] = 1;
-            }
-        }
-    }
-    return dctResult;
-}
-
-
-void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
-{
-    if (pendings.Count == 0) { return; }
+    if (pendings.Count == 0) { return false; }
     var newPendings = new List<(Module module, bool highPulse, Module sender)>();
 
     foreach (var (module, highPulse, sender) in pendings)
     {
-        lows += (!highPulse) ? 1 : 0;
-        highs += (highPulse) ? 1 : 0;
-
-        //if (module.Name == "rv" && !highPulse) { Console.WriteLine(i); Console.ReadLine(); return; }
-        if (module.Name == "rx" && !highPulse) { Console.WriteLine(i); Console.ReadLine(); return; }
+        foreach (var item in interesting)
+        {
+            if (module.Name == item && !highPulse)
+            {
+                vals[item] = i;
+                if (vals.All(x => x.Value != 0))
+                {
+                    return true;
+                }
+            }
+        }
 
         if (printDebug) { Console.WriteLine($"{sender?.Name ?? "button"} -{(highPulse ? "high" : "low")}-> {module.Name}"); }
 
@@ -266,52 +188,13 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
             throw new NotImplementedException();
         }
     }
-    Execute(newPendings);
+    return Execute(newPendings);
 }
 
 
-timer.Stop();
 Console.WriteLine(result);
-// 106337768232960 too low
-// 2624872963614720 too high
-// 194139118858905 wrong
-// 255282961905279 wrong
-// 212965241395951388742644547964187965440 too high
-// 130672208443392 wrong
-// 1522255148144640  wrong
-// 1312436481807360 wrong
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
-
-(Dictionary<string, Module> modules, List<(Module module, bool highPulse, Module sender)> pendings) Initialize(string input, string broadcaster)
-{
-    modules = input.Split(Environment.NewLine).Select(Parse).ToDictionary(x => x.Name, x => x);
-    Module Parse(string line)
-    {
-        var split = line.Split(" -> ");
-        var name = split[0];
-        var type = default(char);
-        if (name != broadcaster)
-        {
-            type = name[0];
-            name = name.Substring(1);
-        }
-        return new Module { Name = name, Type = type, Nodes = split[1].Split(", ").ToList() };
-    }
-
-    modules.Add("output", new Module { Name = "output", Type = 'x', Nodes = new List<string>() });
-    modules.Add("rx", new Module { Name = "rx", Type = 'x', Nodes = new List<string>() });
-
-    foreach (var item in modules.Values.Where(x => x.Type == '&'))
-    {
-        item.Previous = modules.Where(x => x.Value.Nodes.Contains(item.Name)).Select(x => x.Key).Distinct().ToDictionary(x => x, x => false);
-    }
-
-    pendings = new List<(Module module, bool highPulse, Module sender)>();
-    pendings.Add((modules[broadcaster], false, null));
-
-    return (modules, pendings);
-}
 
 class Module
 {

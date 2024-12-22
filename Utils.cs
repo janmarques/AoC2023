@@ -154,7 +154,6 @@ public static class Utils
         }
         return a;
     }
-
     public static BigInteger LeastCommonMultiple(params BigInteger[] x)
     {
         var result = BigInteger.One;
