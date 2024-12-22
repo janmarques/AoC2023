@@ -88,7 +88,6 @@ var result = 0l;
 var broadcaster = "broadcaster";
 
 
-var (modules, pendings) = Initialize(input, broadcaster);
 
 var lows = 0;
 var highs = 0;
@@ -100,31 +99,73 @@ printDebug = false;
 var i = BigInteger.One;
 var j = 0;
 
-var interesting = new[] { "mj", "qs", "rd", "cs" };
-if (modules.Count < 10)
+var (modules, pendings) = Initialize(input, broadcaster);
+for (int k = 0; k < 1000; k++)
 {
-    interesting = new[] { "inv", "con" };
+    Execute(pendings);
 }
+if (lows * highs != 834323022) { throw new Exception(); }
+
+//var interesting = new[] { "mj", "qs", "rd", "cs" };
+//if (modules.Count < 10)
+//{
+//    interesting = new[] { "inv", "con" };
+//}
+
+(modules, pendings) = Initialize(input, broadcaster);
+
+var interesting = modules.Where(x => x.Value.Type == '&').Select(x => x.Key).Distinct().ToArray();
 var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y =>
 {
     (modules, pendings) = Initialize(input, broadcaster);
     return FindCycle(x.Key, y.Key);
 }));
 
+var biggy = BigInteger.One;
+foreach (var item in intervalDetection)
+{
+    var qw = item.Value.Select(x => x.Value.Distinct()).SelectMany(x => x).Select(x => new BigInteger(x)).ToArray();
+    var lcm = Utils.LeastCommonMultiple(qw);
+    Console.WriteLine(item.Value);
+    Console.WriteLine(string.Join(",", qw));
+    Console.WriteLine(lcm);
+    biggy = Utils.LeastCommonMultiple(biggy, lcm);
+}
+Console.WriteLine(biggy);
+
+var aaa = intervalDetection.SelectMany(item => item.Value.Select(x => x.Value.Distinct()).SelectMany(x => x).Select(x => new BigInteger(x))).ToArray();
+var biggy2 = Utils.LeastCommonMultiple(aaa);
+
+Console.WriteLine(biggy2);
+
+
 (modules, pendings) = Initialize(input, broadcaster);
 i = BigInteger.One;
+//while (true)
+//{
+//    if (intervalDetection.Any(item => item.Value.All(x => i % (x.Value.on + x.Value.off) >= x.Value.off)))
+//    {
+//        goto end;
+//    }
+//    i++;
+//}
+
+
+end:;
+
+(modules, pendings) = Initialize(input, broadcaster);
+
+i = 0;
 while (true)
 {
-    foreach (var item in intervalDetection)
+    if (i == 7657470)
     {
-        if (item.Value.All(x => i % (x.Value.on + x.Value.off) >= x.Value.off))
-        {
-            goto end;
-        }
     }
+    Execute(pendings);
     i++;
 }
-end:;
+
+
 
 //lala("mj", "js", 5000);
 //FindCycle("mj", "xn");
@@ -141,14 +182,12 @@ void lala(string module, string prev, int i)
     var xx = sb.ToString();
 }
 
-(int off, int on, int delay) FindCycle(string module, string prev)
+List<int> FindCycle(string module, string prev)
 {
-    var delay = int.MaxValue;
-    var off = int.MaxValue;
-    var on = int.MaxValue;
     var count = 1;
     var was = false;
-    while (true)
+    var cycles = new List<int>();
+    for (int i = 0; i < 25_000; i++)
     {
         Execute(pendings);
 
@@ -159,23 +198,15 @@ void lala(string module, string prev, int i)
         }
         else
         {
-            if (delay == int.MaxValue)
+            if (!was)
             {
-                delay = count;
-            }
-            else if (on == int.MaxValue)
-            {
-                on = count;
-            }
-            else if (off == int.MaxValue)
-            {
-                off = count;
-                return (off, on, delay);
+                cycles.Add(count);
             }
             was = xx;
             count = 1;
         }
     }
+    return cycles;
 }
 
 void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
@@ -237,6 +268,14 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 
 timer.Stop();
 Console.WriteLine(result);
+// 106337768232960 too low
+// 194139118858905 wrong
+// 255282961905279 wrong
+// 212965241395951388742644547964187965440 too high
+// 130672208443392 wrong
+// 1522255148144640  wrong
+// 2624872963614720 too high
+// 1312436481807360 wrong
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
