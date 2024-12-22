@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 var fullInput =
 @"%qm -> mj, xn
@@ -79,32 +80,12 @@ input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = 0l;
+
+
 var broadcaster = "broadcaster";
-var modules = input.Split(Environment.NewLine).Select(Parse).ToDictionary(x => x.Name, x => x);
 
-Module Parse(string line)
-{
-    var split = line.Split(" -> ");
-    var name = split[0];
-    var type = default(char);
-    if (name != broadcaster)
-    {
-        type = name[0];
-        name = name.Substring(1);
-    }
-    return new Module { Name = name, Type = type, Nodes = split[1].Split(", ").ToList() };
-}
 
-modules.Add("output", new Module { Name = "output", Type = 'x', Nodes = new List<string>() });
-modules.Add("rx", new Module { Name = "rx", Type = 'x', Nodes = new List<string>() });
-
-foreach (var item in modules.Values.Where(x => x.Type == '&'))
-{
-    item.Previous = modules.Where(x => x.Value.Nodes.Contains(item.Name)).Select(x => x.Key).Distinct().ToDictionary(x => x, x => false);
-}
-
-var pendings = new List<(Module module, bool highPulse, Module sender)>();
-pendings.Add((modules[broadcaster], false, null));
+var (modules, pendings) = Initialize(input, broadcaster);
 
 var lows = 0;
 var highs = 0;
@@ -117,56 +98,63 @@ var i = BigInteger.One;
 var j = 0;
 
 var interesting = new[] { "mj", "qs", "rd", "cs" };
-var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y => int.MaxValue));
-
-var count = 0;
-var was = false;
-while (true)
+var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y =>
 {
-    //Console.WriteLine(string.Join("", modules["mj"].Previous.Select(x => x.Value ? "1" : "0")));
-    //Console.WriteLine(string.Join("", modules["qs"].Previous.Select(x => x.Value ? "1" : "0")));
-    //Console.WriteLine(string.Join("", modules["rd"].Previous.Select(x => x.Value ? "1" : "0")));
-    //Console.WriteLine(string.Join("", modules["cs"].Previous.Select(x => x.Value ? "1" : "0")));
+    (modules, pendings) = Initialize(input, broadcaster);
+    return FindCycle(x.Key, y.Key);
+}));
 
-    foreach (var item in interesting)
+(modules, pendings) = Initialize(input, broadcaster);
+
+lala("mj", "xn", 1000);
+//FindCycle("mj", "xn");
+
+void lala(string module, string prev, int i)
+{
+    while (--i > 0)
     {
-        foreach (var item2 in modules[item].Previous)
-        {
-            if (item2.Value)
-            {
-                intervalDetection[item][item2.Key] = Math.Min(j, intervalDetection[item][item2.Key]);
-            }
-        }
-    }
-
-   
-    //Console.WriteLine($"{i} " + string.Join("", modules["mj"].Previous.OrderByDescending(x => intervalDetection["mj"][x.Key]).Select(x => x.Value ? "1" : "0")));
-
-    //Console.WriteLine(modules["mj"].Previous.ElementAt(2).Value ? "1" : "0");
-
-
-    if (i % 100_000 == 0)
-    {
-        Console.WriteLine(i);
-    }
-    Execute(pendings);
-    if (printDebug) { Console.WriteLine(""); }
-    if (printDebug) { Console.WriteLine(""); }
-    i++;
-    j++;
-
-    var xx = modules["mj"].Previous["js"];
-    if (xx == was)
-    {
-        count++;
-    }
-    else
-    {
-        Console.WriteLine($"{i}- {count}");
-        was = xx;
-        count = 0;
+        Execute(pendings);
+        Console.WriteLine(modules[module].Previous[prev]);
     }
 }
+
+(int off, int on, int delay) FindCycle(string module, string prev)
+{
+    var delay = int.MaxValue;
+    var off = int.MaxValue;
+    var on = int.MaxValue;
+    var count = 0;
+    var was = false;
+    while (true)
+    {
+        Execute(pendings);
+
+        var xx = modules[module].Previous[prev];
+        if (xx == was)
+        {
+            count++;
+        }
+        else
+        {
+            if (delay == int.MaxValue)
+            {
+                delay = count;
+            }
+            else if (on == int.MaxValue)
+            {
+                on = count;
+            }
+            else if (off == int.MaxValue)
+            {
+                off = count;
+                return (delay, off, on);
+            }
+            was = xx;
+            count = 1;
+        }
+    }
+}
+
 
 void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 {
@@ -229,6 +217,36 @@ timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+
+(Dictionary<string, Module> modules, List<(Module module, bool highPulse, Module sender)> pendings) Initialize(string input, string broadcaster)
+{
+    modules = input.Split(Environment.NewLine).Select(Parse).ToDictionary(x => x.Name, x => x);
+    Module Parse(string line)
+    {
+        var split = line.Split(" -> ");
+        var name = split[0];
+        var type = default(char);
+        if (name != broadcaster)
+        {
+            type = name[0];
+            name = name.Substring(1);
+        }
+        return new Module { Name = name, Type = type, Nodes = split[1].Split(", ").ToList() };
+    }
+
+    modules.Add("output", new Module { Name = "output", Type = 'x', Nodes = new List<string>() });
+    modules.Add("rx", new Module { Name = "rx", Type = 'x', Nodes = new List<string>() });
+
+    foreach (var item in modules.Values.Where(x => x.Type == '&'))
+    {
+        item.Previous = modules.Where(x => x.Value.Nodes.Contains(item.Name)).Select(x => x.Key).Distinct().ToDictionary(x => x, x => false);
+    }
+
+    pendings = new List<(Module module, bool highPulse, Module sender)>();
+    pendings.Add((modules[broadcaster], false, null));
+
+    return (modules, pendings);
+}
 
 class Module
 {
