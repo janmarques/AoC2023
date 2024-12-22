@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection.Metadata;
 using System.Runtime.Intrinsics.Arm;
+using System.Xml.Linq;
 
 var fullInput =
 @"kbr{x>2309:A,R}
@@ -734,87 +735,111 @@ hdj{m>838:A,pv}
 var smallest = "";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = BigInteger.Zero;
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.Name, x => x);
 
-
-for (int i = 0; i < 10; i++)
+var dct = workflows.Keys.ToDictionary(x => x, x => new List<(FullRange range, string next)>());
+dct["A"] = new List<(FullRange range, string next)>();
+dct["R"] = new List<(FullRange range, string next)>();
+var fullRange = new FullRange
 {
-
-    foreach (var item in workflows.Values)
+    Ranges = new Dictionary<char, List<Range>>
     {
-        Optimize(item);
+        { 'x', new List<Range>{new Range{ From = 1, To = 4000} }},
+        { 'm', new List<Range>{new Range{ From = 1, To = 4000} }},
+        { 'a', new List<Range>{new Range{ From = 1, To = 4000} }},
+        { 's', new List<Range>{new Range{ From = 1, To = 4000} }}
     }
+};
 
+// crn{x<2662:A,R}
+foreach (var item in workflows.Values.Where(x => x.Operations.All(y => y.NextOperationName == "A" || y.NextOperationName == "R" || y.NextOperationName == null)))
+{
+    AnalyzeWorkflow(item, fullRange);
 
-    foreach (var item in workflows.Values.Where(x => x.Operations.Count == 1).ToList())
-    {
-        Substitute(item.Name, item.Operations.Single() is RejectedOperation ? "R" : "A", workflows.Values);
-        workflows.Remove(item.Name);
-    }
 }
 
-
-void Optimize(Workflow workflow)
+FullRange KeepOnly(FullRange x, int value, bool greaterThan, char letter)
 {
-    if (workflow.Operations.Count > 1 && workflow.Operations.TakeLast(2).All(x => x.NextOperationName == "R" || x is RejectedOperation))
-    {
-        workflow.Operations = workflow.Operations.Take(workflow.Operations.Count - 2).Concat(new[] { new RejectedOperation() }).ToList();
-    }
+    var fullRange = x.Copy();
 
-    if (workflow.Operations.Count > 1 && workflow.Operations.TakeLast(2).All(x => x.NextOperationName == "A" || x is AcceptedOperation))
-    {
-        workflow.Operations = workflow.Operations.Take(workflow.Operations.Count - 2).Concat(new[] { new AcceptedOperation() }).ToList();
-    }
+    fullRange.Ranges[letter] = Keep(x.Ranges[letter], value, greaterThan).ToList();
+
+    return fullRange;
 }
 
-
-void Substitute(string findKey, string replaceKey, Dictionary<string, Workflow>.ValueCollection values)
+IEnumerable<Range> Keep(List<Range> ranges, int value, bool greaterThan)
 {
-    foreach (var item in values)
+    foreach (var range in ranges)
     {
-        foreach (var op in item.Operations)
+        if (greaterThan)
         {
-            if (op.NextOperationName == findKey)
+            if (range.From >= value)
             {
-                op.NextOperationName = replaceKey;
+                yield return range;
+            }
+            else if (range.To < value)
+            {
+                // nothing
+            }
+            else
+            {
+                yield return new Range { From = value, To = range.To };
+            }
+        }
+        else
+        {
+            if (value < range.From)
+            {
+                // nothing
+            }
+            else if (range.To <= value)
+            {
+                yield return range;
+            }
+            else
+            {
+                yield return new Range { From = range.From, To = value };
             }
         }
     }
+}
+
+void AnalyzeWorkflow(Workflow workflow, FullRange fullRange)
+{
+    var operation = workflow.Operations.First();
+
+    if (operation is AcceptedOperation)
+    {
+        dct["A"].Add((fullRange, null));
+        return;
+    }
+    if (operation is RejectedOperation)
+    {
+        dct["R"].Add((fullRange, null));
+        return;
+    }
+    //if (!dct.ContainsKey(workflow.Name))
+    //{
+    //    dct[workflow.Name] = new List<(FullRange range, string next)>();
+    //}
+
+    var p1 = KeepOnly(fullRange, operation.Value, operation.IsGreaterThan, operation.Param);
+    var p2 = KeepOnly(fullRange, operation.Value + (operation.IsGreaterThan ? -1 : 1), !operation.IsGreaterThan, operation.Param);
+
+    dct[workflow.Name].Add((p1, operation.NextOperationName));
+
+    workflow.Operations.RemoveAt(0);
+    AnalyzeWorkflow(workflow, p2);
 }
 
 foreach (var item in workflows.Values)
 {
     Console.WriteLine(item);
 }
-
-//bool IsAccepted(int x, int m, int a, int s)
-//{
-//    int Param(char c) => c switch { 'x' => x, 'm' => m, 'a' => a, 's' => s, _ => throw new Exception() };
-//    var operation = "in";
-//    while (true)
-//    {
-//        if (operation == "A") { return true; }
-//        if (operation == "R") { return false; }
-//        foreach (var item in workflows[operation])
-//        {
-//            if (item.Param == default)
-//            {
-//                operation = item.NextOperationName;
-//                break;
-//            }
-//            var eval = item.IsGreaterThan ? (Param(item.Param) > item.Value) : (Param(item.Param) < item.Value);
-//            if (eval)
-//            {
-//                operation = item.NextOperationName;
-//                break;
-//            }
-//        }
-//    }
-//}
 
 timer.Stop();
 Console.WriteLine(result);
@@ -861,6 +886,18 @@ class Workflow
     public string Name { get; set; }
     public List<Operation> Operations { get; set; }
     public override string ToString() => $"{Name}{{{string.Join(",", Operations)}}}";
-
 }
 
+class FullRange
+{
+    public Dictionary<char, List<Range>> Ranges { get; set; }
+    public FullRange Copy() => new FullRange { Ranges = Ranges.ToDictionary(x => x.Key, x => x.Value.ToList()) };
+}
+
+class Range
+{
+    public int From { get; set; }
+    public int To { get; set; }
+    public override string ToString() => $"{From}..{To}";
+
+}
