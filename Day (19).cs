@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Reflection.Metadata;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml.Linq;
 
 var fullInput =
@@ -743,69 +744,20 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = BigInteger.Zero;
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.Name, x => x);
 
-foreach (var item in workflows.Values)
-{
 
-}
+var fullRange = new FullRange { Ranges = new[] { 'x', 'm', 'a', 's' }.ToDictionary(x => x, x => new Range { From = 1, To = 4000 }) };
 
-
-var dct = workflows.Keys.ToDictionary(x => x, x => new List<(FullRange range, string next)>());
-dct["A"] = new List<(FullRange range, string next)>();
-dct["R"] = new List<(FullRange range, string next)>();
-
-var max = 4000;
-var fullRange = new FullRange
-{
-    Ranges = new Dictionary<char, Range>
-    {
-        { 'x', new Range{ From = 1, To = max } },
-        { 'm', new Range{ From = 1, To = max } },
-        { 'a', new Range{ From = 1, To = max } },
-        { 's', new Range{ From = 1, To = max } }
-    }
-};
-
+var acceptedRanges = new List<FullRange>();
 AnalyzeWorkflow(workflows["in"], fullRange);
+result = acceptedRanges.Select(Product).Aggregate(BigInteger.Add);
 
-foreach (var (range, _) in dct["A"])
-{
-    var xx = range.Ranges.Select(x => x.Value).Select(x => x.To - x.From + 1).ToList();
-    var product = BigInteger.One;
-    foreach (var item in xx)
-    {
-        product *= (item);
-    }
-    result += product;
-}
-
-var rejectCount = BigInteger.Zero;
-
-foreach (var (range, _) in dct["R"])
-{
-    var xx = range.Ranges.Select(x => x.Value).Select(x => x.To - x.From + 1).ToList();
-    var product = BigInteger.One;
-    foreach (var item in xx)
-    {
-        product *= item;
-    }
-    rejectCount += product;
-}
-
-var expectedTotal = new BigInteger(max);
-expectedTotal *= expectedTotal;
-expectedTotal *= expectedTotal;
-
-Console.WriteLine($"A: {result} R:{rejectCount} T: {expectedTotal} Missing: {expectedTotal - result - rejectCount}");
+BigInteger Product(FullRange range) => range.Ranges.Select(x => x.Value.To - x.Value.From + 1).Select(x => new BigInteger(x)).Aggregate(BigInteger.Multiply);
 
 FullRange KeepOnly(FullRange x, int value, bool greaterThan, char letter)
 {
     var fullRange = x.Copy();
 
-    var sub = Keep(x.Ranges[letter], value, greaterThan);
-    //if (sub != null)
-    {
-        fullRange.Ranges[letter] = sub;
-    }
+    fullRange.Ranges[letter] = Keep(x.Ranges[letter], value, greaterThan);
 
     return fullRange;
 }
@@ -851,21 +803,17 @@ void AnalyzeWorkflow(Workflow xx, FullRange fullRange)
 
     if (operation is WorkflowPointer p)
     {
-        AnalyzeWorkflow(workflows[p.Name], fullRange);
+        AnalyzeWorkflow(workflows[p.NextOperationName], fullRange);
         return;
     }
 
-    //Console.WriteLine($"Coming into {workflow} with {fullRange}");
-    //Console.WriteLine($"");
-
     if (operation is AcceptedOperation)
     {
-        dct["A"].Add((fullRange, null));
+        acceptedRanges.Add(fullRange);
         return;
     }
     if (operation is RejectedOperation)
     {
-        dct["R"].Add((fullRange, null));
         return;
     }
 
@@ -878,7 +826,6 @@ void AnalyzeWorkflow(Workflow xx, FullRange fullRange)
     }
     var p1 = KeepOnly(fullRange, operation.Value + (!operation.IsGreaterThan ? -1 : 1), operation.IsGreaterThan, operation.Param);
     var p2 = KeepOnly(fullRange, operation.Value, !operation.IsGreaterThan, operation.Param);
-    //Console.WriteLine($"{workflow}:{operation} - split {fullRange} into {p1} and {p2}");
 
     AnalyzeWorkflow(GetNext(), p1);
     workflow.Operations.RemoveAt(0);
@@ -906,7 +853,7 @@ Operation ParseOperation(string str)
         {
             case "A": return new AcceptedOperation();
             case "R": return new RejectedOperation();
-            default: return new WorkflowPointer { Name = str };
+            default: return new WorkflowPointer { NextOperationName = str };
         }
     }
     var split = str.Split('<', '>', ':');
@@ -925,23 +872,19 @@ class Operation
 
 class AcceptedOperation : Operation
 {
-    public override string ToString() => "A";
 }
 
 class RejectedOperation : Operation
 {
-    public override string ToString() => "R";
 }
 class WorkflowPointer : Operation
 {
-    public string Name { get; set; }
 }
 
 class Workflow
 {
     public string Name { get; set; }
     public List<Operation> Operations { get; set; }
-    public override string ToString() => $"{Name}{{{string.Join(",", Operations)}}}";
     public Workflow Copy() => new Workflow { Name = Name, Operations = Operations.ToList() };
 
 }
@@ -950,7 +893,6 @@ class FullRange
 {
     public Dictionary<char, Range> Ranges { get; set; }
     public FullRange Copy() => new FullRange { Ranges = Ranges.ToDictionary(x => x.Key, x => x.Value) };
-    public override string ToString() => string.Join(",", Ranges.Select(x => $"{x.Key}:{x.Value}"));
 
 }
 
@@ -958,12 +900,5 @@ class Range
 {
     public int From { get; set; }
     public int To { get; set; }
-    public override string ToString() => $"{From}..{To}";
 
 }
-
-
-//167409079868000 
-//35867037998250
-//256000000000000
-//24691116994328
