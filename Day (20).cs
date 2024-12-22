@@ -106,7 +106,8 @@ for (int k = 0; k < 1000; k++)
 }
 if (lows * highs != 834323022) { throw new Exception(); }
 
-//var interesting = new[] { "mj", "qs", "rd", "cs" };
+var interesting = new[] { "mj", "qs", "rd", "cs" };
+interesting = new[] { "bt", "dl", "rv", "fr" };
 //if (modules.Count < 10)
 //{
 //    interesting = new[] { "inv", "con" };
@@ -114,7 +115,8 @@ if (lows * highs != 834323022) { throw new Exception(); }
 
 (modules, pendings) = Initialize(input, broadcaster);
 
-var interesting = modules.Where(x => x.Value.Type == '&').Select(x => x.Key).Distinct().ToArray();
+//var interesting = modules.Where(x => x.Value.Type == '&').Select(x => x.Key).Distinct().ToArray();
+FindCycles(interesting, )
 var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y =>
 {
     (modules, pendings) = Initialize(input, broadcaster);
@@ -182,32 +184,33 @@ void lala(string module, string prev, int i)
     var xx = sb.ToString();
 }
 
-List<int> FindCycle(string module, string prev)
+Dictionary<string, List<int>> FindCycles(string[] moduleWatch, string prev)
 {
-    var count = 1;
-    var was = false;
-    var cycles = new List<int>();
-    for (int i = 0; i < 25_000; i++)
+    var dctWas = moduleWatch.ToDictionary(x => x, x => false);
+    var dctCount = moduleWatch.ToDictionary(x => x, x => 1);
+    var dctResult = moduleWatch.ToDictionary(x => x, x => new List<int>());
+    for (int i = 0; i < 1_000_000; i++)
     {
         Execute(pendings);
 
-        var xx = modules[module].Previous[prev];
-        if (xx == was)
+        foreach (var module in moduleWatch)
         {
-            count++;
-        }
-        else
-        {
-            if (!was)
+            var xx = modules[module].Previous[prev];
+            if (xx == dctWas[module])
             {
-                cycles.Add(count);
+                dctCount[module]++;
             }
-            was = xx;
-            count = 1;
+            else
+            {
+                dctResult[module].Add(dctCount[module]);
+                dctWas[module] = xx;
+                dctCount[module] = 1;
+            }
         }
     }
-    return cycles;
+    return dctResult;
 }
+
 
 void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 {
@@ -219,6 +222,7 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
         lows += (!highPulse) ? 1 : 0;
         highs += (highPulse) ? 1 : 0;
 
+        //if (module.Name == "rv" && !highPulse) { Console.WriteLine(i); Console.ReadLine(); return; }
         if (module.Name == "rx" && !highPulse) { Console.WriteLine(i); Console.ReadLine(); return; }
 
         if (printDebug) { Console.WriteLine($"{sender?.Name ?? "button"} -{(highPulse ? "high" : "low")}-> {module.Name}"); }
@@ -269,12 +273,12 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 timer.Stop();
 Console.WriteLine(result);
 // 106337768232960 too low
+// 2624872963614720 too high
 // 194139118858905 wrong
 // 255282961905279 wrong
 // 212965241395951388742644547964187965440 too high
 // 130672208443392 wrong
 // 1522255148144640  wrong
-// 2624872963614720 too high
 // 1312436481807360 wrong
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
