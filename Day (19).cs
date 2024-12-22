@@ -1,8 +1,10 @@
 ﻿using AoC2023;
+using System;
 using System.Linq;
 using System.Numerics;
 using System.Reflection.Metadata;
 using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 var fullInput =
@@ -732,85 +734,129 @@ hdj{m>838:A,pv}
 {x=2461,m=1339,a=466,s=291}
 {x=2127,m=1623,a=2188,s=1013}";
 
-var smallest = "";
+var smallest = "in{s<1351:px,qqz}";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 var result = BigInteger.Zero;
 var workflows = input.Split(Environment.NewLine).TakeWhile(x => x != "").Select(ParseWorkflow).ToDictionary(x => x.Name, x => x);
 
+foreach (var item in workflows.Values)
+{
+
+}
+
+
 var dct = workflows.Keys.ToDictionary(x => x, x => new List<(FullRange range, string next)>());
 dct["A"] = new List<(FullRange range, string next)>();
 dct["R"] = new List<(FullRange range, string next)>();
+
+var max = 4000;
 var fullRange = new FullRange
 {
-    Ranges = new Dictionary<char, List<Range>>
+    Ranges = new Dictionary<char, Range>
     {
-        { 'x', new List<Range>{new Range{ From = 1, To = 4000} }},
-        { 'm', new List<Range>{new Range{ From = 1, To = 4000} }},
-        { 'a', new List<Range>{new Range{ From = 1, To = 4000} }},
-        { 's', new List<Range>{new Range{ From = 1, To = 4000} }}
+        { 'x', new Range{ From = 1, To = max } },
+        { 'm', new Range{ From = 1, To = max } },
+        { 'a', new Range{ From = 1, To = max } },
+        { 's', new Range{ From = 1, To = max } }
     }
 };
 
-// crn{x<2662:A,R}
-foreach (var item in workflows.Values.Where(x => x.Operations.All(y => y.NextOperationName == "A" || y.NextOperationName == "R" || y.NextOperationName == null)))
-{
-    AnalyzeWorkflow(item, fullRange);
+AnalyzeWorkflow(workflows["in"], fullRange);
 
+foreach (var (range, _) in dct["A"])
+{
+    var xx = range.Ranges.Select(x => x.Value).Select(x => x.To - x.From + 1).ToList();
+    var product = BigInteger.One;
+    foreach (var item in xx)
+    {
+        product *= (item);
+    }
+    result += product;
 }
+
+var rejectCount = BigInteger.Zero;
+
+foreach (var (range, _) in dct["R"])
+{
+    var xx = range.Ranges.Select(x => x.Value).Select(x => x.To - x.From + 1).ToList();
+    var product = BigInteger.One;
+    foreach (var item in xx)
+    {
+        product *= item;
+    }
+    rejectCount += product;
+}
+
+var expectedTotal = new BigInteger(max);
+expectedTotal *= expectedTotal;
+expectedTotal *= expectedTotal;
+
+Console.WriteLine($"A: {result} R:{rejectCount} T: {expectedTotal} Missing: {expectedTotal - result - rejectCount}");
 
 FullRange KeepOnly(FullRange x, int value, bool greaterThan, char letter)
 {
     var fullRange = x.Copy();
 
-    fullRange.Ranges[letter] = Keep(x.Ranges[letter], value, greaterThan).ToList();
+    var sub = Keep(x.Ranges[letter], value, greaterThan);
+    //if (sub != null)
+    {
+        fullRange.Ranges[letter] = sub;
+    }
 
     return fullRange;
 }
 
-IEnumerable<Range> Keep(List<Range> ranges, int value, bool greaterThan)
+Range Keep(Range range, int value, bool greaterThan)
 {
-    foreach (var range in ranges)
+    if (greaterThan)
     {
-        if (greaterThan)
+        if (range.From >= value)
         {
-            if (range.From >= value)
-            {
-                yield return range;
-            }
-            else if (range.To < value)
-            {
-                // nothing
-            }
-            else
-            {
-                yield return new Range { From = value, To = range.To };
-            }
+            return range;
+        }
+        else if (range.To < value)
+        {
+            return null;
         }
         else
         {
-            if (value < range.From)
-            {
-                // nothing
-            }
-            else if (range.To <= value)
-            {
-                yield return range;
-            }
-            else
-            {
-                yield return new Range { From = range.From, To = value };
-            }
+            return new Range { From = value, To = range.To };
+        }
+    }
+    else
+    {
+        if (value < range.From)
+        {
+            return null;
+        }
+        else if (range.To <= value)
+        {
+            return range;
+        }
+        else
+        {
+            return new Range { From = range.From, To = value };
         }
     }
 }
 
-void AnalyzeWorkflow(Workflow workflow, FullRange fullRange)
+void AnalyzeWorkflow(Workflow xx, FullRange fullRange)
 {
+    var workflow = xx.Copy();
     var operation = workflow.Operations.First();
+
+    if (operation is WorkflowPointer p)
+    {
+        AnalyzeWorkflow(workflows[p.Name], fullRange);
+        return;
+    }
+
+    //Console.WriteLine($"Coming into {workflow} with {fullRange}");
+    //Console.WriteLine($"");
 
     if (operation is AcceptedOperation)
     {
@@ -822,23 +868,21 @@ void AnalyzeWorkflow(Workflow workflow, FullRange fullRange)
         dct["R"].Add((fullRange, null));
         return;
     }
-    //if (!dct.ContainsKey(workflow.Name))
-    //{
-    //    dct[workflow.Name] = new List<(FullRange range, string next)>();
-    //}
 
-    var p1 = KeepOnly(fullRange, operation.Value, operation.IsGreaterThan, operation.Param);
-    var p2 = KeepOnly(fullRange, operation.Value + (operation.IsGreaterThan ? -1 : 1), !operation.IsGreaterThan, operation.Param);
+    Workflow GetNext()
+    {
+        if (operation.NextOperationName == "R") { return new Workflow { Operations = new List<Operation> { new RejectedOperation() } }; }
+        if (operation.NextOperationName == "A") { return new Workflow { Operations = new List<Operation> { new AcceptedOperation() } }; }
+        return workflows[operation.NextOperationName];
 
-    dct[workflow.Name].Add((p1, operation.NextOperationName));
+    }
+    var p1 = KeepOnly(fullRange, operation.Value + (!operation.IsGreaterThan ? -1 : 1), operation.IsGreaterThan, operation.Param);
+    var p2 = KeepOnly(fullRange, operation.Value, !operation.IsGreaterThan, operation.Param);
+    //Console.WriteLine($"{workflow}:{operation} - split {fullRange} into {p1} and {p2}");
 
+    AnalyzeWorkflow(GetNext(), p1);
     workflow.Operations.RemoveAt(0);
     AnalyzeWorkflow(workflow, p2);
-}
-
-foreach (var item in workflows.Values)
-{
-    Console.WriteLine(item);
 }
 
 timer.Stop();
@@ -856,7 +900,15 @@ Workflow ParseWorkflow(string str)
 
 Operation ParseOperation(string str)
 {
-    if (!str.Contains(":")) { return str == "A" ? new AcceptedOperation() : new RejectedOperation(); }
+    if (!str.Contains(":"))
+    {
+        switch (str)
+        {
+            case "A": return new AcceptedOperation();
+            case "R": return new RejectedOperation();
+            default: return new WorkflowPointer { Name = str };
+        }
+    }
     var split = str.Split('<', '>', ':');
     return new Operation { Param = split[0][0], IsGreaterThan = str.Contains(">"), Value = int.Parse(split[1]), NextOperationName = split[2] };
 }
@@ -880,18 +932,26 @@ class RejectedOperation : Operation
 {
     public override string ToString() => "R";
 }
+class WorkflowPointer : Operation
+{
+    public string Name { get; set; }
+}
 
 class Workflow
 {
     public string Name { get; set; }
     public List<Operation> Operations { get; set; }
     public override string ToString() => $"{Name}{{{string.Join(",", Operations)}}}";
+    public Workflow Copy() => new Workflow { Name = Name, Operations = Operations.ToList() };
+
 }
 
 class FullRange
 {
-    public Dictionary<char, List<Range>> Ranges { get; set; }
-    public FullRange Copy() => new FullRange { Ranges = Ranges.ToDictionary(x => x.Key, x => x.Value.ToList()) };
+    public Dictionary<char, Range> Ranges { get; set; }
+    public FullRange Copy() => new FullRange { Ranges = Ranges.ToDictionary(x => x.Key, x => x.Value) };
+    public override string ToString() => string.Join(",", Ranges.Select(x => $"{x.Key}:{x.Value}"));
+
 }
 
 class Range
@@ -901,3 +961,9 @@ class Range
     public override string ToString() => $"{From}..{To}";
 
 }
+
+
+//167409079868000 
+//35867037998250
+//256000000000000
+//24691116994328
