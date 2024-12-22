@@ -1,4 +1,6 @@
-﻿var fullInput =
+﻿using System.Numerics;
+
+var fullInput =
 @"%qm -> mj, xn
 &mj -> hz, bt, lr, sq, qh, vq
 %qc -> qs, vg
@@ -111,13 +113,60 @@ var highs = 0;
 var printDebug = true;
 printDebug = false;
 
-for (int i = 0; i < 1000; i++)
+var i = BigInteger.One;
+var j = 0;
+
+var interesting = new[] { "mj", "qs", "rd", "cs" };
+var intervalDetection = modules.Where(x => interesting.Contains(x.Key)).ToDictionary(x => x.Key, x => x.Value.Previous.ToDictionary(y => y.Key, y => int.MaxValue));
+
+var count = 0;
+var was = false;
+while (true)
 {
+    //Console.WriteLine(string.Join("", modules["mj"].Previous.Select(x => x.Value ? "1" : "0")));
+    //Console.WriteLine(string.Join("", modules["qs"].Previous.Select(x => x.Value ? "1" : "0")));
+    //Console.WriteLine(string.Join("", modules["rd"].Previous.Select(x => x.Value ? "1" : "0")));
+    //Console.WriteLine(string.Join("", modules["cs"].Previous.Select(x => x.Value ? "1" : "0")));
+
+    foreach (var item in interesting)
+    {
+        foreach (var item2 in modules[item].Previous)
+        {
+            if (item2.Value)
+            {
+                intervalDetection[item][item2.Key] = Math.Min(j, intervalDetection[item][item2.Key]);
+            }
+        }
+    }
+
+   
+    //Console.WriteLine($"{i} " + string.Join("", modules["mj"].Previous.OrderByDescending(x => intervalDetection["mj"][x.Key]).Select(x => x.Value ? "1" : "0")));
+
+    //Console.WriteLine(modules["mj"].Previous.ElementAt(2).Value ? "1" : "0");
+
+
+    if (i % 100_000 == 0)
+    {
+        Console.WriteLine(i);
+    }
     Execute(pendings);
     if (printDebug) { Console.WriteLine(""); }
     if (printDebug) { Console.WriteLine(""); }
-}
+    i++;
+    j++;
 
+    var xx = modules["mj"].Previous["js"];
+    if (xx == was)
+    {
+        count++;
+    }
+    else
+    {
+        Console.WriteLine($"{i}- {count}");
+        was = xx;
+        count = 0;
+    }
+}
 
 void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 {
@@ -128,6 +177,8 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
     {
         lows += (!highPulse) ? 1 : 0;
         highs += (highPulse) ? 1 : 0;
+
+        if (module.Name == "rx" && !highPulse) { Console.WriteLine(i); Console.ReadLine(); return; }
 
         if (printDebug) { Console.WriteLine($"{sender?.Name ?? "button"} -{(highPulse ? "high" : "low")}-> {module.Name}"); }
 
@@ -174,7 +225,6 @@ void Execute(List<(Module module, bool highPulse, Module sender)> pendings)
 }
 
 
-result = lows * highs;
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
