@@ -64,6 +64,13 @@ public static class Utils
 
     static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null, int? minWidth = null, int? minHeight = null, Func<int, int, string> nullPrint = null)
     {
+        Console.Write(WriteGrid(grid, X, Y, print, width, height, minWidth, minHeight, nullPrint));
+    }
+
+
+    static public string WriteGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null, int? minWidth = null, int? minHeight = null, Func<int, int, string> nullPrint = null)
+    {
+        var sb = new StringBuilder();
         print ??= x => x.ToString();
         minWidth ??= grid.Min(X);
         minHeight ??= grid.Min(Y);
@@ -76,17 +83,18 @@ public static class Utils
             {
                 if (grid.Any(o => X(o) == i && Y(o) == j))
                 {
-                    Console.Write(print(grid.Single(o => X(o) == i && Y(o) == j)));
+                    sb.Append(print(grid.Single(o => X(o) == i && Y(o) == j)));
                 }
                 else
                 {
-                    Console.Write(nullPrint(i, j));
+                    sb.Append(nullPrint(i, j));
                 }
             }
-            Console.WriteLine();
+            sb.AppendLine();
         }
-        Console.WriteLine();
-        Console.WriteLine();
+        sb.AppendLine();
+        sb.AppendLine();
+        return sb.ToString();
     }
 
     static public (char[][] grid, int height, int width) Parse2DGrid(string input)

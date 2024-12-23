@@ -150,64 +150,95 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
 
-var grid = Utils.ParseCoordGrid(input).ToList();
-var width = grid.Max(x => x.x) + 1;
-var height = grid.Max(x => x.y) + 1;
+input = input.Replace("S", ".");
 
-var unvisitable = grid.Where(x => x.c == '#').Select(x => (x.x, x.y)).ToHashSet();
-(int x, int y) Mod((int x, int y) n) => (Utils.SafeMod(n.x, width), Utils.SafeMod(n.y, height));
-bool Visitable((int x, int y) n) => !unvisitable.Contains(Mod(n));
-var start = grid.Single(x => x.c == 'S');
+void Extend()
+{
+    input = input.Replace("S", ".");
+    input = string.Join(Environment.NewLine, input.Split(Environment.NewLine).Select(x => x + x + x));
+    input = input + Environment.NewLine + input + Environment.NewLine + input;
+}
 
-//Utils.PrintGrid(grid, x => x.x, x => x.y, x => x.c.ToString());
+//Extend();
+Extend();
+Extend();
+//Extend();
+//Extend();
+//Extend();
+//Extend();
+//Extend();
+(bool?[][] grid, int height, int width) = Utils.Parse2DGrid(input, x => x == '#' ? (bool?)null : x == 'S');
+grid[height / 2][width / 2] = true;
 
-var s = grid.Single(x => x.c == 'S');
 
-var steps = 12000;
+//Utils.PrintGrid(grid, x => !x.HasValue ? "#" : x.Value ? "0" : ".");
+
+//var mX = grid.Max(y => y.x) / 2;
+//var mY = grid.Max(y => y.y) / 2;
+//var middle = grid.Single(x => x.x == mX && x.y == mY);
+//var index = grid.IndexOf(middle);
+//grid[index] = (middle.x, middle.y, 'S');
+
+
+//var unvisitable = grid.Where(x => x.c == '#').Select(x => (x.x, x.y)).ToHashSet();
+//(int x, int y) Mod((int x, int y) n) => (Utils.SafeMod(n.x, width), Utils.SafeMod(n.y, height));
+//bool Visitable((int x, int y) n) => !unvisitable.Contains(Mod(n));
+//var start = grid.Single(x => x.c == 'S');
+
+//var xx = Utils.WriteGrid(grid, x => x.x, x => x.y, x => x.c.ToString());
+//File.WriteAllText(@"C:\Users\Jan\Desktop\sub10m.txt", input);
+
+
+var steps = 200000;
 
 
 //var visited = new HashSet<(int x, int y)> { (s.x, s.y) };
 
-var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
+//var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
 
-Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
+//Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
 
 var prevs = new List<int>() { 1 };
 int prev = 0;
 int prevCount = 0;
-for (var i = 1; i < steps; i++)
+var len = grid.Length;
+for (var stepCnt = 1; stepCnt < steps; stepCnt++)
 {
-    IEnumerable<(int x, int y)> Get((int x, int y) item)
+    var cpy = grid.Select(x => x.ToArray()).ToArray();
+
+    for (int y = 0; y < len; y++)
     {
-        foreach (var d in new[] { (1, 0), (-1, 0), (0, -1), (0, 1), })
+        for (int x = 0; x < len; x++)
         {
-            var newCoord = (item.x + d.Item1, item.y + d.Item2);
-            if (!Visitable(newCoord)) { continue; }
-            yield return newCoord;
+            if (grid[y][x] == true)
+            {
+                foreach (var d in new[] { (x: 1, y: 0), (x: -1, y: 0), (x: 0, y: -1), (x: 0, y: 1), })
+                {
+                    if (grid[y + d.y][x + d.x] != null)
+                    {
+                        cpy[y + d.y][x + d.x] = true;
+                    }
+                }
+                cpy[y][x] = false;
+            }
         }
     }
 
-    toVisit = toVisit.SelectMany(Get).ToHashSet();
-    //Console.Clear();
-    var added = toVisit.Count - prevCount;
-    prevCount = toVisit.Count;
-    var tHeight = toVisit.Max(x => x.y) + 1 - toVisit.Min(x => x.y);
-    var tWidth = toVisit.Max(x => x.x) + 1 - toVisit.Min(x => x.x);
-    var t = tHeight * tWidth;
-    //Console.WriteLine($"{i} {toVisit.Count} {added} {(double)toVisit.Count / i} {(double)added / i}");
-    Console.WriteLine($"{i}\t{toVisit.Count}\t{t}\t{(double)added/i}\t{added - prev}\t{prevs.Average()}");
-    prevs.Add(added - prev);
-    prev = added;
-    //Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", nullPrint: (x, y) => Visitable((x, y)) ? "." : " ");
+    grid = cpy;
+
+    if (stepCnt % 100 == 0)
+    {
+        Console.WriteLine($"{stepCnt}\t{grid.Sum(x => x.Count(y => y ?? false))}");
+    }
 }
 
-result = toVisit.Count;
+result = 0;
 
 
 timer.Stop();
