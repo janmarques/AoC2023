@@ -165,7 +165,8 @@ var steps = grid.Count < 1000 ? 6 : 64;
 //var visited = new HashSet<(int x, int y)> { (s.x, s.y) };
 
 var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
-for (; steps > 0; steps--)
+var prev = 0;
+for (var i = 0; i < steps; i++)
 {
     var newToVisit = new HashSet<(int x, int y)>() { };
 
@@ -175,8 +176,14 @@ for (; steps > 0; steps--)
         newToVisit.UnionWith(neighbours);
     }
     toVisit = newToVisit;
-    //Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => x == default ? "." : "0", grid.Max(x => x.x), grid.Max(x => x.y));
+    Console.WriteLine($"{i} {toVisit.Count} {toVisit.Count - prev}");
+    prev = toVisit.Count;
+    //if( i > 30)
+    //{
+
+    //}
 }
+Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => x == default ? "." : "0", grid.Max(x => x.x), grid.Max(x => x.y));
 
 result = toVisit.Count;
 
