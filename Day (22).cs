@@ -1333,19 +1333,27 @@ void SetLowest()
 }
 
 Fall();
-void Fall()
+int Fall()
 {
+    int touched = 0;
     for (int i = 1; i <= maxZ; i++)
     {
         foreach (var brick in bricks.Where(x => x.From.Z == i).ToList())
         {
+            var inc = false;
             while (!RestingUndeneath(brick) && brick.From.Z > 1)
             {
+                if (!inc)
+                {
+                    touched++;
+                    inc = true;
+                }
                 brick.From.Z--;
                 brick.To.Z--;
             }
         }
     }
+    return touched;
 }
 
 bool OverlapInAxis(Brick one, Brick two, Func<Coord, int> axis)
@@ -1399,15 +1407,17 @@ bool CanDisintegrate(Brick brick)
     return true;
 }
 
-var aa = bricks.Select(x => (x, CanDisintegrate(x))).ToList();
-foreach (var item in aa)
+var cpy = bricks.Select(x => x.Clone()).ToList();
+
+for (int i = 0; i < cpy.Count; i++)
 {
-    Console.WriteLine($"{item.x} {item.Item2}");
+    bricks = cpy.Select(x => x.Clone()).ToList();
+    bricks.RemoveAt(i);
+    result += Fall();
 }
-result = aa.Count(x => x.Item2);
 
 timer.Stop();
-Console.WriteLine(result); // 484 too high
+Console.WriteLine(result); // 24927 too low
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
 
@@ -1416,6 +1426,8 @@ class Brick
     public Coord From { get; set; }
     public Coord To { get; set; }
     public override string ToString() => $"{From}~{To}";
+
+    public Brick Clone() => new Brick { From = From.Clone(), To = To.Clone() };
 
 }
 
@@ -1426,6 +1438,8 @@ class Coord
     public int Z { get; set; }
 
     public override string ToString() => $"{X},{Y},{Z}";
+
+    public Coord Clone() => new Coord { X = X, Y = Y, Z = Z };
 }
 
 
