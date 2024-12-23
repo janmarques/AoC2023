@@ -157,7 +157,7 @@ var xx = new BigInteger(15416) * new BigInteger(202300) * new BigInteger(202300)
 
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -178,9 +178,9 @@ var s = grid.Single(x => x.c == 'S');
 
 var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
 
-Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
+//Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
 
-var toFind = new[] { width, (int)(1.5 * width), (int)(2.5 * width), }.ToDictionary(x => x, x => int.MinValue);
+var toFind = new[] { width/2, (int)(1.5 * width), (int)(2.5 * width), }.ToDictionary(x => x, x => int.MinValue);
 
 var prev = 0;
 for (var i = 1; ; i++)
@@ -195,13 +195,14 @@ for (var i = 1; ; i++)
         }
     }
     toVisit = toVisit.SelectMany(Get).ToHashSet();
+    Console.WriteLine($"{i} {toVisit.Count}");
 
     if (toFind.Keys.Contains(i))
     {
         toFind[i] = toVisit.Count;
         if (toFind.All(x => x.Value != int.MinValue))
         {
-            break;
+            //break;
         }
     }
 }
@@ -211,9 +212,9 @@ var y0 = toFind.Values.ElementAt(0);
 var y1 = toFind.Values.ElementAt(1);
 var y2 = toFind.Values.ElementAt(2);
 
-var _C = y0;
+var _C = y2;
 var _AplusBplusC = y1;
-var _4Aplus2BplusC = y2;
+var _4Aplus2BplusC = y0;
 
 var _AplusB = _AplusBplusC - _C;
 var _4Aplus2B = _4Aplus2BplusC - _C;
@@ -223,7 +224,7 @@ var _A = _2A / 2;
 var _B = _AplusB - _A;
 
 var targetSteps = 26501365;
-var _X = new BigInteger((targetSteps - height / 2) / height);
+var _X = new BigInteger((targetSteps - height/2) / height);
 
 
 result = _A * _X * _X + _B * _X + _C;
@@ -232,5 +233,7 @@ result = _A * _X * _X + _B * _X + _C;
 timer.Stop();
 Console.WriteLine(result); // 630903862217271 too high
                            // 858243848161716 too high
+                           // 858235363318106
+                           // 3898608414711471
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
