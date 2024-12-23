@@ -62,17 +62,26 @@ public static class Utils
     }
 
 
-    static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null)
+    static public void PrintGrid<T>(IEnumerable<T> grid, Func<T, int> X, Func<T, int> Y, Func<T, string> print = null, int? width = null, int? height = null, int? minWidth = null, int? minHeight = null, Func<int, int, string> nullPrint = null)
     {
         print ??= x => x.ToString();
+        minWidth ??= grid.Min(X);
+        minHeight ??= grid.Min(Y);
         width ??= grid.Max(X);
         height ??= grid.Max(Y);
-        for (int j = 0; j <= height; j++)
+        nullPrint ??= (_, _) => "?";
+        for (int j = minHeight.Value; j <= height.Value; j++)
         {
-            for (int i = 0; i <= width; i++)
+            for (int i = minWidth.Value; i <= width.Value; i++)
             {
-                var item = grid.SingleOrDefault(o => X(o) == i && Y(o) == j);
-                Console.Write(item is null ? "?" : print(item));
+                if (grid.Any(o => X(o) == i && Y(o) == j))
+                {
+                    Console.Write(print(grid.Single(o => X(o) == i && Y(o) == j)));
+                }
+                else
+                {
+                    Console.Write(nullPrint(i, j));
+                }
             }
             Console.WriteLine();
         }
@@ -168,5 +177,10 @@ public static class Utils
     public static BigInteger LeastCommonMultiple(BigInteger a, BigInteger b)
     {
         return (a / gcf(a, b)) * b;
+    }
+
+    public static int SafeMod(int a, int b)
+    {
+        return ((a % b) + b) % b;
     }
 }

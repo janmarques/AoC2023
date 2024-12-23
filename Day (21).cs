@@ -1,4 +1,5 @@
 ﻿using AoC2023;
+using static AoC2023.Utils;
 
 var fullInput =
 @"...................................................................................................................................
@@ -149,62 +150,51 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-input = fullInput;
+//input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
 
-//void Extend()
-//{
-//input = input.Replace("S", ".");
-//input = string.Join(Environment.NewLine, input.Split(Environment.NewLine).Select(x => x + x + x));
-//input = input + Environment.NewLine + input + Environment.NewLine + input;
-//}
-
-//Extend();
-//Extend();
-
-//var mX = grid.Max(y => y.x) / 2;
-//var mY = grid.Max(y => y.y) / 2;
-//var middle = grid.Single(x => x.x == mX && x.y == mY);
-//var index = grid.IndexOf(middle);
-//grid[index] = (middle.x, middle.y, 'S');
-
-//var grid = Utils.ParseCoordGrid(input, Parse).ToList();
 var grid = Utils.ParseCoordGrid(input).ToList();
+var width = grid.Max(x => x.x) + 1;
+var height = grid.Max(x => x.y) + 1;
 
 var unvisitable = grid.Where(x => x.c == '#').Select(x => (x.x, x.y)).ToHashSet();
+(int x, int y) Mod((int x, int y) n) => (Utils.SafeMod(n.x, width), Utils.SafeMod(n.y, height));
+bool Visitable((int x, int y) n) => !unvisitable.Contains(Mod(n));
 var start = grid.Single(x => x.c == 'S');
 
 //Utils.PrintGrid(grid, x => x.x, x => x.y, x => x.c.ToString());
 
 var s = grid.Single(x => x.c == 'S');
 
-var steps = 66;
+var steps = 12000;
 
 
 //var visited = new HashSet<(int x, int y)> { (s.x, s.y) };
 
 var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
+
+Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
+
 var prev = 0;
 for (var i = 1; i < steps; i++)
 {
-    var newToVisit = new HashSet<(int x, int y)>() { };
-
-    foreach (var item in toVisit)
+    IEnumerable<(int x, int y)> Get((int x, int y) item)
     {
-        foreach (var d in Utils.Directions)
+        foreach (var d in new[] { (1, 0), (-1, 0), (0, -1), (0, 1), })
         {
-            var newCoord = (item.x + d.x, item.y + d.y);
-            if (unvisitable.Contains(newCoord)) { continue; }
-            newToVisit.Add(newCoord);
+            var newCoord = (item.x + d.Item1, item.y + d.Item2);
+            if (!Visitable(newCoord)) { continue; }
+            yield return newCoord;
         }
     }
-    toVisit = newToVisit;
+
+    toVisit = toVisit.SelectMany(Get).ToHashSet();
     Console.WriteLine($"{i} {toVisit.Count} {toVisit.Count - prev}");
     prev = toVisit.Count;
-//Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => x == default ? "." : "0", grid.Max(x => x.x), grid.Max(x => x.y));
+    //Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
 }
 
 result = toVisit.Count;
