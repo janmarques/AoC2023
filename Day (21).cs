@@ -150,7 +150,7 @@ var smallInput =
 var smallest = "";
 
 var input = smallInput;
-//input = fullInput;
+input = fullInput;
 //input = smallest;
 var timer = System.Diagnostics.Stopwatch.StartNew();
 
@@ -178,7 +178,9 @@ var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
 
 Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
 
-var prev = 0;
+var prevs = new List<int>() { 1 };
+int prev = 0;
+int prevCount = 0;
 for (var i = 1; i < steps; i++)
 {
     IEnumerable<(int x, int y)> Get((int x, int y) item)
@@ -192,9 +194,17 @@ for (var i = 1; i < steps; i++)
     }
 
     toVisit = toVisit.SelectMany(Get).ToHashSet();
-    Console.WriteLine($"{i} {toVisit.Count} {toVisit.Count - prev}");
-    prev = toVisit.Count;
-    //Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", 15, 15, -15, -15, (x, y) => Visitable((x, y)) ? "." : "#");
+    //Console.Clear();
+    var added = toVisit.Count - prevCount;
+    prevCount = toVisit.Count;
+    var tHeight = toVisit.Max(x => x.y) + 1 - toVisit.Min(x => x.y);
+    var tWidth = toVisit.Max(x => x.x) + 1 - toVisit.Min(x => x.x);
+    var t = tHeight * tWidth;
+    //Console.WriteLine($"{i} {toVisit.Count} {added} {(double)toVisit.Count / i} {(double)added / i}");
+    Console.WriteLine($"{i}\t{toVisit.Count}\t{t}\t{(double)added/i}\t{added - prev}\t{prevs.Average()}");
+    prevs.Add(added - prev);
+    prev = added;
+    //Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => "0", nullPrint: (x, y) => Visitable((x, y)) ? "." : " ");
 }
 
 result = toVisit.Count;
