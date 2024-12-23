@@ -155,35 +155,57 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
 
+//void Extend()
+//{
+//input = input.Replace("S", ".");
+//input = string.Join(Environment.NewLine, input.Split(Environment.NewLine).Select(x => x + x + x));
+//input = input + Environment.NewLine + input + Environment.NewLine + input;
+//}
+
+//Extend();
+//Extend();
+
+//var mX = grid.Max(y => y.x) / 2;
+//var mY = grid.Max(y => y.y) / 2;
+//var middle = grid.Single(x => x.x == mX && x.y == mY);
+//var index = grid.IndexOf(middle);
+//grid[index] = (middle.x, middle.y, 'S');
+
+//var grid = Utils.ParseCoordGrid(input, Parse).ToList();
 var grid = Utils.ParseCoordGrid(input).ToList();
+
+var unvisitable = grid.Where(x => x.c == '#').Select(x => (x.x, x.y)).ToHashSet();
+var start = grid.Single(x => x.c == 'S');
+
+//Utils.PrintGrid(grid, x => x.x, x => x.y, x => x.c.ToString());
 
 var s = grid.Single(x => x.c == 'S');
 
-var steps = grid.Count < 1000 ? 6 : 64;
+var steps = 66;
 
 
 //var visited = new HashSet<(int x, int y)> { (s.x, s.y) };
 
 var toVisit = new HashSet<(int x, int y)>() { (s.x, s.y) };
 var prev = 0;
-for (var i = 0; i < steps; i++)
+for (var i = 1; i < steps; i++)
 {
     var newToVisit = new HashSet<(int x, int y)>() { };
 
     foreach (var item in toVisit)
     {
-        var neighbours = Utils.Directions.Select(d => grid.SingleOrDefault(c => c.x == item.x + d.x && c.y == item.y + d.y && c.c != '#')).Where(x => x != default)/*.Where(x => !visited.Contains((x.x, x.y)))*/.Select(x => (x.x, x.y)).ToList();
-        newToVisit.UnionWith(neighbours);
+        foreach (var d in Utils.Directions)
+        {
+            var newCoord = (item.x + d.x, item.y + d.y);
+            if (unvisitable.Contains(newCoord)) { continue; }
+            newToVisit.Add(newCoord);
+        }
     }
     toVisit = newToVisit;
     Console.WriteLine($"{i} {toVisit.Count} {toVisit.Count - prev}");
     prev = toVisit.Count;
-    //if( i > 30)
-    //{
-
-    //}
+//Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => x == default ? "." : "0", grid.Max(x => x.x), grid.Max(x => x.y));
 }
-Utils.PrintGrid(toVisit, x => x.x, y => y.y, x => x == default ? "." : "0", grid.Max(x => x.x), grid.Max(x => x.y));
 
 result = toVisit.Count;
 
