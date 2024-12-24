@@ -1,4 +1,6 @@
-﻿var fullInput =
+﻿using System.Runtime.Intrinsics.X86;
+
+var fullInput =
 @"308205470708820, 82023714100543, 475164418926765 @ 42, 274, -194
 242904857760501, 351203053017504, 247366253386570 @ 147, -69, 131
 258124591360173, 252205185038992, 113896142591148 @ -84, -5, 409
@@ -307,6 +309,7 @@ var smallInput =
 12, 31, 28 @ -1, -2, -1
 20, 19, 15 @  1, -5, -3";
 
+
 var smallest = "";
 
 var input = smallInput;
@@ -318,56 +321,60 @@ var result = 0l;
 
 var hailstones = input.Split(Environment.NewLine).Select(x => x.Split(new[] { ", ", " @ " }, StringSplitOptions.None).Select(long.Parse).ToArray()).Select(x => new Hailstone { X = x[0], Y = x[1], Z = x[2], XOffset = x[3], YOffset = x[4], ZOffset = x[5] }).ToList();
 
-foreach (var item in hailstones)
-{
-    // y = ax+b
-    item.A = (double)item.YOffset / item.XOffset;
-    item.B = -1 * item.X * item.A + item.Y;
-}
+var sss = hailstones.GroupBy(x => x.YOffset).Where(x => x.Count() >= 3).ToList();
 
-(double x, double y) Collision(Hailstone one, Hailstone two)
-{
-    var x = (two.B - one.B) / (one.A - two.A);
-    var y = one.A * x + one.B;
+//https://pastebin.com/pnbxaCVu
+var s0 = sss.ElementAt(1).ElementAt(0);
+var s1 = sss.ElementAt(1).ElementAt(1);
+var s2 = sss.ElementAt(1).ElementAt(2);
 
-    return (x, y);
-}
+double vxr1 = s1.XOffset - s0.XOffset;
+double vzr1 = s1.ZOffset - s0.ZOffset;
+double vxr2 = s2.XOffset - s0.XOffset;
+double vzr2 = s2.ZOffset - s0.ZOffset;
+double xr1 = s1.X - s0.X;
+double yr1 = s1.Y - s0.Y;
+double zr1 = s1.Z - s0.Z;
+double xr2 = s2.X - s0.X;
+double yr2 = s2.Y - s0.Y;
+double zr2 = s2.Z - s0.Z;
+double num = (yr2 * xr1 * vzr1) - (vxr1 * yr2 * zr1) + (yr1 * zr2 * vxr1) - (yr1 * xr2 * vzr1);
+double den = yr1 * ((vzr1 * vxr2) - (vxr1 * vzr2));
+double t2 = num / den;
 
-var min = 200000000000000;
-var max = 400000000000000;
+num = (yr1 * xr2) + (yr1 * vxr2 * t2) - (yr2 * xr1);
+den = yr2 * vxr1;
+double t1 = num / den;
+double cx1 = s1.X + (t1 * s1.XOffset);
+double cy1 = s1.Y + (t1 * s1.YOffset);
+double cz1 = s1.Z + (t1 * s1.ZOffset);
+double cx2 = s2.X + (t2 * s2.XOffset);
+double cy2 = s2.Y + (t2 * s2.YOffset);
+double cz2 = s2.Z + (t2 * s2.ZOffset);
+double xm = (double)(cx2 - cx1) / (t2 - t1);
+double zm = (double)(cz2 - cz1) / (t2 - t1);
+double ym = (double)(cy2 - cy1) / (t2 - t1);
+double xc = cx1 - (xm * t1);
+double yc = cy1 - (ym * t1);
+double zc = cz1 - (zm * t1);
 
-foreach (var item in hailstones)
-{
-    foreach (var other in hailstones.SkipWhile(x => x != item).Skip(1).ToList())
-    {
-        var x = Collision(other, item);
-        //Console.WriteLine(x);
-        bool GoodDirection(double x, double y, Hailstone h)
-        {
-            return (h.X - x) * h.XOffset < 0 && (h.Y - y) * h.YOffset < 0;
-        }
-        if ((min <= x.x && x.x <= max) && (min <= x.y && x.y <= max) && GoodDirection(x.x, x.y, item) && GoodDirection(x.x, x.y, other))
-        {
-            //Console.Write("yes");
-            result++;
-        }
-    }
-}
+Console.WriteLine($"{xc},{yc},{zc}");
 
+result += (long) xc + (long)yc + (long)zc;
 
 timer.Stop();
 Console.WriteLine(result);
+// 557743507346379
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
-
 class Hailstone
 {
-    public long X { get; set; }
-    public long Y { get; set; }
-    public long Z { get; set; }
-    public long XOffset { get; set; }
-    public long YOffset { get; set; }
-    public long ZOffset { get; set; }
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Z { get; set; }
+    public double XOffset { get; set; }
+    public double YOffset { get; set; }
+    public double ZOffset { get; set; }
 
     public double A { get; set; }
     public double B { get; set; }
