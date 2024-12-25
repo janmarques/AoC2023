@@ -191,4 +191,32 @@ public static class Utils
     {
         return ((a % b) + b) % b;
     }
+
+    public static void SetNeighbours<T>(List<T> grid, Func<T, HashSet<T>> listSelector, Func<T, int> X, Func<T, int> Y) where T : class
+    {
+        var directions = Directions.Select(x => (x.x, x.y)).ToList();
+        var asDct = grid.ToDictionary(x => (X(x), Y(x)));
+
+        foreach (var item in grid)
+        {
+            foreach (var dir in directions)
+            {
+                if (asDct.TryGetValue((X(item) + dir.x, Y(item) + dir.y), out var match))
+                {
+                    listSelector(item).Add(match);
+                }
+            }
+        }
+    }
+
+    public static void AllCombinations<T>(IEnumerable<T> grid, Action<T, T> action) where T : class
+    {
+        foreach (var item in grid)
+        {
+            foreach (var other in grid.SkipWhile(x => x != item).Skip(1))
+            {
+                action(item, other);
+            }
+        }
+    }
 }
