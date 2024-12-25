@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using AoC2023;
+using System.Diagnostics;
+using System.Text;
 
 var fullInput =
 @"kln: zrp
@@ -1264,13 +1266,13 @@ jzz: gdp qsn
 ljk: fsl qsf gzr pll";
 
 var smallInput =
-@"jqt: rhn xhk nvd
+@"jqt: rhn xhk
 rsh: frs pzl lsr
 xhk: hfx
-cmg: qnr nvd lhk bvb
+cmg: qnr nvd lhk
 rhn: xhk bvb hfx
 bvb: xhk hfx
-pzl: lsr hfx nvd
+pzl: lsr nvd
 qnr: nvd
 ntq: jqt hfx bvb xhk
 nvd: lhk
@@ -1287,27 +1289,45 @@ var timer = System.Diagnostics.Stopwatch.StartNew();
 
 var result = 0l;
 
-var sb = new StringBuilder();
+var nodes = new Dictionary<string, Node>();
+
 foreach (var line in input.Split(Environment.NewLine))
 {
     var split = line.Split(new[] { ": ", " " }, StringSplitOptions.None);
-    foreach (var item in split.Skip(1))
+    foreach (var item in split)
     {
-        sb.AppendLine($"{split[0]}->{item}");
+        if (!nodes.ContainsKey(item))
+        {
+            nodes[item] = new Node { Name = item };
+        }
+    }
+
+    Utils.AllCombinations(split, (x, y) =>
+    {
+        nodes[x].Neigbours.Add(nodes[y]);
+        nodes[y].Neigbours.Add(nodes[x]);
+    });
+}
+
+var visited = new HashSet<Node>();
+Traverse(nodes.Values.First());
+void Traverse(Node node)
+{
+    visited.Add(node);
+    foreach (var item in node.Neigbours.Except(visited))
+    {
+        Traverse(item);
     }
 }
 
-var xx = sb.ToString();
-// <title xmlns="http://www.w3.org/2000/svg">vgf-&gt;jpn</title>
-// <title xmlns="http://www.w3.org/2000/svg">fdb-&gt;txm</title>
-// <title xmlns="http://www.w3.org/2000/svg">nmz-&gt;mnl</title>
-// vgf jpn
-// fdb txm
-// nmz mnl
-// Found graphically with graphviz
-
-
+result = visited.Count * (nodes.Count - visited.Count);
 timer.Stop();
 Console.WriteLine(result);
 Console.WriteLine(timer.ElapsedMilliseconds + "ms");
 Console.ReadLine();
+
+class Node
+{
+    public string Name { get; set; }
+    public HashSet<Node> Neigbours { get; set; } = new HashSet<Node>();
+}
